@@ -59,6 +59,15 @@
   set_fact:
     base_packages: "{{ base_packages + suse_extra_packages }}"
   when: suse_extra_packages is defined
+- name: configure system proxy
+  template:
+    src: proxy.j2
+    dest: /etc/sysconfig/proxy
+    owner: root
+    mode: 0755
+  when: proxy_host is defined and skip_proxy is undefined
+  tags:
+    - access_setup
 
 - name: install zypper config
   copy:
@@ -107,6 +116,8 @@
 #    update_cache: yes
 #  with_items: "{{unwanted_packages}}"
 
+# this should be merged in ansible 2.4, for now we need to carry a
+# newer zypper.py
 - name: Upgrade the system
   zypper:
     name: '*'

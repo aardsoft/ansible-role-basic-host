@@ -1,0 +1,94 @@
+#jinja2: lstrip_blocks: True
+# {{ ansible_managed }}
+# See: https://www.freedesktop.org/software/systemd/man/systemd.network.html
+#
+# Currently only some basics for static addresses, dhcp and vlan are
+# implemented. Some options are present but disabled to make adding
+# additional functionality once needed easier. Do not manually edit
+# the ansible created files.
+
+[Match]
+Name={{item.key}}
+#MACAddress=
+#Path=
+#Driver=
+#Type=
+#Host=
+#Virtualization=
+#Architecture=
+
+#[Link]
+#MACAddress=
+#MTUBytes=
+#ARP=
+# default: no, set it explicitely
+#Unmanaged=
+
+[Network]
+#Description=
+{% if item.value.static is defined and item.value.static == True %}
+{# TODO: check if it's a dict. in that case, add multiple address #}
+{#       sections instead                                         #}
+{# TODO: add prefixes #}
+Address={{ item.value.ipv4 }}
+  {% if item.value.gateway is defined %}
+Gateway={{ item.value.gateway }}
+  {% endif %}
+{% elif item.value.static is defined and item.value.static == False %}
+DHCP=yes
+{% elif item.value.ipv4 is defined %}
+DHCP=yes
+{% else %}
+DHCP=no
+{% endif %}
+
+IPForward={{ item.value.forwarding|default("no") }}
+IPMasquerade={{ item.value.masquerade|default("no") }}
+
+#BindCarrier=
+#IPv6PrivacyExtensions=
+#IPv6AcceptRA=
+#IPv6HopLimit=
+#Bridge=
+#Bond=
+#VRF=
+#TODO: look up vlans my name
+{% if item.value.vlans is defined %}
+  {% for vlan in item.value.vlans %}
+VLAN=vl.{{vlan}}
+  {% endfor %}
+{% endif %}
+{% if item.value.macvlans is defined %}
+  {% for macvlan in item.value.macvlans %}
+MACVLAN={{macvlan}}
+  {% endfor %}
+{% endif %}
+{% if item.value.vxlans is defined %}
+  {% for vxlan in item.value.vxlans %}
+VXLAN={{vxlan}}
+  {% endfor %}
+{% endif %}
+{% if item.value.tunnels is defined %}
+  {% for tunnel in item.value.tunnels %}
+Tunnel={{tunnel}}
+  {% endfor %}
+{% endif %}
+
+{# FIXME #}
+{% if item.value.addresses is defined %}
+#[Address]
+#Address=
+#Peer=
+#Broadcast=
+#Label=
+#PreferredLifetime=
+#HomeAddress=
+#DuplicateAddressDetection=
+#ManageTemporaryAddress=
+#PrefixRoute=
+#AutoJoin=
+{% endif %}
+
+#[IPv6AddressLabel]
+#Label=
+#Prefix=

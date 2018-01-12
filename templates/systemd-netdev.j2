@@ -1,0 +1,34 @@
+#jinja2: lstrip_blocks: True
+# {{ ansible_managed }}
+# See: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html
+#
+# Currently only some basics for static addresses, dhcp and vlan are
+# implemented. Some options are present but disabled to make adding
+# additional functionality once needed easier. Do not manually edit
+# the ansible created files.
+
+#[Match]
+#Host=
+#Virtualization=
+#Architecture=
+#KernelCommandLine=
+
+[NetDev]
+#Description=
+Name={{item.key}}
+Kind={{item.value.type}}
+#MTUBytes=
+#MACAddress=
+
+{% if item.value.type == "vlan" %}
+[VLAN]
+{% if item.value.vlan is number %}
+Id={{item.value.vlan}}
+{% else %}
+Id={{vlans[item.value.vlan]}}
+{% endif %}
+#GVRP=
+#MVRP=
+#LooseBindings=
+#ReorderHeader=
+{% endif %}

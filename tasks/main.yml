@@ -188,6 +188,43 @@
     path: "/.provisioning-needed"
   register: marker
 
+- name: create networkd configuration directory
+  file:
+    path: /etc/systemd/network
+    owner: root
+    group: root
+    mode: 0755
+    state: directory
+
+- name: configure virtual network devices (networkd)
+  template:
+    src: systemd-netdev.j2
+    dest: "/etc/systemd/network/{{item.key}}.netdev"
+  with_dict: "{{network_nodes[inventory_hostname].networks |default({})}}"
+  when: >
+    network_manager is defined and network_manager == "networkd" and
+    item.value.type is defined and item.value.type != "phys"
+    and item.key != "ilo"
+  notify:
+    - restart networkd
+
+- name: configure static network interfaces (networkd)
+  template:
+   src: systemd-network.j2
+   dest: "/etc/systemd/network/{{item.key}}.network"
+  with_dict: "{{network_nodes[inventory_hostname].networks |default({})}}"
+  when: >
+    network_manager is defined and network_manager == "networkd"
+    and item.key != "ilo"
+  notify:
+    - restart networkd
+
+- name: enable networkd
+  service: name=systemd-networkd enabled=yes
+  when: network_manager is defined and network_manager == "networkd"
+  notify:
+    - restart networkd
+
 - name: drop root .ssh (provisioning)
   file:
     path: "/root/.ssh"

@@ -1,0 +1,15 @@
+BOOTPROTO="static"
+DEVICE="{{item.key}}"
+ONBOOT=yes
+TYPE=Ethernet
+IPADDR="{{item.value.ipv4 | ipaddr('address')}}"
+NETMASK="{{item.value.netmask|default('255.255.255.0')}}"
+{% if item.value.gateway is defined %}
+GATEWAY="{{ item.value.gateway }}"
+{% endif %}
+DEFROUTE=yes
+PEERDNS=no
+PEERROUTES=yes
+IPV4_FAILURE_FATAL=no
+IPV6INIT=no
+NAME="System {{item.key}}"
