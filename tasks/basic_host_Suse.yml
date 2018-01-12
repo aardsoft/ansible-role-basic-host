@@ -155,17 +155,3 @@
     state: present
     update_cache: yes
   with_items: "{{base_packages}}"
-
-# https://letsencrypt.org/certs/isrgrootx1.pem
-# https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem
-- name: Copy letsencrypt certificates
-  copy:
-    src: "{{ item }}"
-    dest: /etc/pki/trust/anchors/{{item}}
-    owner: root
-    group: root
-    mode: 0644
-  with_items:
-    - isrgrootx1.pem
-    - lets-encrypt-x3-cross-signed.pem
-  notify: update certificates
