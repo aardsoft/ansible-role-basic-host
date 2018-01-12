@@ -1,0 +1,115 @@
+# note: deletion of old certificates is currently not supported
+- name: install additional CA certificates
+  tags:
+    - access_setup
+  copy:
+    src: "{{item}}"
+    dest: "/etc/pki/ca-trust/source/anchors/{{item}}"
+  with_items: "{{ca_certificates|default({})}}"
+
+# this would be better tied to actually changing CA files, but handlers
+# only run at the end, which would be too late here. Given that it returns
+# very quickly it's not worth the effort to check for changes.
+- name: refresh CA trust
+  shell: /usr/bin/update-ca-trust
+
+- name: configure dnf
+  template:
+    src: dnf.conf.j2
+    dest: /etc/dnf/dnf.conf
+    owner: root
+    mode: 0755
+  tags:
+    - access_setup
+  when: >
+    proxy_host is defined and skip_proxy is undefined
+    and ansible_pkg_mgr == "dnf"
+
+- name: set basic packages
+  set_fact:
+    bare_metal_packages:
+      - lvm2
+      - ntp
+      - ipmitool
+      - dmidecode
+      - nmap
+    base_packages:
+      - bash-completion
+      - bzip2
+      - ca-certificates
+      - firewalld
+      - iotop
+      - iproute
+      - jq
+      - net-tools
+      - procps-ng
+      - psmisc
+      - python-firewall
+      - screen
+      - strace
+      - tzdata
+      - usbutils
+      - vim
+      - wget
+      - policycoreutils-python
+  when: base_packages is undefined
+
+- name: set unwanted packages
+  set_fact:
+    unwanted_packages:
+      - chrony
+  when: unwanted_packages is undefined
+
+- name: expand package list for bare metal servers
+  set_fact:
+    base_packages: "{{ base_packages + bare_metal_packages }}"
+  when: ansible_virtualization_role == "host"
+
+- name: append extra packages
+  set_fact:
+    base_packages: "{{ base_packages + redhat_extra_packages }}"
+  when: redhat_extra_packages is defined
+
+- name: Get rid of unwanted packages (dnf)
+  dnf:
+    name: "{{ item }}"
+    state: absent
+  with_items: "{{unwanted_packages}}"
+  when: ansible_pkg_mgr == "dnf"
+
+- name: Get rid of unwanted packages (yum)
+  yum:
+    name: "{{ item }}"
+    state: absent
+  with_items: "{{unwanted_packages}}"
+  when: ansible_pkg_mgr == "yum"
+
+- name: Install base packages (dnf)
+  dnf:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{base_packages}}"
+  when: ansible_pkg_mgr == "dnf"
+
+- name: Install base packages (yum)
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{base_packages}}"
+  when: ansible_pkg_mgr == "yum"
+
+- name: configure static network interfaces (NM)
+  template:
+    src: ifcfg.j2
+    dest: "/etc/sysconfig/network-scripts/ifcfg-{{item.key}}"
+  with_dict: "{{network_nodes[inventory_hostname].networks |default({})}}"
+  when: >
+    item.value.static is defined and item.value.static == True
+    and network_manager is undefined or
+    (network_manager is defined and network_manager == "networkmanager")
+
+- name: disable NetworkManager
+  service: name=NetworkManager enabled=no
+  when: network_manager is defined and network_manager != "networkmanager"
+  notify:
+    - stop NetworkManager

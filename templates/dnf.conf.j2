@@ -1,0 +1,7 @@
+[main]
+gpgcheck=1
+installonly_limit=3
+clean_requirements_on_remove=True
+{% if proxy_enabled is defined and proxy_enabled == 'yes' and proxy_host is defined %}
+proxy=http://{{proxy_host}}
+{% endif %}
