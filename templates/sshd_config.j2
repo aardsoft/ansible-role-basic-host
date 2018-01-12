@@ -1,3 +1,6 @@
+#jinja2: lstrip_blocks: True
+# {{ ansible_managed }}
+
 # What ports, IPs and protocols we listen for
 Port 22
 # Use these options to restrict which interfaces/protocols sshd will bind to
@@ -17,7 +20,7 @@ UsePrivilegeSeparation yes
 
 # Authentication:
 LoginGraceTime 120
-PermitRootLogin no
+PermitRootLogin {{ssh_root_login|default("no")}}
 StrictModes yes
 
 RSAAuthentication yes
@@ -78,3 +81,9 @@ Subsystem sftp /usr/lib/openssh/sftp-server
 # PAM authentication, then enable this but set PasswordAuthentication
 # and ChallengeResponseAuthentication to 'no'.
 UsePAM yes
+
+{% if sshd_config_addition is defined %}
+  {% for entry in sshd_config_addition.entries %}
+{{entry}}
+  {% endfor %}
+{% endif %}
