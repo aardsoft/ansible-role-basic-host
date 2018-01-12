@@ -1,0 +1,15 @@
+#!/bin/bash
+
+BOOTDEVICES=
+for DEV in /dev/disk/by-id/ata-*; do
+    if `echo $DEV | grep -q -- -part`; then
+        echo "Skipping $DEV" >/dev/null
+    else
+        if [ -z "$BOOTDEVICES" ]; then
+            BOOTDEVICES="$DEV"
+        else
+            BOOTDEVICES="$BOOTDEVICES, $DEV"
+        fi
+    fi
+done
+echo -n $BOOTDEVICES

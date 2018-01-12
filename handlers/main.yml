@@ -1,0 +1,6 @@
+- name: restart sshd
+  service: name=sshd state=restarted
+  ignore_errors: yes
+
+- name: update certificates
+  command: /usr/sbin/update-ca-certificates

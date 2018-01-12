@@ -1,0 +1,10 @@
+- set_fact: host_timezone=Europe/Helsinki
+  when: host_timezone is undefined
+- set_fact: adm_uid=10000
+  when: adm_uid is undefined
+- set_fact: adm_gid=10000
+  when: adm_gid is undefined
+- set_fact: adm_user=management
+  when: adm_user is undefined
+- set_fact: adm_group=management
+  when: adm_group is undefined

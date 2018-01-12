@@ -1,0 +1,130 @@
+- name: add aardsoft apt configuration
+  copy:
+    src: apt-conf-aardsoft
+    dest: /etc/apt/apt.conf.d/aardsoft
+    owner: root
+    group: root
+    mode: 0644
+
+- name: configure list of core packages
+  set_fact:
+    bare_metal_packages:
+      - lvm2
+      - makedev
+      - mdadm
+      - nload
+      - ntp
+      - smartmontools
+    base_packages:
+      - "{{ sudo_pkg }}"
+      - apt-file
+      - apt-transport-https
+      - attr
+      - bridge-utils
+      - bsdmainutils
+      - ca-certificates
+      - dosfstools
+      - ebtables
+      - iputils-ping
+      - ftp
+      - fuse
+      - openssh-server
+      - openssl
+      - psmisc
+      - python
+      - screen
+      - sshfs
+      - strace
+      - tcpdump
+      - wget
+  when: base_packages is undefined
+
+- name: expand package list for bare metal servers
+  set_fact:
+    base_packages: "{{ base_packages + bare_metal_packages }}"
+  when: ansible_virtualization_role == "host" or
+        ansible_virtualization_role == "NA"
+
+- name: append extra packages
+  set_fact:
+    base_packages: "{{ base_packages + debian_extra_packages }}"
+  when: debian_extra_packages is defined
+
+- name: configure sources.list
+  copy:
+    src: "{{ apt_source }}"
+    dest: /etc/apt/sources.list
+    owner: root
+    group: root
+    mode: 0644
+  when: apt_source is defined
+
+- name: configure locale selection
+  debconf:
+    name: locales
+    question: 'locales/locales_to_be_generated'
+    value: 'en_US.UTF-8 UTF-8'
+    vtype: 'multiselect'
+
+- name: configure default locale
+  debconf:
+    name: locales
+    question: 'locales/default_environment_locale'
+    value: en_US.UTF-8
+    vtype: 'select'
+
+- name: check if default locale is available
+  shell: /usr/bin/locale -a
+  register: locales
+
+- name: remove locale.gen if it needs updating
+  file: path=/etc/locale.gen state=absent
+  when: ansible_os_family == "Debian" and "en_US.utf8" not in locales.stdout
+
+- name: Install base packages
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+    cache_valid_time: 3600
+  with_items: "{{base_packages}}"
+
+- name: Clean apt cache
+  command: apt-get -y clean
+
+- name: Update apt-file cache
+  command: apt-file update
+
+- name: Mask tty service
+  file:
+    src: /dev/null
+    dest: /etc/systemd/system/getty-static.service
+    state: link
+    force: yes
+
+- stat: path=/etc/locale.gen
+  register: locale_gen
+
+- name: Generate locales
+  command: dpkg-reconfigure -f noninteractive locales
+  when: locale_gen.stat.exists == False
+
+# for some reason this barfs with output on stderr
+# needs to be run after local generation because of that
+- name: detect boot devices
+  script: find-bootdevices
+  register: host_bootdevices
+  when: ansible_virtualization_role == "host" or
+        ansible_virtualization_role == "NA"
+
+# this just pre-configures the bootloader, bootloader and kernel
+# install needs to happen separately (containers don't need kernels)
+- name: configure default boot devices
+  debconf:
+    name: grub-pc
+    question: 'grub-pc/install_devices'
+    value: "{{ host_bootdevices.stdout }}"
+    vtype: 'multiselect'
+  when: ansible_virtualization_role == "host" or
+        ansible_virtualization_role == "NA" and
+        host_bootdevices is defined

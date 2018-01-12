@@ -1,0 +1,135 @@
+# TODO: add update repo for non-oss?
+# TODO: fix zypper.conf recommends
+
+- name: set suse release
+  set_fact:
+    suse_release=tumbleweed
+    dist_base=http://download.opensuse.org/
+    obs_base=http://download.opensuse.org/repositories/
+    suse_long_release=openSUSE_Tumbleweed
+  when: suse_release is undefined
+
+# ansible silently converts "42.2" to float, so string match doesn't work here
+- name: handle leap release naming
+  set_fact:
+    suse_long_release=openSUSE_Leap_{{ suse_release }}
+    dist_base=http://download.opensuse.org/distribution/leap/
+    obs_base=http://download.opensuse.org/repositories/
+  when: suse_release >= 42 and suse_release <= 43
+
+- name: set suse longrelease
+  set_fact:
+    suse_long_release=openSUSE_{{ suse_release }}
+    dist_base=http://download.opensuse.org/distribution/
+    obs_base=http://download.opensuse.org/repositories/
+  when: suse_release is defined and suse_long_release is undefined
+
+- name: set base URL
+  set_fact:
+    dist_base=http://download.opensuse.org/distribution/
+  when: suse_release != "tumbleweed" and dist_base is undefined
+
+- name: set basic packages
+  set_fact:
+    bare_metal_packages:
+      - lvm2
+      - ntp
+    base_packages:
+      - libopenssl1_0_0-hmac
+      - iproute2
+      - python-xml
+      - vim
+      - screen
+      - strace
+      - wget
+      - timezone
+      - ca-certificates-mozilla
+    unwanted_packages:
+      - libwicked-0-6
+      - wicked-service
+      - wicked
+  when: base_packages is undefined
+
+- name: expand package list for bare metal servers
+  set_fact:
+    base_packages: "{{ base_packages + bare_metal_packages }}"
+  when: ansible_virtualization_role == "host"
+
+- name: append extra packages
+  set_fact:
+    base_packages: "{{ base_packages + suse_extra_packages }}"
+  when: suse_extra_packages is defined
+
+- name: install zypper config
+  copy:
+    src: "{{ item }}"
+    dest: /etc/zypp/{{ item }}
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - zypp.conf
+    - zypper.conf
+
+- name: set core repos
+  set_fact:
+    core_repos:
+      - name: repo-oss
+        url: "{{ dist_base }}/{{ suse_release }}/repo/oss"
+      - name: repo-non-oss
+        url: "{{ dist_base }}/{{ suse_release }}/repo/non-oss"
+      - name: update
+        url: http://download.opensuse.org/update/{{ suse_release }}
+
+- name: set additional OBS repos
+  zypper_repository:
+    name: "{{ item }}"
+    repo: "{{ obs_base }}/{{ item }}/{{ suse_long_release }}"
+    state: present
+    auto_import_keys: yes
+    overwrite_multiple: yes
+  with_items: "{{obs_repos|default({})}}"
+
+
+- name: configure core repos
+  zypper_repository:
+    name: "{{ item.name }}"
+    repo: "{{ item.url }}"
+    state: present
+    auto_import_keys: yes
+    overwrite_multiple: yes
+  with_items: "{{core_repos}}"
+
+#- name: Get rid of unwanted packages
+#  zypper:
+#    name: "{{ item }}"
+#    state: absent
+#    update_cache: yes
+#  with_items: "{{unwanted_packages}}"
+
+- name: Upgrade the system
+  zypper:
+    name: '*'
+    state: dist-upgrade
+  when: skip_updates is undefined or force_updates is defined
+
+- name: Install base packages
+  zypper:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  with_items: "{{base_packages}}"
+
+# https://letsencrypt.org/certs/isrgrootx1.pem
+# https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem
+- name: Copy letsencrypt certificates
+  copy:
+    src: "{{ item }}"
+    dest: /etc/pki/trust/anchors/{{item}}
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - isrgrootx1.pem
+    - lets-encrypt-x3-cross-signed.pem
+  notify: update certificates

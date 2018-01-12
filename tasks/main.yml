@@ -1,0 +1,201 @@
+- name: set sudo package name
+  set_fact:
+    sudo_pkg: "sudo"
+  tags:
+    - base_config
+    - access_setup
+
+- name: set sudo package name for Debian
+  set_fact:
+    sudo_pkg: "sudo-ldap"
+  when: ansible_distribution == 'Debian'
+  tags:
+    - base_config
+    - access_setup
+
+- include: default_vars.yml
+  tags:
+    - base_config
+    - access_setup
+
+- name: set resolv location to site, if necessary
+  tags:
+    - base_config
+  set_fact:
+    resolv_location: "{{ site_region }}"
+  when: site_region is defined and resolv_location is undefined
+
+- name: add resolv.conf
+  tags:
+    - base_config
+  copy:
+    src: resolv.conf.{{ resolv_location }}
+    dest: /etc/resolv.conf
+    owner: root
+    group: root
+    mode: 0644
+  when: resolv_location is defined
+
+- name: add adjtime
+  copy:
+    src: adjtime
+    dest: /etc/adjtime
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - base_config
+
+- name: add logind configuration
+  copy:
+    src: logind.conf
+    dest: /etc/systemd/logind.conf
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - base_config
+
+- name: add sshd configuration
+  template:
+    src: sshd_config.j2
+    dest: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: 0640
+  tags:
+    - base_config
+  notify:
+    - restart sshd
+
+# timezone command was added in 2.2 only
+- name: set /etc/timezone
+  copy:
+    content: "{{ host_timezone }}"
+    dest: /etc/timezone
+  tags:
+    - base_config
+
+- name: set /etc/localtime
+  file:
+    src: "/usr/share/zoneinfo/{{ host_timezone }}"
+    dest: /etc/localtime
+    state: link
+    force: yes
+  tags:
+    - base_config
+
+- stat: path=/etc/hostname
+  register: hostname_file
+  tags:
+    - base_config
+
+- name: set hostname
+  copy:
+    content: "{{ hostname }}"
+    dest: /etc/hostname
+  when: hostname.stat.exists == False and hostname is defined
+
+- name: set hostname
+  copy:
+    content: "{{ inventory_hostname.split('.')[0] }}"
+    dest: /etc/hostname
+  when: hostname.stat.exists == False and hostname is undefined
+  tags:
+    - base_config
+
+- include: "basic_host_{{ ansible_os_family }}.yml"
+  when: ansible_os_family == "Debian" or ansible_os_family == "Suse"
+  tags:
+    - base_config
+
+- name: create ssl cert group
+  group: name=ssl-cert gid=950 state=present
+
+- name: create certificate directory
+  file:
+    path: /etc/ssl/keys
+    owner: root
+    group: ssl-cert
+    mode: 0750
+    state: directory
+
+- name: Install sudo
+  apt:
+    name: "{{ sudo_pkg }}"
+    state: present
+    update_cache: yes
+    cache_valid_time: 3600
+  when: ansible_os_family == "Debian"
+  tags:
+    - access_setup
+
+- name: Install sudo
+  zypper:
+    name: "{{ sudo_pkg }}"
+    state: present
+  when: ansible_os_family == "Suse"
+  tags:
+    - access_setup
+
+- name: create management group
+  group: name={{ adm_group }} gid={{ adm_gid }} state=present
+  tags:
+    - access_setup
+  when: adm_group is defined and adm_gid is defined
+
+- name: create management user
+  user: name={{ adm_user }} uid={{ adm_uid }} group={{ adm_group }} groups=disk shell=/bin/bash
+  tags:
+    - access_setup
+  when: adm_user is defined and adm_uid is defined and adm_group is defined
+
+- name: make sure management .ssh exists
+  file:
+    path: /home/{{ adm_user }}/.ssh
+    owner: "{{ adm_user }}"
+    group: "{{ adm_group }}"
+    mode: 0700
+    state: directory
+  tags:
+    - access_setup
+  when: adm_user is defined
+
+- name: update management authorized_keys file
+  copy:
+    src: authorized_keys
+    dest: /home/{{ adm_user }}/.ssh/authorized_keys
+    owner: "{{ adm_user }}"
+    group: "{{ adm_group }}"
+    mode: 0600
+  tags:
+    - access_setup
+  when: adm_user is defined and adm_group is defined
+
+- name: add management sudoers configuration
+  template:
+    src: adm-sudoers.j2
+    dest: /etc/sudoers.d/ansible-access
+    owner: root
+    group: root
+    mode: 0440
+  tags:
+    - access_setup
+  when: adm_user is defined
+
+- name: check provisioning marker
+  stat:
+    path: "/.provisioning-needed"
+  register: marker
+
+- name: drop root .ssh (provisioning)
+  file:
+    path: "/root/.ssh"
+    state: absent
+  when: marker.stat.exists == True
+
+- name: drop provisioning marker
+  file:
+    path: "/.provisioning-needed"
+    state: absent
+  when: marker.stat.exists == True
