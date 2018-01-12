@@ -46,6 +46,16 @@
   tags:
     - base_config
 
+- name: add hosts
+  copy:
+    src: hosts
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - base_config
+
 - name: add logind configuration
   copy:
     src: logind.conf
