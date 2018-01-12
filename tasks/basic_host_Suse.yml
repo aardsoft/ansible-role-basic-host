@@ -8,6 +8,8 @@
     obs_base=http://download.opensuse.org/repositories/
     suse_long_release=openSUSE_Tumbleweed
   when: suse_release is undefined
+  tags:
+    - access_setup
 
 # ansible silently converts "42.2" to float, so string match doesn't work here
 - name: handle leap release naming
@@ -16,6 +18,8 @@
     dist_base=http://download.opensuse.org/distribution/leap/
     obs_base=http://download.opensuse.org/repositories/
   when: suse_release >= 42 and suse_release <= 43
+  tags:
+    - access_setup
 
 - name: set suse longrelease
   set_fact:
@@ -23,20 +27,27 @@
     dist_base=http://download.opensuse.org/distribution/
     obs_base=http://download.opensuse.org/repositories/
   when: suse_release is defined and suse_long_release is undefined
+  tags:
+    - access_setup
 
 - name: set base URL
   set_fact:
     dist_base=http://download.opensuse.org/distribution/
   when: suse_release != "tumbleweed" and dist_base is undefined
+  tags:
+    - access_setup
 
 - name: set basic packages
   set_fact:
     bare_metal_packages:
       - lvm2
       - ntp
+      - dmidecode
+      - ipmitool
     base_packages:
       - libopenssl1_0_0-hmac
       - iproute2
+      - iotop
       - python-xml
       - vim
       - screen
@@ -49,16 +60,23 @@
       - wicked-service
       - wicked
   when: base_packages is undefined
+  tags:
+    - access_setup
 
 - name: expand package list for bare metal servers
   set_fact:
     base_packages: "{{ base_packages + bare_metal_packages }}"
   when: ansible_virtualization_role == "host"
+  tags:
+    - access_setup
 
 - name: append extra packages
   set_fact:
     base_packages: "{{ base_packages + suse_extra_packages }}"
   when: suse_extra_packages is defined
+  tags:
+    - access_setup
+
 - name: configure system proxy
   template:
     src: proxy.j2
@@ -79,6 +97,8 @@
   with_items:
     - zypp.conf
     - zypper.conf
+  tags:
+    - access_setup
 
 - name: set core repos
   set_fact:
@@ -89,6 +109,8 @@
         url: "{{ dist_base }}/{{ suse_release }}/repo/non-oss"
       - name: update
         url: http://download.opensuse.org/update/{{ suse_release }}
+  tags:
+    - access_setup
 
 - name: set additional OBS repos
   zypper_repository:
@@ -98,7 +120,8 @@
     auto_import_keys: yes
     overwrite_multiple: yes
   with_items: "{{obs_repos|default({})}}"
-
+  tags:
+    - access_setup
 
 - name: configure core repos
   zypper_repository:
@@ -108,6 +131,8 @@
     auto_import_keys: yes
     overwrite_multiple: yes
   with_items: "{{core_repos}}"
+  tags:
+    - access_setup
 
 #- name: Get rid of unwanted packages
 #  zypper:
