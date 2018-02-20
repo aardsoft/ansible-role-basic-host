@@ -12,6 +12,8 @@
 # very quickly it's not worth the effort to check for changes.
 - name: refresh CA trust
   shell: /usr/bin/update-ca-trust
+  tags:
+    - access_setup
 
 - name: configure dnf
   template:
@@ -107,9 +109,13 @@
     item.value.static is defined and item.value.static == True
     and network_manager is undefined or
     (network_manager is defined and network_manager == "networkmanager")
+  tags:
+    - access_setup
 
 - name: disable NetworkManager
   service: name=NetworkManager enabled=no
   when: network_manager is defined and network_manager != "networkmanager"
   notify:
     - stop NetworkManager
+  tags:
+    - access_setup

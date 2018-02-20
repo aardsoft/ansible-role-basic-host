@@ -21,6 +21,7 @@
 - name: set resolv location to site, if necessary
   tags:
     - base_config
+    - access_setup
   set_fact:
     resolv_location: "{{ site_region }}"
   when: site_region is defined and resolv_location is undefined
@@ -245,6 +246,8 @@
     group: root
     mode: 0755
     state: directory
+  tags:
+    - access_setup
 
 - name: configure virtual network devices (networkd)
   template:
@@ -257,6 +260,8 @@
     and item.key != "ilo"
   notify:
     - restart networkd
+  tags:
+    - access_setup
 
 - name: configure static network interfaces (networkd)
   template:
@@ -268,12 +273,16 @@
     and item.key != "ilo"
   notify:
     - restart networkd
+  tags:
+    - access_setup
 
 - name: enable networkd
   service: name=systemd-networkd enabled=yes
   when: network_manager is defined and network_manager == "networkd"
   notify:
     - restart networkd
+  tags:
+    - access_setup
 
 - name: drop root .ssh (provisioning)
   file:
