@@ -172,3 +172,18 @@
     state: present
     update_cache: yes
   with_items: "{{base_packages}}"
+
+- name: mask Wicked servicessss
+  file:
+    src: /dev/null
+    dest: /etc/systemd/system/{{item}}.service
+    state: link
+    force: yes
+  when: network_manager is defined and network_manager != "wicked"
+  with_items:
+    - wicked
+    - wickedd-auto4
+    - wickedd-dhcp4
+    - wickedd-dhcp6
+    - wickedd-nanny
+    - wickedd
