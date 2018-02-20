@@ -1,6 +1,23 @@
 # TODO: add update repo for non-oss?
 # TODO: fix zypper.conf recommends
 
+# note: deletion of old certificates is currently not supported
+- name: install additional CA certificates
+  tags:
+    - access_setup
+  copy:
+    src: "{{item}}"
+    dest: "/etc/pki/trust/anchors/{{item}}"
+  with_items: "{{ca_certificates|default({})}}"
+
+# this would be better tied to actually changing CA files, but handlers
+# only run at the end, which would be too late here. Given that it returns
+# very quickly it's not worth the effort to check for changes.
+- name: refresh CA trust
+  shell: /usr/sbin/update-ca-certificates
+  tags:
+    - access_setup
+
 - name: set suse release
   set_fact:
     suse_release=tumbleweed
