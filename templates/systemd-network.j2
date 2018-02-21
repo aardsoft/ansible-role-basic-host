@@ -17,12 +17,17 @@ Name={{item.key}}
 #Virtualization=
 #Architecture=
 
-#[Link]
-#MACAddress=
-#MTUBytes=
+[Link]
+{# for now only force MAC addresses on bridges #}
+{% if item.value.hwaddr is defined and item.value.type == "bridge" %}
+MACAddress={{ item.value.hwaddr }}
+{% endif %}
+{% if item.value.mtu is defined %}
+MTUBytes={{ item.value.mtu }}
+{% endif %}
 #ARP=
 # default: no, set it explicitely
-#Unmanaged=
+Unmanaged={{ item.value.unmanaged | default('no')}}
 
 [Network]
 #Description=
@@ -36,8 +41,14 @@ Gateway={{ item.value.gateway }}
   {% endif %}
 {% elif item.value.static is defined and item.value.static == False %}
 DHCP=yes
-{% elif item.value.ipv4 is defined %}
+{# if ipv4 and hwaddr is defined, but static is not assume that the address #}
+{# is configured in the DHCP server as static binding                       #}
+{% elif item.value.ipv4 is defined and item.value.hwaddr is defined %}
 DHCP=yes
+{# check if dhcp is explicitely configured #}
+{% elif item.value.dhcp is defined %}
+DHCP={{ item.value.dhcp }}
+{# default to not checking DHCP #}
 {% else %}
 DHCP=no
 {% endif %}
@@ -49,8 +60,12 @@ IPMasquerade={{ item.value.masquerade|default("no") }}
 #IPv6PrivacyExtensions=
 #IPv6AcceptRA=
 #IPv6HopLimit=
-#Bridge=
-#Bond=
+{% if item.value.bridge is defined %}
+Bridge={{item.value.bridge}}
+{% endif %}
+{% if item.value.bond is defined %}
+Bond={{item.value.bond}}
+{% endif %}
 #VRF=
 #TODO: look up vlans my name
 {% if item.value.vlans is defined %}

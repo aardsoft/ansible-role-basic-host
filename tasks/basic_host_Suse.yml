@@ -187,3 +187,5 @@
     - wickedd-dhcp6
     - wickedd-nanny
     - wickedd
+  tags:
+    - access_setup
