@@ -72,10 +72,6 @@
       - wget
       - timezone
       - ca-certificates-mozilla
-    unwanted_packages:
-      - libwicked-0-6
-      - wicked-service
-      - wicked
   when: base_packages is undefined
   tags:
     - access_setup
@@ -150,13 +146,6 @@
   with_items: "{{core_repos}}"
   tags:
     - access_setup
-
-#- name: Get rid of unwanted packages
-#  zypper:
-#    name: "{{ item }}"
-#    state: absent
-#    update_cache: yes
-#  with_items: "{{unwanted_packages}}"
 
 # this should be merged in ansible 2.4, for now we need to carry a
 # newer zypper.py
