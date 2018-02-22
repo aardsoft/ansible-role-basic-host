@@ -7,7 +7,7 @@
     - access_setup
   copy:
     src: "{{item}}"
-    dest: "/etc/pki/trust/anchors/{{item}}"
+    dest: "/etc/pki/trust/anchors/"
   with_items: "{{ca_certificates|default({})}}"
 
 # this would be better tied to actually changing CA files, but handlers
