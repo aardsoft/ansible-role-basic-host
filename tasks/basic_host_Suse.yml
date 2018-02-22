@@ -57,13 +57,18 @@
 - name: set basic packages
   set_fact:
     bare_metal_packages:
+      - bridge-utils
+      - vlan
       - lvm2
       - ntp
       - dmidecode
       - ipmitool
+      - nmap
+      - tcpdump
     base_packages:
       - libopenssl1_0_0-hmac
       - iproute2
+      - net-tools
       - iotop
       - python-xml
       - vim
@@ -72,6 +77,7 @@
       - wget
       - timezone
       - ca-certificates-mozilla
+      - ca-certificates
   when: base_packages is undefined
   tags:
     - access_setup
