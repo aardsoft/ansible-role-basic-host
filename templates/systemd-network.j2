@@ -19,7 +19,7 @@ Name={{item.key}}
 
 [Link]
 {# for now only force MAC addresses on bridges #}
-{% if item.value.hwaddr is defined and item.value.type == "bridge" %}
+{% if item.value.hwaddr is defined and item.value.type is defined and item.value.type == "bridge" %}
 MACAddress={{ item.value.hwaddr }}
 {% endif %}
 {% if item.value.mtu is defined %}
