@@ -66,6 +66,7 @@
       - nmap
       - tcpdump
     base_packages:
+      - curl
       - libopenssl1_0_0-hmac
       - iproute2
       - net-tools

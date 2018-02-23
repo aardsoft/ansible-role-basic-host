@@ -38,6 +38,7 @@
     base_packages:
       - bash-completion
       - bzip2
+      - curl
       - ca-certificates
       - firewalld
       - iotop
