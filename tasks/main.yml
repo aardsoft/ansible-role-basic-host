@@ -296,9 +296,45 @@
     - net.bridge.bridge-nf-call-ip6tables
     - net.bridge.bridge-nf-call-iptables
     - net.bridge.bridge-nf-call-arptables
-  when: ansible_virtualization_role == "host" or
-        ansible_virtualization_role == "NA"
+  when: >
+    ansible_virtualization_role == "host" or
+    ansible_virtualization_role == "NA"
+  ignore_errors: True
+  # the opensuse kernel doesn't have that interface - ignore errors until it
+  # can be debugged
 
+# TODO: add a query to firewalld to see if it fails/passes to determine if it can be used
+- name: check if firewalld is available and working
+  firewalld:
+    zone: block
+    state: enabled
+    permanent: no
+  register: firewalld_result
+  ignore_errors: True
+
+- name: register firewalld status
+  set_fact:
+    firewalld_available: True
+  when: firewalld_result|succeeded
+
+# TODO: add a firewalld_required variable, and fail if firewalld is broken
+
+- name: configure firewalld zones for networkd managed interfaces
+  firewalld:
+    zone: "{{ item.value.zone }}"
+    interface: "{{ item.key }}"
+    permanent: true
+    state: enabled
+    immediate: true
+  with_dict: "{{network_nodes[inventory_hostname].networks |default({})}}"
+  when: >
+    firewalld_available == True and
+    (ansible_os_family == "RedHat" or ansible_os_family == "Suse") and
+    network_manager is defined and network_manager == "networkd" and
+    item.value.type is defined and item.value.type != "phys"
+    and item.key != "ilo" and item.value.zone is defined
+  tags:
+    - access_setup
 
 - name: drop root .ssh (provisioning)
   file:

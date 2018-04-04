@@ -8,3 +8,5 @@
   when: adm_user is undefined
 - set_fact: adm_group=management
   when: adm_group is undefined
+- set_fact: firewalld_available=False
+  when: firewalld_available is undefined
