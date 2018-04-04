@@ -119,6 +119,7 @@
   when: ansible_os_family == "Debian" or ansible_os_family == "Suse" or ansible_os_family == "RedHat"
   tags:
     - base_config
+    - access_setup
 
 - name: create ssl cert group
   group: name=ssl-cert gid=950 state=present

@@ -34,7 +34,8 @@
     suse_long_release=openSUSE_Leap_{{ suse_release }}
     dist_base=http://download.opensuse.org/distribution/leap/
     obs_base=http://download.opensuse.org/repositories/
-  when: suse_release >= 42 and suse_release <= 43
+    update_url=http://download.opensuse.org/update/leap/{{ suse_release }}
+  when: suse_release >= 15 and suse_release <= 43
   tags:
     - access_setup
 
@@ -127,8 +128,6 @@
         url: "{{ dist_base }}/{{ suse_release }}/repo/oss"
       - name: repo-non-oss
         url: "{{ dist_base }}/{{ suse_release }}/repo/non-oss"
-      - name: update
-        url: http://download.opensuse.org/update/{{ suse_release }}
   tags:
     - access_setup
 
@@ -151,6 +150,20 @@
     auto_import_keys: yes
     overwrite_multiple: yes
   with_items: "{{core_repos}}"
+  tags:
+    - access_setup
+
+- name: configure update repo
+  zypper_repository:
+    name: "update-{{ item }}"
+    repo: "{{ update_url }}/{{ item }}"
+    state: present
+    auto_import_keys: yes
+    overwrite_multiple: yes
+  with_items:
+    - oss
+    - non-oss
+  when: update_url is defined
   tags:
     - access_setup
 
