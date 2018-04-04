@@ -89,6 +89,64 @@ Tunnel={{tunnel}}
   {% endfor %}
 {% endif %}
 
+{% if item.value.routes is defined %}
+  {% for route in item.value.routes %}
+    {% if item.value.routes[route].gateway is defined %}
+[Route]
+Gateway={{ item.value.routes[route].gateway }}
+      {% if item.value.routes[route].destination is defined %}
+Destination={{ item.value.routes[route].destination }}
+      {% endif %}
+      {% if item.value.routes[route].source is defined %}
+Source={{ item.value.routes[route].source }}
+      {% endif %}
+      {% if item.value.routes[route].metric is defined %}
+Metric={{ item.value.routes[route].metric }}
+      {% endif %}
+Scope={{ item.value.routes[route].scope | default('global') }}
+      {% if item.value.routes[route].preferredsource is defined %}
+PreferredSource={{ item.value.routes[route].preferredsource }}
+      {% endif %}
+      {% if item.value.routes[route].table is defined %}
+Table={{ item.value.routes[route].table }}
+      {% endif %}
+
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{# PolicyRules are available from systemd 235 onwards #}
+{% if item.value.policyrules is defined %}
+  {% for rule in item.value.policyrules %}
+[RoutingPolicyRule]
+    {% if item.value.policyrules[rule].typeofservice is defined %}
+TypeOfService={{ item.value.policyrules[rule].typeofservice }}
+    {% endif %}
+    {% if item.value.policyrules[rule].from is defined %}
+From={{ item.value.policyrules[rule].from }}
+    {% endif %}
+    {% if item.value.policyrules[rule].to is defined %}
+To={{ item.value.policyrules[rule].to }}
+    {% endif %}
+    {% if item.value.policyrules[rule].firewallmark is defined %}
+FirewallMark={{ item.value.policyrules[rule].firewallmark }}
+    {% endif %}
+    {% if item.value.policyrules[rule].table is defined %}
+Table={{ item.value.policyrules[rule].table }}
+    {% endif %}
+    {% if item.value.policyrules[rule].priority is defined %}
+Priority={{ item.value.policyrules[rule].priority }}
+    {% endif %}
+    {% if item.value.policyrules[rule].incominginterface is defined %}
+IncomingInterface={{ item.value.policyrules[rule].incominginterface }}
+    {% endif %}
+    {% if item.value.policyrules[rule].outgoinginterface is defined %}
+OutgoingInterface={{ item.value.policyrules[rule].outgoinginterface }}
+    {% endif %}
+
+  {% endfor %}
+{% endif %}
+
 {# FIXME #}
 {% if item.value.addresses is defined %}
 #[Address]
