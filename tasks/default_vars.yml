@@ -1,12 +1,30 @@
 - set_fact: host_timezone=Europe/Helsinki
   when: host_timezone is undefined
+  tags:
+    - base_config
+    - access_setup
 - set_fact: adm_uid=10000
   when: adm_uid is undefined
+  tags:
+    - base_config
+    - access_setup
 - set_fact: adm_gid=10000
   when: adm_gid is undefined
+  tags:
+    - base_config
+    - access_setup
 - set_fact: adm_user=management
   when: adm_user is undefined
+  tags:
+    - base_config
+    - access_setup
 - set_fact: adm_group=management
   when: adm_group is undefined
+  tags:
+    - base_config
+    - access_setup
 - set_fact: firewalld_available=False
   when: firewalld_available is undefined
+  tags:
+    - base_config
+    - access_setup
