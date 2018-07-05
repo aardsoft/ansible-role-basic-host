@@ -18,32 +18,37 @@
   tags:
     - access_setup
 
+- name: use os_release as suse release
+  set_fact:
+    suse_release: "{{os_release|float}}"
+  when: suse_release is undefined and os_release is defined
+
 - name: set suse release
   set_fact:
-    suse_release=tumbleweed
-    dist_base=http://download.opensuse.org/
-    obs_base=http://download.opensuse.org/repositories/
-    suse_long_release=openSUSE_Tumbleweed
-  when: suse_release is undefined
+    suse_release: tumbleweed
+    dist_base: http://download.opensuse.org/
+    obs_base: http://download.opensuse.org/repositories/
+    suse_long_release: openSUSE_Tumbleweed
+  when: suse_release is undefined or suse_release == "tumbleweed"
   tags:
     - access_setup
 
 # ansible silently converts "42.2" to float, so string match doesn't work here
-- name: handle leap release naming
+- name: handle leap release naming ({{suse_release}})
   set_fact:
-    suse_long_release=openSUSE_Leap_{{ suse_release }}
-    dist_base=http://download.opensuse.org/distribution/leap/
-    obs_base=http://download.opensuse.org/repositories/
-    update_url=http://download.opensuse.org/update/leap/{{ suse_release }}
-  when: suse_release >= 15 and suse_release <= 43
+    suse_long_release: openSUSE_Leap_{{ suse_release }}
+    dist_base: http://download.opensuse.org/distribution/leap/
+    obs_base: http://download.opensuse.org/repositories/
+    update_url: http://download.opensuse.org/update/leap/{{ suse_release }}
+  when: suse_release|float >= 15 and suse_release|float <= 43
   tags:
     - access_setup
 
-- name: set suse longrelease
+- name: set suse longrelease ({{suse_release}})
   set_fact:
-    suse_long_release=openSUSE_{{ suse_release }}
-    dist_base=http://download.opensuse.org/distribution/
-    obs_base=http://download.opensuse.org/repositories/
+    suse_long_release: openSUSE_{{ suse_release }}
+    dist_base: http://download.opensuse.org/distribution/
+    obs_base: http://download.opensuse.org/repositories/
   when: suse_release is defined and suse_long_release is undefined
   tags:
     - access_setup
