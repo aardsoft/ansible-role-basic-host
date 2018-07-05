@@ -1,0 +1,11 @@
+#jinja2: lstrip_blocks: True
+# {{ ansible_managed }}
+
+{% if search_domains is defined %}
+search{% for domain in search_domains %} {{domain}}{% endfor %}
+{% endif %}
+
+
+{% for ns in nameservers %}
+nameserver {{ns}}
+{% endfor %}
