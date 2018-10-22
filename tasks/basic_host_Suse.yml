@@ -85,6 +85,8 @@
       - timezone
       - ca-certificates-mozilla
       - ca-certificates
+      - less
+      - insserv-compat
   when: base_packages is undefined
   tags:
     - access_setup
