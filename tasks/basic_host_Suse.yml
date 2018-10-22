@@ -1,23 +1,6 @@
 # TODO: add update repo for non-oss?
 # TODO: fix zypper.conf recommends
 
-# note: deletion of old certificates is currently not supported
-- name: install additional CA certificates
-  tags:
-    - access_setup
-  copy:
-    src: "{{item}}"
-    dest: "/etc/pki/trust/anchors/"
-  with_items: "{{ca_certificates|default({})}}"
-
-# this would be better tied to actually changing CA files, but handlers
-# only run at the end, which would be too late here. Given that it returns
-# very quickly it's not worth the effort to check for changes.
-- name: refresh CA trust
-  shell: /usr/sbin/update-ca-certificates
-  tags:
-    - access_setup
-
 - name: use os_release as suse release
   set_fact:
     suse_release: "{{os_release|float}}"
@@ -59,6 +42,49 @@
   when: suse_release != "tumbleweed" and dist_base is undefined
   tags:
     - access_setup
+
+
+- name: configure system proxy
+  template:
+    src: proxy.j2
+    dest: /etc/sysconfig/proxy
+    owner: root
+    mode: 0755
+  when: proxy_host is defined and skip_proxy is undefined
+  tags:
+    - access_setup
+
+- name: install zypper config
+  copy:
+    src: "{{ item }}"
+    dest: /etc/zypp/{{ item }}
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - zypp.conf
+    - zypper.conf
+  tags:
+    - access_setup
+
+# note: deletion of old certificates is currently not supported
+- name: install additional CA certificates
+  tags:
+    - access_setup
+  copy:
+    src: "{{item}}"
+    dest: "/etc/pki/trust/anchors/"
+  with_items: "{{ca_certificates|default({})}}"
+
+# this would be better tied to actually changing CA files, but handlers
+# only run at the end, which would be too late here. Given that it returns
+# very quickly it's not worth the effort to check for changes.
+# note: this fails if ca-certificates package is not yet installed
+- name: refresh CA trust
+  shell: /usr/sbin/update-ca-certificates
+  tags:
+    - access_setup
+  ignore_errors: True
 
 - name: set basic packages
   set_fact:
@@ -102,29 +128,6 @@
   set_fact:
     base_packages: "{{ base_packages + suse_extra_packages }}"
   when: suse_extra_packages is defined
-  tags:
-    - access_setup
-
-- name: configure system proxy
-  template:
-    src: proxy.j2
-    dest: /etc/sysconfig/proxy
-    owner: root
-    mode: 0755
-  when: proxy_host is defined and skip_proxy is undefined
-  tags:
-    - access_setup
-
-- name: install zypper config
-  copy:
-    src: "{{ item }}"
-    dest: /etc/zypp/{{ item }}
-    owner: root
-    group: root
-    mode: 0644
-  with_items:
-    - zypp.conf
-    - zypper.conf
   tags:
     - access_setup
 
@@ -189,7 +192,15 @@
     update_cache: yes
   with_items: "{{base_packages}}"
 
-- name: mask Wicked servicessss
+# in case the first one failed due to missing package, and we got here
+# without needing a certificate for a proxy, refresh without masking
+# errors to be sure it works.
+- name: refresh CA trust (again)
+  shell: /usr/sbin/update-ca-certificates
+  tags:
+    - access_setup
+
+- name: mask Wicked services
   file:
     src: /dev/null
     dest: /etc/systemd/system/{{item}}.service
