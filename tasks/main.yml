@@ -310,7 +310,8 @@
     - net.bridge.bridge-nf-call-arptables
   when: >
     ansible_virtualization_role == "host" or
-    ansible_virtualization_role == "NA"
+    ansible_virtualization_role == "NA" and
+    ansible_os_family != "Suse"
   ignore_errors: True
   # the opensuse kernel doesn't have that interface - ignore errors until it
   # can be debugged
