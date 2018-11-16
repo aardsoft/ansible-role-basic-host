@@ -27,6 +27,16 @@
     proxy_host is defined and skip_proxy is undefined
     and ansible_pkg_mgr == "dnf"
 
+- name: configure python-firewall package (default)
+  set_fact:
+    python_firewall_package: python-firewall
+
+- name: configure python-firewall package (Fedora >= 29)
+  set_fact:
+    python_firewall_package: python3-firewall
+  when:
+    ansible_distribution == 'Fedora' and ansible_distribution_version >= 29
+
 - name: set basic packages
   set_fact:
     bare_metal_packages:
@@ -47,7 +57,6 @@
       - net-tools
       - procps-ng
       - psmisc
-      - python-firewall
       - screen
       - strace
       - tzdata
@@ -55,6 +64,7 @@
       - vim
       - wget
       - policycoreutils-python
+      - "{{python_firewall_package}}"
   when: base_packages is undefined
 
 - name: set unwanted packages
