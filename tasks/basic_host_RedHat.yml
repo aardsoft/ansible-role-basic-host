@@ -130,3 +130,7 @@
     - stop NetworkManager
   tags:
     - access_setup
+  # NetworkManager may not be availeble on all images - it's probably safe to
+  # ignore the error here as even a still running network manager won't
+  # break networking in many cases
+  ignore_errors: True
