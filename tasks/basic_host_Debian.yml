@@ -15,6 +15,7 @@
       - nload
       - ntp
       - smartmontools
+      - lsof
     base_packages:
       - "{{ sudo_pkg }}"
       - apt-file

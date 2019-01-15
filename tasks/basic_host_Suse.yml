@@ -97,6 +97,9 @@
       - ipmitool
       - nmap
       - tcpdump
+      - lsof
+      - hdparm
+      - smartmontools
     base_packages:
       - curl
       - libopenssl1_0_0-hmac
@@ -113,6 +116,7 @@
       - ca-certificates
       - less
       - insserv-compat
+      - glibc-locale
   when: base_packages is undefined
   tags:
     - access_setup

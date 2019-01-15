@@ -45,6 +45,10 @@
       - ipmitool
       - dmidecode
       - nmap
+      - lm_sensors
+      - lsof
+      - hdparm
+      - smartmontools
     base_packages:
       - bash-completion
       - bzip2
