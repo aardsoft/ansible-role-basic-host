@@ -1,0 +1,10 @@
+#jinja2: lstrip_blocks: True
+# {{ ansible_managed }}
+#CentOS-fasttrack.repo
+
+[fasttrack]
+name=CentOS-7 - fasttrack
+baseurl=http://{{ centos_mirror }}/$releasever/fasttrack/$basearch/
+gpgcheck=1
+enabled={{ centos_repositories.fasttrack | default('0') }}
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7

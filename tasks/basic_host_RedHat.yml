@@ -15,6 +15,67 @@
   tags:
     - access_setup
 
+- set_fact:
+    centos_repositories: {}
+  when: centos_repositories is undefined
+
+- set_fact:
+    epel_repositories: {}
+  when: epel_repositories is undefined
+
+# media, sources, vault and debuginfo repositories are not provided by us
+# enabled repositories are configured through centos_repositories. Subkeys
+# are:
+#
+# - plus
+# - cr
+# - fasttrack
+# - sclo
+# - sclo_rh
+#
+# example:
+# centos_repositories
+#   sclo: 1
+#   sclo_rh: 1
+- name: configure dist repos (CentOS)
+  template:
+    src: "{{item}}.j2"
+    dest: /etc/yum.repos.d/{{item}}
+    owner: root
+    mode: 0644
+  with_items:
+    - CentOS-Base.repo
+    - CentOS-CR.repo
+    - CentOS-fasttrack.repo
+    - CentOS-SCLo-scl.repo
+    - CentOS-SCLo-scl-rh.repo
+  when: ansible_distribution == "CentOS" and centos_mirror is defined
+  tags:
+    - access_setup
+
+- name: configure epel repos (CentOS)
+  template:
+    src: "{{item}}.j2"
+    dest: /etc/yum.repos.d/{{item}}
+    owner: root
+    mode: 0644
+  with_items:
+    - epel.repo
+    - epel-testing.repo
+  when: ansible_distribution == "CentOS" and epel_mirror is defined
+  tags:
+    - access_setup
+
+- name: configure fastest_mirror (CentOS)
+  template:
+    src: yum_fastestmirror.conf.j2
+    dest: /etc/yum/pluginconf.d/fastestmirror.conf
+    owner: root
+    mode: 0644
+  when: ansible_distribution == "CentOS" and epel_mirror is defined
+  tags:
+    - access_setup
+
 - name: configure dnf
   template:
     src: dnf.conf.j2
