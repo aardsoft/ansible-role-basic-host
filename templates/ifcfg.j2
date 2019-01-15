@@ -13,3 +13,15 @@ PEERROUTES=yes
 IPV4_FAILURE_FATAL=no
 IPV6INIT=no
 NAME="System {{item.key}}"
+{% if item.value.dns1 is defined %}
+DNS1="{{ item.value.dns1 }}"
+{% endif %}
+{% if item.value.dns2 is defined %}
+DNS2="{{ item.value.dns2 }}"
+{% endif %}
+{% if item.value.search_domains is defined %}
+DOMAIN="{{ item.value.search_domains }}"
+{% endif %}
+{% if item.value.zone is defined %}
+ZONE={{ item.value.zone }}
+{% endif %}

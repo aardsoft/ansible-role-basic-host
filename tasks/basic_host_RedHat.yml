@@ -18,10 +18,14 @@
 - set_fact:
     centos_repositories: {}
   when: centos_repositories is undefined
+  tags:
+    - access_setup
 
 - set_fact:
     epel_repositories: {}
   when: epel_repositories is undefined
+  tags:
+    - access_setup
 
 # media, sources, vault and debuginfo repositories are not provided by us
 # enabled repositories are configured through centos_repositories. Subkeys
