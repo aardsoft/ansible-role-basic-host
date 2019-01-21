@@ -28,3 +28,8 @@
   tags:
     - base_config
     - access_setup
+- set_fact:
+    server_type: "proliant"
+    server_model: "{{ ansible_product_name.split(' ')[1] | lower }}"
+    server_gen: "{{ ansible_product_name.split(' ')[2] | int }}"
+  when: ansible_product_name.split(" ")[0] | lower == "proliant"
