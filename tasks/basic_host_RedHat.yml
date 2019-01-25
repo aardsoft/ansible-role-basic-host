@@ -80,6 +80,15 @@
   tags:
     - access_setup
 
+- name: add additional RPM repositories
+  template:
+    src: "rpm-repo.j2"
+    dest: /etc/yum.repos.d/{{item.key}}.repo
+    owner: root
+    mode: 0644
+  with_dict: "{{ rpm_repos }}"
+  when: rpm_repos is defined
+
 - name: add SPP repository
   template:
     src: "rpm-repo.j2"

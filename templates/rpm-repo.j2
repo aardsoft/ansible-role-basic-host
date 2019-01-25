@@ -1,0 +1,8 @@
+[{{item.key}}]
+name={{ item.value['description'] | default(item.key) }}
+type={{ item.value['type'] | default('rpm-md') }}
+baseurl={{ item.value['baseurl'] }}
+enabled={{ item.value['enabled'] | default(1) }}
+gpgcheck={{ item.value['gpgcheck'] | default(0) }}
+sslverify={{ item.value['sslverify'] | default(0) }}
+metadata_expire={{ item.value['metadata_expire'] | default(60) }}
