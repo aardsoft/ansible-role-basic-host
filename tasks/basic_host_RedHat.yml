@@ -136,6 +136,12 @@
       - "{{python_firewall_package}}"
   when: base_packages is undefined
 
+- name: add systemd-networkd to base packages (CentOS)
+  set_fact:
+    base_packages: "{{ base_packages }} + [ 'systemd-networkd' ]"
+  when: >
+    network_manager is defined and network_manager == "networkd"
+
 - name: set unwanted packages
   set_fact:
     unwanted_packages:

@@ -296,6 +296,24 @@
   tags:
     - access_setup
 
+- name: locate old ifcfg files
+  find:
+    paths: /etc/sysconfig/network-scripts/
+    patterns: "ifcfg-e*"
+    recurse: no
+    file_type: file
+  register: find_result
+  when: >
+    network_manager is defined and network_manager == "networkd"
+
+- name: remove old ifcfg files
+  file:
+    state: absent
+    path: "{{ item.path }}"
+  with_items: "{{ find_result.files }}"
+  when: >
+    network_manager is defined and network_manager == "networkd"
+
 # having this enabled randomly breaks connectivity over bridges
 - name: disable filtering on bridges
   sysctl:
