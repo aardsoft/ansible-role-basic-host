@@ -96,7 +96,9 @@
     owner: root
     mode: 0644
   with_dict: { hp_spp: { baseurl: '{{hp_spp_repository}}', description: "HP SPP" }}
-  when: hp_spp_repository is defined
+  when: >
+    hp_spp_repository is defined
+    and server_type is defined and server_type == "proliant"
 
 - name: configure dnf
   template:
