@@ -80,6 +80,15 @@
   tags:
     - access_setup
 
+- name: add SPP repository
+  template:
+    src: "rpm-repo.j2"
+    dest: /etc/yum.repos.d/hp-spp.repo
+    owner: root
+    mode: 0644
+  with_dict: { hp_spp: { baseurl: '{{hp_spp_repository}}', description: "HP SPP" }}
+  when: hp_spp_repository is defined
+
 - name: configure dnf
   template:
     src: dnf.conf.j2
