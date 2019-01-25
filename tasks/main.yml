@@ -346,7 +346,7 @@
 - name: register firewalld status
   set_fact:
     firewalld_available: True
-  when: firewalld_result|succeeded
+  when: firewalld_result is succeeded
 
 # TODO: add a firewalld_required variable, and fail if firewalld is broken
 
