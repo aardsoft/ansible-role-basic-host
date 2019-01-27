@@ -3,30 +3,26 @@
 
 - name: Install packages for {{role_name}} (Debian)
   apt:
-    name: "{{ item }}"
+    name: "{{ role_packages }}"
     state: present
     update_cache: yes
     cache_valid_time: 3600
   when: ansible_os_family == "Debian"
-  with_items: "{{role_packages}}"
 
 - name: Install packages for {{role_name}} (SuSE)
   zypper:
-    name: "{{ item }}"
+    name: "{{ role_packages }}"
     state: present
   when: ansible_os_family == "Suse"
-  with_items: "{{role_packages}}"
 
 - name: Install packages for {{role_name}} (RedHat/dnf)
   dnf:
-    name: "{{ item }}"
+    name: "{{ role_packages }}"
     state: present
   when: ansible_os_family == "RedHat" and ansible_pkg_mgr == "dnf"
-  with_items: "{{role_packages}}"
 
 - name: Install packages for {{role_name}} (RedHat/yum)
   yum:
-    name: "{{ item }}"
+    name: "{{ role_packages }}"
     state: present
   when: ansible_os_family == "RedHat" and ansible_pkg_mgr == "yum"
-  with_items: "{{role_packages}}"

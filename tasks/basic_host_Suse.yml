@@ -191,10 +191,9 @@
 
 - name: Install base packages
   zypper:
-    name: "{{ item }}"
+    name: "{{ base_packages }}"
     state: present
     update_cache: yes
-  with_items: "{{base_packages}}"
 
 # in case the first one failed due to missing package, and we got here
 # without needing a certificate for a proxy, refresh without masking

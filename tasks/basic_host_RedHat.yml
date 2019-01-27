@@ -120,7 +120,7 @@
   set_fact:
     python_firewall_package: python3-firewall
   when:
-    ansible_distribution == 'Fedora' and ansible_distribution_version >= 29
+    ansible_distribution == 'Fedora' and ansible_distribution_version|int >= 29
 
 - name: set basic packages
   set_fact:
@@ -161,6 +161,7 @@
     base_packages: "{{ base_packages }} + [ 'systemd-networkd' ]"
   when: >
     network_manager is defined and network_manager == "networkd"
+  when: ansible_distribution == "CentOS"
 
 - name: set unwanted packages
   set_fact:
@@ -180,30 +181,26 @@
 
 - name: Get rid of unwanted packages (dnf)
   dnf:
-    name: "{{ item }}"
+    name: "{{ unwanted_packages }}"
     state: absent
-  with_items: "{{unwanted_packages}}"
   when: ansible_pkg_mgr == "dnf"
 
 - name: Get rid of unwanted packages (yum)
   yum:
-    name: "{{ item }}"
+    name: "{{ unwanted_packages }}"
     state: absent
-  with_items: "{{unwanted_packages}}"
   when: ansible_pkg_mgr == "yum"
 
 - name: Install base packages (dnf)
   dnf:
-    name: "{{ item }}"
+    name: "{{ base_packages }}"
     state: present
-  with_items: "{{base_packages}}"
   when: ansible_pkg_mgr == "dnf"
 
 - name: Install base packages (yum)
   yum:
-    name: "{{ item }}"
+    name: "{{ base_packages }}"
     state: present
-  with_items: "{{base_packages}}"
   when: ansible_pkg_mgr == "yum"
 
 - name: configure static network interfaces (NM)
