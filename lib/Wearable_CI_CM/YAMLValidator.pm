@@ -112,13 +112,15 @@ sub compareInterfaceLists {
                $s->{result}->{errors}++;
                $s->{result}->{error_messages}.=
                  "$type defined without physical interface: '$phy[$i]' on $machine\n";
-               #$s->{result}->{error_messages}.="Phy:\n". join("\n\t", @phy)."\n";
-               #$s->{result}->{error_messages}.="Tp:\n". join("\n\t", @tp)."\n";
+               $s->{result}->{error_messages}.="Phy:\n". join("\n\t", @phy)."\n";
+               $s->{result}->{error_messages}.="Tp:\n". join("\n\t", @tp)."\n";
              },
           DISCARD_B => sub{ my $i1=shift; my $i2=shift;
                             $s->{result}->{errors}++;
                             $s->{result}->{error_messages}.=
                               "$type only defined on physical interface: '$tp[$i2]' on $machine\n";
+               $s->{result}->{error_messages}.="Phy:\n". join("\n\t", @phy)."\n";
+               $s->{result}->{error_messages}.="Tp:\n". join("\n\t", @tp)."\n";
                           },
          });
     }
@@ -177,6 +179,7 @@ sub validateNetworkSection {
       # validating the vlan configuration.
       my $vlans;
       my $bridges;
+      my $bonds;
       # verify network interfaces of the current system
       my $networks=%$system{networks};
       foreach my $if_key (sort(keys %$networks)){
@@ -216,6 +219,10 @@ sub validateNetworkSection {
                      and %$networks{$if_key}->{type} eq "bridge"){
               print "Bridge: $key, $if_key\n";
               push @{$bridges->{phy}}, $if_key;
+            } elsif (defined %$networks{$if_key}->{type}
+                     and %$networks{$if_key}->{type} eq "bond"){
+              print "Bond: $key, $if_key\n";
+              push @{$bonds->{phy}}, $if_key;
               # anything left at this point is a physical interface without a
               # port specification -> error
             } else {
@@ -234,6 +241,14 @@ sub validateNetworkSection {
           push(@{$bridges->{br}}, %$networks{$if_key}->{bridge});
         }
 
+        if (defined %$networks{$if_key}->{bond}){
+          my $bond_if=%$networks{$if_key}->{bond};
+          # multiple interfaces belong to one bond, but only one is needed to
+          # verify the phy<>bond mapping
+          unless (grep(/^$bond_if$/, @{$bonds->{bn}})){
+            push(@{$bonds->{bn}}, $bond_if);
+          }
+        }
         # instead of standalone an ilo/ipmi card might be specified as a network
         # interface named 'ilo' within the server it belongs to. In that case
         # it is expected that a vlan key is defined, and set to 'ilo'
@@ -254,6 +269,7 @@ sub validateNetworkSection {
       # appropriate error messages if an item is missing from one of the lists
       $s->compareInterfaceLists("VLan", $key, $vlans->{phy}, $vlans->{vl});
       $s->compareInterfaceLists("Bridge", $key, $bridges->{phy}, $bridges->{br});
+      $s->compareInterfaceLists("Bond", $key, $bonds->{phy}, $bonds->{bn});
     }
   }
 }
