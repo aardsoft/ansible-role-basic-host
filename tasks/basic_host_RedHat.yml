@@ -27,6 +27,12 @@
   tags:
     - access_setup
 
+- set_fact:
+    elrepo_repositories: {}
+  when: elrepo_repositories is undefined
+  tags:
+    - access_setup
+
 # media, sources, vault and debuginfo repositories are not provided by us
 # enabled repositories are configured through centos_repositories. Subkeys
 # are:
@@ -70,13 +76,35 @@
   tags:
     - access_setup
 
+- name: configure elrepo repos (CentOS)
+  template:
+    src: "{{item}}.j2"
+    dest: /etc/yum.repos.d/{{item}}
+    owner: root
+    mode: 0644
+  with_items:
+    - elrepo.repo
+  when: ansible_distribution == "CentOS" and elrepo_mirror is defined
+  tags:
+    - access_setup
+
+- name: add elrepo key (CentOS)
+  copy:
+    src: "RPM-GPG-KEY-elrepo.org"
+    dest: /etc/pki/rpm-gpg/RPM-GPG-KEY-elrepo.org
+    owner: root
+    mode: 0644
+  when: ansible_distribution == "CentOS" and elrepo_mirror is defined
+  tags:
+    - access_setup
+
 - name: configure fastest_mirror (CentOS)
   template:
     src: yum_fastestmirror.conf.j2
     dest: /etc/yum/pluginconf.d/fastestmirror.conf
     owner: root
     mode: 0644
-  when: ansible_distribution == "CentOS" and epel_mirror is defined
+  when: ansible_distribution == "CentOS" and centos_mirror is defined
   tags:
     - access_setup
 
