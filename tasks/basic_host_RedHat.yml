@@ -150,6 +150,14 @@
   when:
     ansible_distribution == 'Fedora' and ansible_distribution_version|int >= 29
 
+- name: set HP SPP packages
+  set_fact:
+    hp_packages:
+      - ssacli
+      - ssaducli
+#      - sut
+      - hponcfg
+      - hpdiags
 - name: set basic packages
   set_fact:
     bare_metal_packages:
@@ -190,6 +198,13 @@
   when: >
     network_manager is defined and network_manager == "networkd"
   when: ansible_distribution == "CentOS"
+
+- name: add HP SPP packages
+  set_fact:
+    base_packages: "{{ base_packages }} + {{ hp_packages }}"
+  when: >
+    hp_spp_repository is defined
+    and server_type is defined and server_type == "proliant"
 
 - name: set unwanted packages
   set_fact:
