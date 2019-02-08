@@ -288,8 +288,11 @@
   tags:
     - access_setup
 
-- name: enable networkd
-  service: name=systemd-networkd enabled=yes
+- name: enable networkd services
+  service: name="{{item}}" enabled=yes
+  with_items:
+    - systemd-networkd
+    - systemd-networkd-wait-online
   when: network_manager is defined and network_manager == "networkd"
   notify:
     - restart networkd
