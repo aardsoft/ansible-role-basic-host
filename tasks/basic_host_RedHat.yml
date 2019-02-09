@@ -159,6 +159,7 @@
 #      - sut
       - hponcfg
       - hpdiags
+
 - name: set basic packages
   set_fact:
     bare_metal_packages:
@@ -198,7 +199,7 @@
     base_packages: "{{ base_packages }} + [ 'systemd-networkd' ]"
   when: >
     network_manager is defined and network_manager == "networkd"
-  when: ansible_distribution == "CentOS"
+    and ansible_distribution == "CentOS"
 
 - name: add HP SPP packages
   set_fact:
