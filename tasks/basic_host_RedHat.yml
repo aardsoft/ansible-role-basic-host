@@ -14,6 +14,7 @@
   shell: /usr/bin/update-ca-trust
   tags:
     - access_setup
+  changed_when: false
 
 - set_fact:
     centos_repositories: {}

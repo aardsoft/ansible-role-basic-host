@@ -85,6 +85,7 @@
   tags:
     - access_setup
   ignore_errors: True
+  changed_when: false
 
 - name: set basic packages
   set_fact:
@@ -200,6 +201,7 @@
 # errors to be sure it works.
 - name: refresh CA trust (again)
   shell: /usr/sbin/update-ca-certificates
+  changed_when: false
   tags:
     - access_setup
 
