@@ -1,0 +1,37 @@
+#jinja2: lstrip_blocks: True
+# {{ ansible_managed }}
+[updates-modular]
+name=Fedora Modular $releasever - $basearch - Updates
+failovermethod=priority
+baseurl={{ fedora_mirror }}/fedora/linux/updates/$releasever/Modular/$basearch/
+enabled={{ fedora_repositories.updates_modular | default('1') }}
+repo_gpgcheck=0
+type=rpm
+gpgcheck=1
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
+skip_if_unavailable=False
+
+[updates-modular-debuginfo]
+name=Fedora Modular $releasever - $basearch - Updates - Debug
+failovermethod=priority
+baseurl={{ fedora_mirror }}/fedora/linux/updates/$releasever/Modular/$basearch/debug/
+enabled={{ fedora_repositories.updates_debuginfo_modular | default('0') }}
+repo_gpgcheck=0
+type=rpm
+gpgcheck=1
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
+skip_if_unavailable=False
+
+[updates-modular-source]
+name=Fedora Modular $releasever - Updates Source
+failovermethod=priority
+baseurl={{ fedora_mirror }}/fedora/linux/updates/$releasever/Modular/SRPMS/
+enabled={{ fedora_repositories.updates_source_modular | default('0') }}
+repo_gpgcheck=0
+type=rpm
+gpgcheck=1
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
+skip_if_unavailable=False

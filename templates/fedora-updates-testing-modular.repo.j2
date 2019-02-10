@@ -1,0 +1,35 @@
+[updates-testing-modular]
+name=Fedora Modular $releasever - $basearch - Test Updates
+failovermethod=priority
+baseurl={{ fedora_mirror }}/fedora/linux/updates/testing/$releasever/Modular/$basearch/
+enabled={{ fedora_repositories.updates_testing_modular | default('0') }}
+repo_gpgcheck=0
+type=rpm
+gpgcheck=1
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
+skip_if_unavailable=False
+
+[updates-testing-modular-debuginfo]
+name=Fedora Modular $releasever - $basearch - Test Updates Debug
+failovermethod=priority
+baseurl={{ fedora_mirror }}/fedora/linux/updates/$releasever/Modular/$basearch/debug/
+enabled={{ fedora_repositories.updates_testing_modular_debuginfo | default('0') }}
+repo_gpgcheck=0
+type=rpm
+gpgcheck=1
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
+skip_if_unavailable=False
+
+[updates-testing-modular-source]
+name=Fedora Modular $releasever - Test Updates Source
+failovermethod=priority
+baseurl={{ fedora_mirror }}/fedora/linux/updates/$releasever/Modular/SRPMS/
+enabled={{ fedora_repositories.updates_testing_modular_source | default('0') }}
+repo_gpgcheck=0
+type=rpm
+gpgcheck=1
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
+skip_if_unavailable=False

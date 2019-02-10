@@ -1,0 +1,37 @@
+#jinja2: lstrip_blocks: True
+# {{ ansible_managed }}
+[updates]
+name=Fedora $releasever - $basearch - Updates
+failovermethod=priority
+baseurl={{ fedora_mirror }}/fedora/linux/updates/$releasever/Everything/$basearch/
+enabled={{ fedora_repositories.updates | default('1') }}
+repo_gpgcheck=0
+type=rpm
+gpgcheck=1
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
+skip_if_unavailable=False
+
+[updates-debuginfo]
+name=Fedora $releasever - $basearch - Updates - Debug
+failovermethod=priority
+baseurl={{ fedora_mirror }}/fedora/linux/updates/$releasever/Everything/$basearch/debug/
+enabled={{ fedora_repositories.updates_debuginfo | default('0') }}
+repo_gpgcheck=0
+type=rpm
+gpgcheck=1
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
+skip_if_unavailable=False
+
+[updates-source]
+name=Fedora $releasever - Updates Source
+failovermethod=priority
+baseurl={{ fedora_mirror }}/fedora/linux/updates/$releasever/Everything/SRPMS/
+enabled={{ fedora_repositories.updates_source | default('0') }}
+repo_gpgcheck=0
+type=rpm
+gpgcheck=1
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch
+skip_if_unavailable=False

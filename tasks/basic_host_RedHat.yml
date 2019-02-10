@@ -23,6 +23,12 @@
     - access_setup
 
 - set_fact:
+    fedora_repositories: {}
+  when: fedora_repositories is undefined
+  tags:
+    - access_setup
+
+- set_fact:
     epel_repositories: {}
   when: epel_repositories is undefined
   tags:
@@ -61,6 +67,43 @@
     - CentOS-SCLo-scl.repo
     - CentOS-SCLo-scl-rh.repo
   when: ansible_distribution == "CentOS" and centos_mirror is defined
+  tags:
+    - access_setup
+
+# available repository keys, the ones with asterisk are enabled per default:
+# - fedora*
+# - source
+# - debuginfo
+# - updates*
+# - updates_source
+# - updates_debuginfo
+# - modular*
+# - modular_source
+# - modular_debuginfo
+# - updates_modular*
+# - updates_modular_source
+# - updates_modular_debuginfo
+# - updates_testing
+# - updates_testing_source
+# - updates_testing_debuginfo
+# - updates_testing_modular
+# - updates_testing_modular_source
+# - updates_testing_modular_debuginfo
+
+- name: configure dist repos (Fedora)
+  template:
+    src: "{{item}}.j2"
+    dest: /etc/yum.repos.d/{{item}}
+    owner: root
+    mode: 0644
+  with_items:
+    - fedora-modular.repo
+    - fedora-updates-modular.repo
+    - fedora-updates-testing-modular.repo
+    - fedora-updates-testing.repo
+    - fedora-updates.repo
+    - fedora.repo
+  when: ansible_distribution == "Fedora" and fedora_mirror is defined
   tags:
     - access_setup
 
