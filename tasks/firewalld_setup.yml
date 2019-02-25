@@ -1,0 +1,23 @@
+- set_fact:
+    firewalld: { }
+  when: firewalld is undefined
+
+- name: set packages
+  set_fact:
+    role_packages:
+      - firewalld
+
+- include_role:
+    name: basic-host
+    tasks_from: install_packages
+
+- name: add firewalld config file
+  template:
+    src: firewalld.conf.j2
+    dest: /etc/firewalld/firewalld.conf
+    owner: root
+    group: root
+    mode: 0600
+
+- name: enable and start firewalld
+  service: name=firewalld enabled=yes state=started

@@ -360,6 +360,12 @@
     firewalld_available: True
   when: firewalld_result is succeeded
 
+- name: setup firewalld
+  include: firewalld_setup.yml
+  when: >
+    firewalld_available == False and
+    firewalld_required is defined and firewalld_required == True
+
 # TODO: add a firewalld_required variable, and fail if firewalld is broken
 
 - name: configure firewalld zones for networkd managed interfaces
@@ -374,8 +380,7 @@
     firewalld_available == True and
     (ansible_os_family == "RedHat" or ansible_os_family == "Suse") and
     network_manager is defined and network_manager == "networkd" and
-    item.value.type is defined and item.value.type != "phys"
-    and item.key != "ilo" and item.value.zone is defined
+    item.key != "ilo" and item.value.zone is defined
   tags:
     - access_setup
 
