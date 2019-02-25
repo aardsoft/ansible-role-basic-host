@@ -1,0 +1,5 @@
+#jinja2: lstrip_blocks: True
+# {{ ansible_managed }}
+
+APT::Install-Suggests "{{apt_install_suggests|default('false')}}";
+APT::Install-Recommends "{{apt_install_recommends|default('false')}}";
