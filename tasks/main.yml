@@ -378,9 +378,7 @@
   with_dict: "{{network_nodes[inventory_hostname].networks |default({})}}"
   when: >
     firewalld_available == True and
-    (ansible_os_family == "RedHat" or ansible_os_family == "Suse") and
-    network_manager is defined and network_manager == "networkd" and
-    item.key != "ilo" and item.value.zone is defined
+    item.value.zone is defined
   tags:
     - access_setup
 
