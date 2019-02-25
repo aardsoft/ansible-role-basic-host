@@ -379,6 +379,12 @@
   tags:
     - access_setup
 
+- name: configure firewalld services
+  include: firewalld_service.yml
+  with_dict: "{{firewalld_services}}"
+  when: >
+    firewalld_available == True and firewalld_services is defined
+
 - name: drop root .ssh (provisioning)
   file:
     path: "/root/.ssh"

@@ -1,0 +1,10 @@
+- name: configure firewalld services for {{item.key}}/{{service}}
+  firewalld:
+    zone: "{{item.key}}"
+    service: "{{service}}"
+    permanent: true
+    state: enabled
+    immediate: true
+  with_items: "{{ item.value }}"
+  loop_control:
+    loop_var: service
