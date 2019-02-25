@@ -1,1 +1,1 @@
-{{ adm_user }} ALL = (root) NOPASSWD:ALL
+{{ adm_user }} ALL = ({{adm_become_user|default('ALL')}}) NOPASSWD:ALL
