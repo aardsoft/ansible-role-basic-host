@@ -94,7 +94,7 @@ sub compareInterfaceLists {
     if (!defined $phy_list){
       $s->{result}->{errors}++;
       $s->{result}->{error_messages}.=
-        "Physical interface missing VLan list for $machine\n";
+        "Physical interface missing $type list for $machine\n";
     } elsif (!defined $type_list){
       $s->{result}->{errors}++;
       $s->{result}->{error_messages}.=
@@ -189,7 +189,7 @@ sub validateNetworkSection {
         # servers may have additional, non-physical interfaces connected. Those
         # are handled separately by checking if they have the correct type set,
         # and then do additional verification for this type of interface.
-        if ($type eq "server" or $type eq "ilo" or $type eq "ipmi"){
+        if ($type eq "server" or $type eq "ilo" or $type eq "ipmi" or $type eq "workstation"){
           if (not defined %$networks{$if_key}->{port}){
             # shared ports are physical ports shared between two or more MACs
             # a typical setup is a server with an IPMI/ILo interface sharing
