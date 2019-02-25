@@ -206,6 +206,7 @@
 - name: set basic packages
   set_fact:
     bare_metal_packages:
+      - bridge-utils
       - lvm2
       - ntp
       - ipmitool
