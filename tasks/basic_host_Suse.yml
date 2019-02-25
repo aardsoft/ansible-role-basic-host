@@ -8,11 +8,18 @@
 
 - name: set suse release
   set_fact:
+    suse_release: 15.0
+  when: suse_release is undefined
+  tags:
+    - access_setup
+
+- name: set suse release
+  set_fact:
     suse_release: tumbleweed
     dist_base: http://download.opensuse.org/
     obs_base: http://download.opensuse.org/repositories/
     suse_long_release: openSUSE_Tumbleweed
-  when: suse_release is undefined or suse_release == "tumbleweed"
+  when: suse_release == "tumbleweed"
   tags:
     - access_setup
 
