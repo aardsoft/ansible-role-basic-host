@@ -225,6 +225,8 @@ sub validateNetworkSection {
               push @{$bonds->{phy}}, $if_key;
               # anything left at this point is a physical interface without a
               # port specification -> error
+            } elsif (defined %$networks{$if_key}->{type}
+                     and %$networks{$if_key}->{type} eq "dummy"){
             } else {
               $s->{result}->{errors}++;
               $s->{result}->{error_messages}.=
