@@ -189,6 +189,22 @@
   tags:
     - access_setup
 
+# TODO: add support for extra keys:
+#       - description
+#       - gpgcheck
+#       - priority
+- name: add additional RPM repositories
+  zypper_repository:
+    name: "{{ item.key }}"
+    repo: "{{ item.value.baseurl }}"
+    state: present
+    auto_import_keys: yes
+    overwrite_multiple: yes
+  with_dict: "{{ rpm_repos }}"
+  when: rpm_repos is defined
+  tags:
+    - access_setup
+
 # this should be merged in ansible 2.4, for now we need to carry a
 # newer zypper.py
 - name: Upgrade the system
