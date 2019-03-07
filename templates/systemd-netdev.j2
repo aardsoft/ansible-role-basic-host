@@ -18,7 +18,9 @@
 Name={{item.key}}
 Kind={{item.value.type}}
 #MTUBytes=
-#MACAddress=
+{% if item.value.type == "dummy" %}
+MACAddress={{ item.value.hwaddr }}
+{% endif %}
 
 {% if item.value.type == "vlan" %}
 [VLAN]

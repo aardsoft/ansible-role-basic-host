@@ -67,7 +67,7 @@ Bridge={{item.value.bridge}}
 Bond={{item.value.bond}}
 {% endif %}
 #VRF=
-#TODO: look up vlans my name
+#TODO: look up vlans by name
 {% if item.value.vlans is defined %}
   {% for vlan in item.value.vlans %}
 VLAN=vl.{{vlan}}
