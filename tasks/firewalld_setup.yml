@@ -21,3 +21,17 @@
 
 - name: enable and start firewalld
   service: name=firewalld enabled=yes state=started
+
+# check again if firewalld works now, and fail if it doesn't
+- name: check if firewalld is available and working
+  firewalld:
+    zone: block
+    state: enabled
+    permanent: no
+  register: firewalld_result
+  ignore_errors: False
+
+- name: register firewalld status
+  set_fact:
+    firewalld_available: True
+  when: firewalld_result is succeeded
