@@ -11,26 +11,33 @@
 - name: configure list of core packages
   set_fact:
     bare_metal_packages:
+      - bridge-utils
+      - dmidecode
+      - hdparm
+      - ipmitool
+      - ebtables
+      - lm-sensors
+      - lsof
       - lvm2
       - makedev
       - mdadm
+      - nmap
       - nload
       - ntp
       - smartmontools
-      - lsof
+      - tcpdump
+      - vlan
     base_packages:
       - "{{ sudo_pkg }}"
       - apt-file
       - apt-transport-https
       - attr
-      - bridge-utils
       - bsdmainutils
       - ca-certificates
       - dosfstools
-      - ebtables
-      - iputils-ping
       - ftp
       - fuse
+      - iputils-ping
       - openssh-server
       - openssl
       - psmisc
@@ -38,7 +45,6 @@
       - screen
       - sshfs
       - strace
-      - tcpdump
       - wget
   when: base_packages is undefined
 

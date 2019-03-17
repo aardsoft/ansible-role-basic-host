@@ -207,25 +207,28 @@
   set_fact:
     bare_metal_packages:
       - bridge-utils
-      - lvm2
-      - ntp
-      - ipmitool
       - dmidecode
-      - nmap
+      - hdparm
+      - ipmitool
       - lm_sensors
       - lsof
-      - hdparm
+      - lvm2
+      - nmap
+      - ntp
       - smartmontools
+      - tcpdump
+      - vconfig
     base_packages:
       - bash-completion
       - bzip2
-      - curl
       - ca-certificates
+      - curl
       - firewalld
       - iotop
       - iproute
       - jq
       - net-tools
+      - policycoreutils-python
       - procps-ng
       - psmisc
       - screen
@@ -234,7 +237,6 @@
       - usbutils
       - vim
       - wget
-      - policycoreutils-python
       - "{{python_firewall_package}}"
   when: base_packages is undefined
 

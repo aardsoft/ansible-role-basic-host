@@ -98,33 +98,34 @@
   set_fact:
     bare_metal_packages:
       - bridge-utils
-      - vlan
-      - lvm2
-      - ntp
       - dmidecode
-      - ipmitool
-      - nmap
-      - tcpdump
-      - lsof
       - hdparm
+      - ipmitool
+      - lsof
+      - lvm2
+      - nmap
+      - ntp
+      - sensors
       - smartmontools
+      - tcpdump
+      - vlan
     base_packages:
+      - ca-certificates
+      - ca-certificates-mozilla
       - curl
-      - libopenssl1_0_0-hmac
-      - iproute2
-      - net-tools
+      - glibc-locale
+      - insserv-compat
       - iotop
+      - iproute2
+      - less
+      - libopenssl1_0_0-hmac
+      - net-tools
       - python-xml
-      - vim
       - screen
       - strace
-      - wget
       - timezone
-      - ca-certificates-mozilla
-      - ca-certificates
-      - less
-      - insserv-compat
-      - glibc-locale
+      - vim
+      - wget
   when: base_packages is undefined
   tags:
     - access_setup
