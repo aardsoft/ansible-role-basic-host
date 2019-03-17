@@ -87,6 +87,16 @@
   tags:
     - base_config
 
+- name: locate existing sshd host keys
+  find:
+    paths: /etc/ssh/
+    patterns: "ssh_host_*_key"
+    recurse: no
+    file_type: file
+  register: ssh_host_keys
+  tags:
+    - base_config
+
 - name: add sshd configuration
   template:
     src: sshd_config.j2

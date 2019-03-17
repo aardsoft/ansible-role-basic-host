@@ -8,6 +8,19 @@ Port 22
 #ListenAddress 0.0.0.0
 Protocol 2
 
+{# Some distributions no longer generate all host keys, but openssh #}
+{# without HostKey directive tries to include all, leading to silly #}
+{# warnings in the log files.                                       #}
+{# The basic_host role creates a list of host keys available on the #}
+{# system before calling this template, which is used to create a   #}
+{# bunch of HostKey directives matching the system. If this is ever #}
+{# run against a host without SSHd running yet (unlikely) no config #}
+{# is created, which only leads to warnings until next ansible run. #}
+{% if ssh_host_keys.matched > 0 %}
+  {% for host_key in ssh_host_keys.files %}
+HostKey {{host_key.path}}
+  {% endfor %}
+{% endif %}
 
 # Lifetime and size of ephemeral version 1 server key
 #KeyRegenerationInterval 3600
