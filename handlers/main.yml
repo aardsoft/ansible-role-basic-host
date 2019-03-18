@@ -8,5 +8,8 @@
 - name: restart networkd
   systemd: name=systemd-networkd state=restarted daemon_reload=yes
 
+- name: restart logind
+  systemd: name=systemd-logind state=restarted
+
 - name: stop NetworkManager
   systemd: name=NetworkManager state=stopped daemon_reload=yes

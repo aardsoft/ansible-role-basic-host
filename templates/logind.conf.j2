@@ -1,0 +1,40 @@
+#jinja2: lstrip_blocks: True
+# {{ ansible_managed }}
+#  This file is part of systemd.
+#
+#  systemd is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU Lesser General Public License as published by
+#  the Free Software Foundation; either version 2.1 of the License, or
+#  (at your option) any later version.
+#
+# Entries in this file show the compile time defaults.
+# You can change settings by editing this file.
+# Defaults can be restored by simply deleting this file.
+#
+# See logind.conf(5) for details.
+
+{% if logind is undefined %}
+{% set logind = {} %}
+{% endif %}
+[Login]
+NAutoVTs={{logind.n_aut_vts|default('0')}}
+ReserveVT={{logind.reserve_vt|default('0')}}
+KillUserProcesses={{logind.kill_user_processes|default('no')}}
+KillOnlyUsers={{logind.kill_only_users|default('')}}
+KillExcludeUsers={{logind.kill_exclude_users|default('root')}}
+InhibitDelayMaxSec={{logind.inhibit_delay_max_sec|default('5')}}
+HandlePowerKey={{logind.handle_power_key|default('poweroff')}}
+HandleSuspendKey={{logind.handle_suspend_key|default('suspend')}}
+HandleHibernateKey={{logind.handle_hibernate_key|default('hibernate')}}
+HandleLidSwitch={{logind.handle_lid_switch|default('suspend')}}
+HandleLidSwitchDocked={{logind.handle_lid_switch_docked|default('ignore')}}
+PowerKeyIgnoreInhibited={{logind.power_key_ignore_inhibited|default('no')}}
+SuspendKeyIgnoreInhibited={{logind.suspend_key_ignore_inhibited|default('no')}}
+HibernateKeyIgnoreInhibited={{logind.hibernate_key_ignore_inhibited|default('no')}}
+LidSwitchIgnoreInhibited={{logind.lid_switch_ignore_inhibited|default('yes')}}
+HoldoffTimeoutSec={{logind.hold_off_timout_sec|default('30s')}}
+IdleAction={{logind.idle_action|default('ignore')}}
+IdleActionSec={{logind.idle_action_sec|default('30min')}}
+RuntimeDirectorySize={{logind.runtime_directory_size|default('10%')}}
+RemoveIPC={{logind.remove_ipc|default('yes')}}
+UserTasksMax={{logind.user_tasks_max|default('12288')}}

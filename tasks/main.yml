@@ -78,14 +78,16 @@
     - base_config
 
 - name: add logind configuration
-  copy:
-    src: logind.conf
+  template:
+    src: logind.conf.j2
     dest: /etc/systemd/logind.conf
     owner: root
     group: root
     mode: 0644
   tags:
     - base_config
+  notify:
+    - restart logind
 
 - name: locate existing sshd host keys
   find:
