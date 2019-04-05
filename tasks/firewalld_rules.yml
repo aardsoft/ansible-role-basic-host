@@ -1,0 +1,92 @@
+# Firewalld rules are structured like:
+#
+# firewalld_rules:
+#   services|sources|rich_rules|ports|routed_ports:
+#     label:
+#       state: enabled|disabled
+#       zones:
+#         - zonea
+#         - zoneb
+#       rules|ports|sources|services:
+#         - a
+#         - b
+#       protocols:
+#         - tcp
+#
+# The protocols key is only used for ports and routed ports, and defaults to
+# 'tcp' if omitted. To simplify specifing a single zone, rule or protocol
+# each of the keys above is available in singular form as single entry (i.e.,
+# "port: 80" or "service: ldap" instead of using a list)
+#
+# State defaults to enabled when omitted. To disable rules on a single zone
+# entry create a temporary structure with that port in that zone moved to
+# and set to disabled.
+#
+# A sample config could look like this:
+#
+# firewalld_rules:
+#   services:
+#     nfs:
+#       services:
+#         - nfs
+#         - mountd
+#         - rpc-bind
+#       zones:
+#         - internal
+#         - external
+#   rich_rules:
+#     https_forward:
+#       rules:
+#         - "rule family=ipv4 forward-port port=443 protocol=tcp to-port=8443"
+#       zone: internal
+#       state: disabled
+#   ports:
+#     proxy:
+#       port: 8080
+#       protocol: tcp
+#       zones: internal
+#
+# If both a list and a single entry is defined (i.e., both ports and port) the
+# list wins. Note that in case both are missing the error message is a bit
+# un-intuitive due to allowing both - trying to build a list causes the string
+# [Undefined] to be sent to firewalld, which throws an error:
+#
+# INVALID_SERVICE: '[Undefined]' not among existing services Permanent and Non-Permanent
+#
+# routed_ports are not going through the high level firewalld API, missing
+# elements there will cause the rule to be silently ignored.
+
+- name: configure firewalld services
+  include: firewalld_manage_services.yml
+  with_dict: "{{item.value}}"
+  when: item.key == "services"
+  loop_control:
+    loop_var: rule
+
+- name: configure firewalld sources
+  include: firewalld_manage_sources.yml
+  with_dict: "{{item.value}}"
+  when: item.key == "sources"
+  loop_control:
+    loop_var: rule
+
+- name: configure firewalld ports
+  include: firewalld_manage_ports.yml
+  with_dict: "{{item.value}}"
+  when: item.key == "ports"
+  loop_control:
+    loop_var: rule
+
+- name: configure firewalld routed ports
+  include: firewalld_manage_routed_ports.yml
+  with_dict: "{{item.value}}"
+  when: item.key == "routed_ports"
+  loop_control:
+    loop_var: rule
+
+- name: configure firewalld rich rules
+  include: firewalld_manage_rich_rules.yml
+  with_dict: "{{item.value}}"
+  when: item.key == "rich_rules"
+  loop_control:
+    loop_var: rule

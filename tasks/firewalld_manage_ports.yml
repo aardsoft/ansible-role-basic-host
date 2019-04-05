@@ -1,0 +1,13 @@
+- name: manage firewalld port ({{rule.key}})
+  firewalld:
+    zone: "{{entry[0]}}"
+    port: "{{entry[1]}}/{{entry[2]}}"
+    permanent: true
+    state: "{{rule.value.state|default('enabled')}}"
+    immediate: true
+  with_nested:
+    - "{{ rule.value.zones|default([rule.value.zone]) }}"
+    - "{{ rule.value.ports|default([rule.value.port]) }}"
+    - "{{ rule.value.protocols|default(['tcp']) }}"
+  loop_control:
+    loop_var: entry

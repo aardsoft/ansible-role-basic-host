@@ -358,7 +358,6 @@
   # the opensuse kernel doesn't have that interface - ignore errors until it
   # can be debugged
 
-# TODO: add a query to firewalld to see if it fails/passes to determine if it can be used
 - name: check if firewalld is available and working
   firewalld:
     zone: block
@@ -378,8 +377,6 @@
     firewalld_available == False and
     firewalld_required is defined and firewalld_required == True
 
-# TODO: add a firewalld_required variable, and fail if firewalld is broken
-
 - name: configure firewalld zones for networkd managed interfaces
   firewalld:
     zone: "{{ item.value.zone }}"
@@ -394,11 +391,11 @@
   tags:
     - access_setup
 
-- name: configure firewalld services
-  include: firewalld_service.yml
-  with_dict: "{{firewalld_services}}"
+- name: configure firewalld rules
+  include: firewalld_rules.yml
+  with_dict: "{{firewalld_rules}}"
   when: >
-    firewalld_available == True and firewalld_services is defined
+    firewalld_available == True and firewalld_rules is defined
 
 - name: drop root .ssh (provisioning)
   file:
