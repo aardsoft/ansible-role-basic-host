@@ -34,10 +34,13 @@
       - attr
       - bsdmainutils
       - ca-certificates
+      - dbus
       - dosfstools
       - ftp
       - fuse
       - iputils-ping
+      - less
+      - nvi
       - openssh-server
       - openssl
       - psmisc
