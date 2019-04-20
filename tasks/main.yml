@@ -7,6 +7,25 @@
     - base_config
     - access_setup
 
+- name: set default password store
+  set_fact:
+    passdb: passwordstore
+  when: passdb is undefined
+
+- name: set default password length
+  set_fact:
+    passdb_password_length: 20
+  when: passdb_password_length is undefined
+
+- name: set default for password creation
+  set_fact:
+    passdb_password_create: True
+  when: passdb_password_create is undefined
+
+- name: set passdb extra arguments
+  set_fact:
+    passdb_extra_arg: " create={{passdb_password_create}} length={{passdb_password_length}}"
+
 - name: set sudo package name
   set_fact:
     sudo_pkg: "sudo"
