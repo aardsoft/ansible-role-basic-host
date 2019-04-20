@@ -229,11 +229,11 @@
   tags:
     - access_setup
 
-- name: mask Wicked services
-  file:
-    src: /dev/null
-    dest: /etc/systemd/system/{{item}}.service
-    state: link
+- name: stop and mask Wicked services
+  systemd:
+    name: "{{item}}.service"
+    masked: yes
+    state: stopped
     force: yes
   when: network_manager is defined and network_manager != "wicked"
   with_items:
@@ -245,3 +245,25 @@
     - wickedd
   tags:
     - access_setup
+
+- name: stop and mask getty services for LXC
+  systemd:
+    name: getty@tty{{item}}.service
+    masked: yes
+    state: stopped
+    force: yes
+  when: >
+    ansible_virtualization_type is defined and
+    ansible_virtualization_type == "lxc"
+  with_sequence: start={{lxc_getty_mask_start|default(0)}}  end={{lxc_getty_mask_end|default(4)}}
+
+- name: stop and mask container-getty services for LXC
+  systemd:
+    name: container-getty@{{item}}.service
+    masked: yes
+    state: stopped
+    force: yes
+  when: >
+    ansible_virtualization_type is defined and
+    ansible_virtualization_type == "lxc"
+  with_sequence: start={{container_getty_mask_start|default(0)}}  end={{container_getty_mask_end|default(3)}}
