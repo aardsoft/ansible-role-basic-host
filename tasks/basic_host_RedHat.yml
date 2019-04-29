@@ -120,6 +120,16 @@
   tags:
     - access_setup
 
+- name: add epel repo key (CentOS)
+  copy:
+    src: "RPM-GPG-KEY-EPEL-7"
+    dest: /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+    owner: root
+    mode: 0644
+  when: ansible_distribution == "CentOS" and epel_mirror is defined
+  tags:
+    - access_setup
+
 - name: configure elrepo repos (CentOS)
   template:
     src: "{{item}}.j2"
