@@ -17,6 +17,19 @@
   changed_when: false
 
 - set_fact:
+    dist_token: ""
+  tags:
+    - access_setup
+
+- name: set dist token {{ansible_distribution_major_version}}
+  set_fact:
+    dist_token: rhel7
+  when:
+    ansible_os_family == 'RedHat' and ansible_distribution_major_version|int == 7
+  tags:
+    - access_setup
+
+- set_fact:
     centos_repositories: {}
   when: centos_repositories is undefined
   tags:
@@ -161,7 +174,7 @@
   with_dict: "{{ rpm_repos }}"
   when: rpm_repos is defined
 
-- name: add SPP repository
+- name: add SPP repository (no token)
   template:
     src: "rpm-repo.j2"
     dest: /etc/yum.repos.d/hp-spp.repo
@@ -169,7 +182,20 @@
     mode: 0644
   with_dict: { hp_spp: { baseurl: '{{hp_spp_repository}}', description: "HP SPP" }}
   when: >
-    hp_spp_repository is defined
+    hp_spp_repository is defined and
+    (hp_spp_append_dist is undefined or hp_spp_append_dist == False)
+    and server_type is defined and server_type == "proliant"
+
+- name: add SPP repository (dist token)
+  template:
+    src: "rpm-repo.j2"
+    dest: /etc/yum.repos.d/hp-spp.repo
+    owner: root
+    mode: 0644
+  with_dict: { hp_spp: { baseurl: '{{hp_spp_repository}}/{{dist_token}}', description: "HP SPP" }}
+  when: >
+    hp_spp_repository is defined and
+    (hp_spp_append_dist is defined and hp_spp_append_dist == True)
     and server_type is defined and server_type == "proliant"
 
 - name: configure dnf
