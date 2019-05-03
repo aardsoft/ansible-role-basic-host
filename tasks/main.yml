@@ -108,6 +108,12 @@
   notify:
     - restart logind
 
+- name: add linger users
+  command: loginctl enable-linger "{{item}}"
+  changed_when: false
+  when: logind_linger_users is defined
+  with_items: "{{logind_linger_users}}"
+
 - name: locate existing sshd host keys
   find:
     paths: /etc/ssh/
