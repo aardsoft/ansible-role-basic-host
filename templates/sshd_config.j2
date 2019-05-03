@@ -1,12 +1,14 @@
 #jinja2: lstrip_blocks: True
 # {{ ansible_managed }}
-
+{% if sshd is undefined %}
+{% set sshd = {} %}
+{% endif %}
 # What ports, IPs and protocols we listen for
-Port 22
+Port {{sshd.port|default(22)}}
 # Use these options to restrict which interfaces/protocols sshd will bind to
 #ListenAddress ::
 #ListenAddress 0.0.0.0
-Protocol 2
+Protocol {{sshd.protocol|default(2)}}
 
 {# Some distributions no longer generate all host keys, but openssh #}
 {# without HostKey directive tries to include all, leading to silly #}
@@ -32,8 +34,11 @@ HostKey {{host_key.path}}
 
 # Authentication:
 LoginGraceTime 120
+{% if sshd.root_login is defined and ssh_root_login is undefined %}
+{% set ssh_root_login = sshd.root_login %}
+{% endif %}
 PermitRootLogin {{ssh_root_login|default("no")}}
-StrictModes yes
+StrictModes {{sshd.strict_modes|default('yes')}}
 
 PubkeyAuthentication yes
 #AuthorizedKeysFile	%h/.ssh/authorized_keys
@@ -53,6 +58,9 @@ PermitEmptyPasswords no
 ChallengeResponseAuthentication no
 
 # Change to no to disable tunnelled clear text passwords
+{% if sshd.password_auth is defined and ssh_password_auth is undefined %}
+{% set ssh_password_auth = sshd.password_auth %}
+{% endif %}
 PasswordAuthentication {{ ssh_password_auth | default("no")}}
 
 # Kerberos options
@@ -65,8 +73,8 @@ PasswordAuthentication {{ ssh_password_auth | default("no")}}
 #GSSAPIAuthentication no
 #GSSAPICleanupCredentials yes
 
-X11Forwarding yes
-X11DisplayOffset 10
+X11Forwarding {{sshd.x11_forwarding|default('yes')}}
+X11DisplayOffset {{sshd.x11_display_offset|default(10)}}
 PrintMotd no
 PrintLastLog yes
 TCPKeepAlive yes
@@ -78,7 +86,13 @@ TCPKeepAlive yes
 # Allow client to pass locale environment variables
 AcceptEnv LANG LC_*
 
+{% if sshd.sftp_binary is defined %}
+Subsystem sftp {{sshd.sftp_binary}}
+{% elif ansible_os_family == "RedHat" %}
+Subsystem sftp /usr/libexec/openssh/sftp-server
+{% elif ansible_os_family == "Suse" %}
 Subsystem sftp /usr/lib/openssh/sftp-server
+{% endif %}
 
 # Set this to 'yes' to enable PAM authentication, account processing,
 # and session processing. If this is enabled, PAM authentication will
