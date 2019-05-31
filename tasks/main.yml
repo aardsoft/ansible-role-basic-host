@@ -363,6 +363,19 @@
   when: >
     network_manager is defined and network_manager == "networkd"
 
+- name: remove bridge filtering keys on unsupported distributions
+  sysctl:
+    name: "{{ item }}"
+    state: absent
+    reload: yes
+  with_items:
+    - net.bridge.bridge-nf-call-ip6tables
+    - net.bridge.bridge-nf-call-iptables
+    - net.bridge.bridge-nf-call-arptables
+  when: >
+    ansible_os_family == "Suse"
+  ignore_errors: True
+
 # having this enabled randomly breaks connectivity over bridges
 - name: disable filtering on bridges
   sysctl:
@@ -376,12 +389,9 @@
     - net.bridge.bridge-nf-call-iptables
     - net.bridge.bridge-nf-call-arptables
   when: >
-    ansible_virtualization_role == "host" or
-    ansible_virtualization_role == "NA" and
+    (ansible_virtualization_role == "host" or
+    ansible_virtualization_role == "NA") and
     ansible_os_family != "Suse"
-  ignore_errors: True
-  # the opensuse kernel doesn't have that interface - ignore errors until it
-  # can be debugged
 
 - name: check if firewalld is available and working
   firewalld:
