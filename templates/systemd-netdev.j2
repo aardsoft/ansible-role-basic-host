@@ -67,8 +67,10 @@ ARPIntervalSec={{ item.value.arp_interval_sec | default(0) }}
 ARPIPTargets={{ item.value.arp_ip_targets }}
 ARPAllTargets={{ item.value.arp_all_targets | default('any') }}
 {% endif %}
+ {% if ansible_distribution != "CentOS" %}
 PrimaryReselectPolicy={{ item.value.primary_reselect_policy | default('better') }}
 ResendIGMP={{ item.value.resend_igmp | default(1) }}
 AllSlavesActive={{ item.value.all_slaves_active | default('false') }}
 MinLinks={{ item.value.min_links | default(0) }}
+ {% endif %}
 {% endif %}

@@ -27,7 +27,9 @@ MTUBytes={{ item.value.mtu }}
 {% endif %}
 #ARP=
 # default: no, set it explicitely
+ {% if ansible_distribution != "CentOS" %}
 Unmanaged={{ item.value.unmanaged | default('no')}}
+ {% endif %}
 
 [Network]
 #Description=
