@@ -363,6 +363,8 @@
   when: >
     network_manager is defined and network_manager == "networkd"
 
+# this seems to go mostly away, so relying on distributions no longer
+# works. Only disable when explicitely required.
 - name: remove bridge filtering keys on unsupported distributions
   sysctl:
     name: "{{ item }}"
@@ -373,7 +375,7 @@
     - net.bridge.bridge-nf-call-iptables
     - net.bridge.bridge-nf-call-arptables
   when: >
-    ansible_os_family == "Suse"
+    bridge_filtering is undefined or bridge_filtering == false
   ignore_errors: True
 
 # having this enabled randomly breaks connectivity over bridges
@@ -389,9 +391,7 @@
     - net.bridge.bridge-nf-call-iptables
     - net.bridge.bridge-nf-call-arptables
   when: >
-    (ansible_virtualization_role == "host" or
-    ansible_virtualization_role == "NA") and
-    ansible_os_family != "Suse"
+    bridge_filtering is defined and bridge_filtering == true
 
 - name: check if firewalld is available and working
   firewalld:
