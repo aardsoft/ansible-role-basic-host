@@ -7,6 +7,11 @@
     - base_config
     - access_setup
 
+- name: merge local network nodes into global one
+  set_fact:
+    network_nodes: "{{ {} | combine(network_nodes, local_network_nodes, recursive=True) }}"
+  when: local_network_nodes is defined
+
 - name: set default password store
   set_fact:
     passdb: passwordstore
