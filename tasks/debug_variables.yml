@@ -1,0 +1,4 @@
+- name: dump variable output
+  copy:
+    dest: "{{debug_variable_file|default('/tmp/debug.yml')}}"
+    content: '{{hostvars | to_nice_yaml}}'

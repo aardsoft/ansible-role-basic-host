@@ -172,6 +172,12 @@
   tags:
     - base_config
 
+- include_tasks: debug_variables.yml
+  when: debug_variables is defined and debug_variables == True
+  tags:
+    - base_config
+    - access_setup
+
 - include_tasks: "basic_host_{{ ansible_os_family }}.yml"
   when: ansible_os_family == "Debian" or ansible_os_family == "Suse" or ansible_os_family == "RedHat"
   tags:
