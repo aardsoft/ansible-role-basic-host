@@ -356,6 +356,15 @@
   tags:
     - access_setup
 
+- name: enable network manager services
+  service: name="{{item}}" enabled=yes state=started
+  with_items:
+    - NetworkManager
+    - NetworkManager-wait-online
+  when: network_manager is defined and network_manager == "networkmanager"
+  tags:
+    - access_setup
+
 - name: locate old ifcfg files
   find:
     paths: /etc/sysconfig/network-scripts/
