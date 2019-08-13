@@ -1,0 +1,7 @@
+- name: remove broken appdata entries
+  win_file:
+    path: '%LOCALAPPDATA%\Microsoft\WindowsApps\{{entry}}'
+    state: absent
+  with_items: "{{item.value.appdata_orphans}}"
+  loop_control:
+    loop_var: entry

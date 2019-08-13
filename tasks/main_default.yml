@@ -1,0 +1,485 @@
+- name: set sudo package name
+  set_fact:
+    sudo_pkg: "sudo"
+  tags:
+    - base_config
+    - access_setup
+
+- name: set sudo package name for Debian
+  set_fact:
+    sudo_pkg: "sudo-ldap"
+  when: ansible_distribution == 'Debian'
+  tags:
+    - base_config
+    - access_setup
+
+- include_tasks: default_vars.yml
+  tags:
+    - base_config
+    - access_setup
+
+- name: set resolv location to site, if necessary
+  tags:
+    - base_config
+    - access_setup
+  set_fact:
+    resolv_location: "{{ site_region }}"
+  when: site_region is defined and resolv_location is undefined
+
+- name: add resolv.conf
+  tags:
+    - base_config
+  copy:
+    src: resolv.conf.{{ resolv_location }}
+    dest: /etc/resolv.conf
+    owner: root
+    group: root
+    mode: 0644
+  when: resolv_location is defined
+
+- name: add resolv.conf (template)
+  tags:
+    - base_config
+  template:
+    src: resolv.conf.j2
+    dest: /etc/resolv.conf
+    owner: root
+    group: root
+    mode: 0644
+  when: nameservers is defined
+
+- name: add adjtime
+  copy:
+    src: adjtime
+    dest: /etc/adjtime
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - base_config
+
+- name: add hosts
+  template:
+    src: hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - base_config
+
+- name: add logind configuration
+  template:
+    src: logind.conf.j2
+    dest: /etc/systemd/logind.conf
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - base_config
+  notify:
+    - restart logind
+
+- name: add linger users
+  command: loginctl enable-linger "{{item}}"
+  changed_when: false
+  when: logind_linger_users is defined
+  with_items: "{{logind_linger_users}}"
+
+- name: locate existing sshd host keys
+  find:
+    paths: /etc/ssh/
+    patterns: "ssh_host_*_key"
+    recurse: no
+    file_type: file
+  register: ssh_host_keys
+  tags:
+    - base_config
+
+- name: add sshd configuration
+  template:
+    src: sshd_config.j2
+    dest: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: 0640
+  tags:
+    - base_config
+  notify:
+    - restart sshd
+
+# timezone command was added in 2.2 only
+- name: set /etc/timezone
+  copy:
+    content: "{{ host_timezone }}"
+    dest: /etc/timezone
+  tags:
+    - base_config
+
+- name: set /etc/localtime
+  file:
+    src: "/usr/share/zoneinfo/{{ host_timezone }}"
+    dest: /etc/localtime
+    state: link
+    force: yes
+  tags:
+    - base_config
+
+- stat: path=/etc/hostname
+  register: hostname_file
+  tags:
+    - base_config
+
+- name: set hostname
+  copy:
+    content: "{{ hostname }}"
+    dest: /etc/hostname
+  when: hostname.stat.exists == False and hostname is defined
+
+- name: set hostname
+  copy:
+    content: "{{ inventory_hostname.split('.')[0] }}"
+    dest: /etc/hostname
+  when: hostname.stat.exists == False and hostname is undefined
+  tags:
+    - base_config
+
+- include_tasks: debug_variables.yml
+  when: debug_variables is defined and debug_variables == True
+  tags:
+    - base_config
+    - access_setup
+
+- include_tasks: "basic_host_{{ ansible_os_family }}.yml"
+  when: ansible_os_family == "Debian" or ansible_os_family == "Suse" or ansible_os_family == "RedHat"
+  tags:
+    - base_config
+    - access_setup
+
+- name: create ssl cert group
+  group: name=ssl-cert gid=950 state=present
+
+- name: create certificate directory
+  file:
+    path: /etc/ssl/keys
+    owner: root
+    group: ssl-cert
+    mode: 0750
+    state: directory
+
+- name: Install sudo (Debian)
+  apt:
+    name: "{{ sudo_pkg }}"
+    state: present
+    update_cache: yes
+    cache_valid_time: 3600
+  when: ansible_os_family == "Debian"
+  tags:
+    - access_setup
+
+- name: Install sudo (Suse)
+  zypper:
+    name: "{{ sudo_pkg }}"
+    state: present
+  when: ansible_os_family == "Suse"
+  tags:
+    - access_setup
+
+- name: Install sudo {{ansible_os_family}}/dnf
+  dnf:
+    name: "{{ sudo_pkg }}"
+    state: present
+  when: ansible_os_family == "RedHat" and ansible_pkg_mgr == "dnf"
+  tags:
+    - access_setup
+
+- name: Install sudo {{ansible_os_family}}/yum
+  yum:
+    name: "{{ sudo_pkg }}"
+    state: present
+  when: ansible_os_family == "RedHat" and ansible_pkg_mgr == "yum"
+  tags:
+    - access_setup
+
+- name: Install python-selinux (Suse)
+  zypper:
+    name: "python-selinux"
+    state: present
+  when: ansible_os_family == "Suse"
+  tags:
+    - access_setup
+
+- name: Install libselinux-python {{ansible_os_family}}/dnf
+  dnf:
+    name: "libselinux-python"
+    state: present
+  when: ansible_os_family == "RedHat" and ansible_pkg_mgr == "dnf"
+  tags:
+    - access_setup
+
+- name: Install libselinux-python {{ansible_os_family}}/yum
+  yum:
+    name: "libselinux-python"
+    state: present
+  when: ansible_os_family == "RedHat" and ansible_pkg_mgr == "yum"
+  tags:
+    - access_setup
+
+- name: create management group
+  group: name={{ adm_group }} gid={{ adm_gid }} state=present
+  tags:
+    - access_setup
+  when: adm_group is defined and adm_gid is defined
+
+- name: create management user
+  user: name={{ adm_user }} uid={{ adm_uid }} group={{ adm_group }} groups=disk shell=/bin/bash
+  tags:
+    - access_setup
+  when: adm_user is defined and adm_uid is defined and adm_group is defined
+
+- name: make sure management .ssh exists
+  file:
+    path: /home/{{ adm_user }}/.ssh
+    owner: "{{ adm_user }}"
+    group: "{{ adm_group }}"
+    mode: 0700
+    state: directory
+  tags:
+    - access_setup
+  when: adm_user is defined
+
+- name: update management authorized_keys file
+  copy:
+    src: authorized_keys
+    dest: /home/{{ adm_user }}/.ssh/authorized_keys
+    owner: "{{ adm_user }}"
+    group: "{{ adm_group }}"
+    mode: 0600
+  tags:
+    - access_setup
+  when: adm_user is defined and adm_group is defined
+
+- name: add management sudoers configuration
+  template:
+    src: adm-sudoers.j2
+    dest: /etc/sudoers.d/ansible-access
+    owner: root
+    group: root
+    mode: 0440
+  tags:
+    - access_setup
+  when: adm_user is defined
+
+- name: check provisioning marker
+  stat:
+    path: "/.provisioning-needed"
+  register: marker
+
+- name: create networkd configuration directory
+  file:
+    path: /etc/systemd/network
+    owner: root
+    group: root
+    mode: 0755
+    state: directory
+  tags:
+    - access_setup
+
+- name: configure virtual network devices (networkd)
+  template:
+    src: systemd-netdev.j2
+    dest: "/etc/systemd/network/{{item.key}}.netdev"
+  with_dict: "{{network_nodes[inventory_hostname].networks |default({})}}"
+  when: >
+    network_manager is defined and network_manager == "networkd" and
+    item.value.type is defined and item.value.type != "phys"
+    and item.key != "ilo"
+  notify:
+    - restart networkd
+  tags:
+    - access_setup
+
+- name: configure static network interfaces (networkd)
+  template:
+   src: systemd-network.j2
+   dest: "/etc/systemd/network/{{item.key}}.network"
+  with_dict: "{{network_nodes[inventory_hostname].networks |default({})}}"
+  when: >
+    network_manager is defined and network_manager == "networkd"
+    and item.key != "ilo"
+  notify:
+    - restart networkd
+  tags:
+    - access_setup
+
+- name: enable networkd services
+  service: name="{{item}}" enabled=yes
+  with_items:
+    - systemd-networkd
+    - systemd-networkd-wait-online
+  when: network_manager is defined and network_manager == "networkd"
+  notify:
+    - restart networkd
+  tags:
+    - access_setup
+
+- name: enable network manager services
+  service: name="{{item}}" enabled=yes state=started
+  with_items:
+    - NetworkManager
+    - NetworkManager-wait-online
+  when: network_manager is defined and network_manager == "networkmanager"
+  tags:
+    - access_setup
+
+- name: locate old ifcfg files
+  find:
+    paths: /etc/sysconfig/network-scripts/
+    patterns: "ifcfg-e*"
+    recurse: no
+    file_type: file
+  register: find_result
+  when: >
+    network_manager is defined and network_manager == "networkd"
+
+- name: remove old ifcfg files
+  file:
+    state: absent
+    path: "{{ item.path }}"
+  with_items: "{{ find_result.files }}"
+  when: >
+    network_manager is defined and network_manager == "networkd"
+
+# this seems to go mostly away, so relying on distributions no longer
+# works. Only disable when explicitely required.
+- name: remove bridge filtering keys on unsupported distributions
+  sysctl:
+    name: "{{ item }}"
+    state: absent
+    reload: yes
+  with_items:
+    - net.bridge.bridge-nf-call-ip6tables
+    - net.bridge.bridge-nf-call-iptables
+    - net.bridge.bridge-nf-call-arptables
+  when: >
+    bridge_filtering is undefined or bridge_filtering == false
+  ignore_errors: True
+
+# having this enabled randomly breaks connectivity over bridges
+- name: disable filtering on bridges
+  sysctl:
+    name: "{{ item }}"
+    value: 0
+    sysctl_set: yes
+    state: present
+    reload: yes
+  with_items:
+    - net.bridge.bridge-nf-call-ip6tables
+    - net.bridge.bridge-nf-call-iptables
+    - net.bridge.bridge-nf-call-arptables
+  when: >
+    bridge_filtering is defined and bridge_filtering == true
+
+- name: check if firewalld is available and working
+  firewalld:
+    zone: block
+    state: enabled
+    permanent: no
+  register: firewalld_result
+  ignore_errors: True
+
+- name: register firewalld status
+  set_fact:
+    firewalld_available: True
+  when: firewalld_result is succeeded
+
+- name: setup firewalld
+  include: firewalld_setup.yml
+  when: >
+    firewalld_available == False and
+    firewalld_required is defined and firewalld_required == True
+
+- name: configure firewalld zones for networkd managed interfaces
+  firewalld:
+    zone: "{{ item.value.zone }}"
+    interface: "{{ item.key }}"
+    permanent: true
+    state: enabled
+    immediate: true
+  with_dict: "{{network_nodes[inventory_hostname].networks |default({})}}"
+  when: >
+    firewalld_available == True and
+    item.value.zone is defined
+  tags:
+    - access_setup
+
+- name: configure firewalld rules
+  include: firewalld_rules.yml
+  with_dict: "{{firewalld_rules}}"
+  when: >
+    firewalld_available == True and firewalld_rules is defined
+
+- name: drop root .ssh (provisioning)
+  file:
+    path: "/root/.ssh"
+    state: absent
+  when: marker.stat.exists == True
+
+- name: drop provisioning marker
+  file:
+    path: "/.provisioning-needed"
+    state: absent
+  when: marker.stat.exists == True
+
+# non-provisioning related steps should go here, if possible
+
+- name: create local groups (known gid)
+  group:
+    gid: "{{item.value.gid}}"
+    name: "{{item.key}}"
+    state: "{{item.value.state|default('present')}}"
+  with_dict: "{{local_groups}}"
+  when: local_groups is defined and item.value.gid is defined
+
+- name: create local groups (unknown gid)
+  group:
+    system: "{{item.value.system|default(true)}}"
+    name: "{{item.key}}"
+    state: "{{item.value.state|default('present')}}"
+  with_dict: "{{local_groups}}"
+  when: local_groups is defined and item.value.gid is undefined
+
+# groups are optional, but if not specified, all non-default groups
+# will be cleaned
+# flags which might make sense to add: seuser remove
+- name: create local users (known uid)
+  user:
+    name: "{{item.key}}"
+    uid: "{{item.value.uid}}"
+    comment: "{{item.value.comment|default('Created by ansible')}}"
+    group: "{{item.value.group|default(item.key)}}"
+    groups: "{{item.value.groups|default('')}}"
+    home: "{{item.value.home|default('/home/'+item.key)}}"
+    move_home: "{{item.value.move_home|default('no')}}"
+    system: "{{item.value.system|default(false)}}"
+    password_lock: "{{item.value.password_lock|default('no')}}"
+    state: "{{item.value.state|default('present')}}"
+    shell: "{{item.value.shell|default('/bin/bash')}}"
+  with_dict: "{{local_users}}"
+  when: local_users is defined and item.value.uid is defined
+
+- name: create local users (unknown uid)
+  user:
+    name: "{{item.key}}"
+    uid: "{{item.value.uid}}"
+    comment: "{{item.value.comment|default('Created by ansible')}}"
+    group: "{{item.value.group|default(item.key)}}"
+    groups: "{{item.value.groups|default('')}}"
+    home: "{{item.value.home|default('/home/'+item.key)}}"
+    move_home: "{{item.value.move_home|default('no')}}"
+    system: "{{item.value.system|default(true)}}"
+    password_lock: "{{item.value.password_lock|default('no')}}"
+    state: "{{item.value.state|default('present')}}"
+    shell: "{{item.value.shell|default('/bin/bash')}}"
+  with_dict: "{{local_users}}"
+  when: local_users is defined and item.value.uid is undefined

@@ -1,0 +1,83 @@
+# https://support.microsoft.com/en-us/help/942817/how-to-change-the-remote-uac-localaccounttokenfilterpolicy-registry-se
+# Makes sure remote sessions of users in the admin group have admin privileges
+- name: configure LocalAccountTokenFilterPolicy
+  win_regedit:
+    path: hklm:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\system
+    name: LocalAccountTokenFilterPolicy
+    data: 1
+    type: dword
+
+- name: set connection profiles to private
+  win_command: "powershell.exe Set-NetConnectionProfile -NetworkCategory Private"
+  register: wincmd_status
+  changed_when: wincmd_status.rc != 0
+
+- name: make sure winrm is running
+  win_command: "winrm.cmd quickconfig -q"
+  register: wincmd_status
+  changed_when: wincmd_status.rc != 0
+
+- name: make sure c:\temp exists
+  win_file:
+    path: 'c:\temp'
+    state: directory
+
+# this doesn't take proxies, .. into account
+# the assumption is that there's a local, controlled mirror
+# with all those archives
+# the installers are still downloaded for uninstalls - some components
+# need the original installer for a clean uninstall
+- name: download windows installers
+  win_get_url:
+    url: "{{item.value.url}}"
+    dest: 'c:\temp\{{item.key}}'
+  with_dict: "{{windows_installers|default({})}}"
+  when: >
+    (item.value.state is undefined or item.value.state == 'present') and
+    item.value.url is defined
+
+- name: remove windows installers
+  with_dict: "{{windows_installers|default({})}}"
+  win_package:
+    product_id: "{{item.value.product_id}}"
+    state: absent
+  when: >
+    (item.value.state is defined and item.value.state == 'absent') and
+    item.value.product_id is defined and
+    item.value.uninstall_arguments is undefined
+
+- name: remove windows installers (custom arguments)
+  with_dict: "{{windows_installers|default({})}}"
+  win_package:
+    product_id: "{{item.value.product_id}}"
+    state: absent
+    arguments: "{{item.value.uninstall_arguments}}"
+    path: 'c:\temp\{{item.key}}'
+  when: >
+    (item.value.state is defined and item.value.state == 'absent') and
+    item.value.product_id is defined and
+    item.value.uninstall_arguments is defined
+
+# To get the product ID, for
+# - MSI: msiinfo suminfo <msi-file> (from wix/msitools); sometimes wrong
+# - general: install the package on a temp system, open powershell,
+#   cd HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall, and
+#   check contents with ls
+- name: install windows installers
+  with_dict: "{{windows_installers|default({})}}"
+  win_package:
+    product_id: "{{item.value.product_id}}"
+    path: 'c:\temp\{{item.key}}'
+    arguments: "{{item.value.arguments|default('')}}"
+  when: >
+    (item.value.state is undefined or item.value.state == 'present') and
+    item.value.url is defined and item.value.product_id is defined
+
+# for whatever reason windows insists on broken store reference entries in
+# some cases -> nuke those
+- include_tasks: win_remove_applinks.yml
+  with_dict: "{{windows_installers|default({})}}"
+  when: >
+    (item.value.state is undefined or item.value.state == 'present') and
+    item.value.url is defined and item.value.product_id is defined and
+    item.value.appdata_orphans is defined
