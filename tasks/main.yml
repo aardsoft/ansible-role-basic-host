@@ -44,3 +44,8 @@
     - base_config
     - access_setup
   when: ansible_os_family == "Windows"
+
+- name: include additional tasks
+  include_tasks: "tasks/{{item}}.yml"
+  with_items: "{{basic_host_extra_tasks}}"
+  when: basic_host_extra_tasks is defined
