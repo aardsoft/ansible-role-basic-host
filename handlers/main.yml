@@ -1,3 +1,8 @@
+- name: include additional handlers
+  include_tasks: "handlers/{{item}}.yml"
+  with_items: "{{basic_host_extra_handlers}}"
+  when: basic_host_extra_handlers is defined
+
 - name: restart sshd
   service: name=sshd state=restarted
   ignore_errors: yes
