@@ -1,0 +1,33 @@
+#!/bin/bash
+# A very simple service start script for use in WSL
+#
+# It takes one or two arguments:
+# service name   - the name of the service, used to look up the service
+#                  start file in /etc/wsl-service/<service name>
+# service binary - the binary started by the service, searched with
+#                  pgrep. Only required if different from service name
+#
+# This script will just try to verify using pgrep that the service is not
+# started yet, and in that case, source the service script.
+#
+# Note that only services started as root are supported.
+
+if [ -z "$1" ]; then
+  echo "Need at least service name"
+  exit 1
+fi
+
+SERVICE_NAME=$1
+
+if [ -z "$2" ]; then
+    SERVICE_BINARY=$SERVICE_NAME
+else
+    SERVICE_BINARY=$2
+fi
+
+pgrep -u root $SERVICE_BINARY -c
+if [ $? -eq 0 ]; then
+    exit 0
+fi
+
+bash /etc/wsl-service/$SERVICE_NAME

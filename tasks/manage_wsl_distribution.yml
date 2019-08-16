@@ -1,0 +1,72 @@
+# This is supposed once after deploying a wsl instance to allow provisioning
+# through regular basic-host role.
+#
+# It's in a separate file to allow easier debugging/development. Steps
+# required for SSH access are:
+#
+# - create management group
+# - create management user
+# - create .ssh and add authorized keys and adjust permissions
+# - create sudoers configuration and adjust permissions
+# - create provisioning marker
+# - copy sshd configuration
+
+- name: copy simple service wrapper (linux side)
+  win_copy:
+    src: wsl-simpleservice
+    dest: "{{windows_temp_directory}}\\wsl-simpleservice"
+
+- name: copy authorized_keys to temp
+  win_copy:
+    src: authorized_keys
+    dest: "{{windows_temp_directory}}\\authorized_keys"
+
+- name: copy sudoers to temp
+  win_template:
+    src: adm-sudoers.j2
+    dest: "{{windows_temp_directory}}\\adm-sudoers"
+    newline_sequence: '\n'
+  when: >
+    adm_user is defined
+
+- name: copy sshd service file to temp
+  win_copy:
+    src: wsl_service_sshd
+    dest: "{{windows_temp_directory}}\\sshd"
+
+- name: copy sshd config to temp
+  win_template:
+    src: sshd_config.j2
+    dest: "{{windows_temp_directory}}\\sshd_config"
+    newline_sequence: '\n'
+  vars:
+    sshd: "{{ {'port': item.value.sshd_port|default(8022)} }}"
+
+- name: copy provisioning script to temp
+  win_template:
+    src: wsl-provision-script.j2
+    dest: "{{windows_temp_directory}}\\wsl-provision-script"
+    newline_sequence: '\n'
+  when: adm_group is defined and adm_gid is defined and adm_user is defined
+
+- name: run provisioning script
+  win_shell: "wsl.exe -u root -d {{item.key}} -e bash /mnt/c/temp/wsl-provision-script"
+  changed_when: false
+
+- name: fetch wsl ssh key
+  fetch:
+    src: "{{windows_temp_directory}}\\ssh_host_ecdsa_key.pub"
+    dest: "host-keys/[{{inventory_hostname}}]:{{item.value.sshd_port}}"
+    flat: yes
+    fail_on_missing: yes
+  when: item.value.sshd_port is defined
+
+- name: force remove wsl ssh key from known hosts
+  become: no
+  local_action: shell ssh-keygen -R '[{{inventory_hostname}}]:{{item.value.sshd_port}}'
+  when: item.value.sshd_port is defined
+
+- name: add wsl ssh key to known hosts
+  become: no
+  local_action:  shell echo -n '[{{inventory_hostname}}]:{{item.value.sshd_port}} ' | cat - 'host-keys/[{{inventory_hostname}}]:{{item.value.sshd_port}}' >> ~/.ssh/known_hosts
+  when: item.value.sshd_port is defined

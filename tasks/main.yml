@@ -31,6 +31,11 @@
   set_fact:
     passdb_extra_arg: " create={{passdb_password_create}} length={{passdb_password_length}}"
 
+- include_tasks: default_vars.yml
+  tags:
+    - base_config
+    - access_setup
+
 - name: include main tasks for non-Windows
   include_tasks: main_default.yml
   tags:

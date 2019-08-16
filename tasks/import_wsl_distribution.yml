@@ -1,0 +1,27 @@
+- name: copy app installer to zip
+  win_copy:
+    src: "{{item.value.installer}}"
+    dest: 'c:\temp\{{item.key}}.zip'
+    remote_src: yes
+  when: >
+    item.value.installer_type is defined and item.value.installer_type == 'appx'
+
+- name: extract zip installer
+  win_unzip:
+    src: 'c:\temp\{{item.key}}.zip'
+    dest: 'c:\temp\{{item.key}}'
+    remote_src: yes
+  when: >
+    item.value.installer_type is defined and item.value.installer_type == 'appx'
+
+- name: import wsl distribution (appx)
+  win_command: 'wsl --import {{item.key}} {{item.value.location}} c:\temp\{{item.key}}\install.tar.gz'
+  when: >
+    item.value.installer_type is defined and item.value.installer_type == 'appx'
+
+# perform basic provisioning steps
+- include_tasks: manage_wsl_distribution.yml
+
+# TODO:
+# - set default distribution
+# - run full ansible against each WSL

@@ -1,0 +1,102 @@
+- name: copy simple service wrapper (windows side)
+  win_copy:
+    src: wsl-simpleservice.vbs
+    dest: "{{windows_script_directory}}\\wsl-simpleservice.vbs"
+
+- name: download distribution installers
+  win_get_url:
+    url: "{{item.value.url}}"
+    dest: "{{item.value.installer}}"
+  with_dict: "{{wsl_distributions}}"
+  when: >
+    (item.value.state is undefined or item.value.state == 'present') and
+    item.value.url is defined and item.value.installer is defined
+
+# later checks are just if the item name exists in stdout ->
+# names may not be a subset of other names, or things will get weird
+- name: capture available distributions
+  win_shell: "wsl.exe -l"
+  register: current_distributions
+  changed_when: False
+  ignore_errors: True
+
+# stdout looks like "W\u0000i\u0000n\u0000d\u0000o\u0000w\u0000s\u0000[...]
+# for whatever reason
+- include_tasks: import_wsl_distribution.yml
+  with_dict: "{{wsl_distributions}}"
+  when: >
+    (item.value.state is undefined or item.value.state == 'present') and
+    item.key not in current_distributions.stdout|regex_replace('\u0000','')
+
+- include_tasks: unregister_wsl_distribution.yml
+  with_dict: "{{wsl_distributions}}"
+  when: >
+    (item.value.state is defined and item.value.state == 'absent') and
+    item.key in current_distributions.stdout|regex_replace('\u0000','')
+
+# if 'reprovision' is set to true for a distribution perform provisioning
+# steps usually only executed afer registering a distribution again
+- include_tasks: manage_wsl_distribution.yml
+  with_dict: "{{wsl_distributions}}"
+  when: >
+    (item.value.state is undefined or item.value.state == 'present') and
+    item.value.reprovision is defined and item.value.reprovision == True
+
+- name: enable WSL sshd in windows firewall
+  with_dict: "{{wsl_distributions}}"
+  win_firewall_rule:
+    name: "WSL sshd for {{item.key}}"
+    localport: "{{item.value.sshd_port}}"
+    action: allow
+    direction: in
+    protocol: tcp
+    state: present
+    enabled: yes
+  when: >
+    (item.value.state is undefined or item.value.state == 'present') and
+    item.value.sshd_service is defined and item.value.sshd_service == True and
+    item.value.sshd_port is defined
+  changed_when: false
+
+# TODO: check if WSL services is available, and use that to start sshd before
+#       instead of the simple service thing.
+#       Proper WSL services would avoid rebooting and add service monitoring
+
+# make sure it's false before starting
+- set_fact:
+    wsl_service_changed: false
+
+- name: create WSL sshd services
+  include: add_wsl_service.yml
+  with_dict: "{{wsl_distributions}}"
+  vars:
+    _service_name: sshd
+    _service_distribution: "{{item.key}}"
+  when: >
+    (item.value.state is undefined or item.value.state == 'present') and
+    item.value.sshd_service is defined and item.value.sshd_service == True and
+    item.value.sshd_port is defined
+
+# this waits until a wsl process shows up. If that turns out to not be sufficient
+# post_reboot_delay may be increased.
+- name: reboot system after adding ssh service
+  win_reboot:
+    reboot_timeout: 600
+    test_command: 'exit (Get-Process -name wsl).Count -eq 0'
+    post_reboot_delay: 0
+  when: wsl_service_changed == True
+
+- name: add WSL instance to inventory
+  with_dict: "{{wsl_distributions}}"
+  add_host:
+    hostname: "{{item.value.host_prefix}}{{inventory_hostname}}"
+    groups: "{{item.value.groups}}"
+    ansible_host: "{{inventory_hostname}}"
+    ansible_port: "{{item.value.sshd_port}}"
+    sshd: "{{ {'port': item.value.sshd_port} }}"
+  when: >
+    (item.value.state is undefined or item.value.state == 'present') and
+    item.value.sshd_service is defined and item.value.sshd_service == True and
+    item.value.sshd_port is defined and item.value.groups is defined and
+    item.value.host_prefix is defined
+  changed_when: false

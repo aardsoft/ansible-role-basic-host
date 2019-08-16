@@ -13,11 +13,6 @@
     - base_config
     - access_setup
 
-- include_tasks: default_vars.yml
-  tags:
-    - base_config
-    - access_setup
-
 - name: set resolv location to site, if necessary
   tags:
     - base_config

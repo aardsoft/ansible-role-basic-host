@@ -1,0 +1,55 @@
+#!/bin/bash
+
+_ADM_UID={{adm_uid}}
+_ADM_GID={{adm_gid}}
+_ADM_GROUP={{adm_group}}
+_ADM_USER={{adm_user}}
+
+touch /.provisioning-needed
+
+# create admin group, if it doesn't exist
+getent group $_ADM_GROUP
+if [ $? -ne 0 ]; then
+    /usr/sbin/groupadd -g $_ADM_GID $_ADM_GROUP
+fi
+
+# create admin user, if it doesn't exist
+getent passwd $_ADM_USER
+if [ $? -ne 0 ]; then
+    /usr/sbin/useradd -g $_ADM_GROUP -m -u $_ADM_UID $_ADM_USER
+fi
+
+# create admin users .ssh, if it doesn't exist
+_d=/home/$_ADM_USER/.ssh
+if [ ! -d $_d ]; then
+    mkdir -p $_d
+    chown $_ADM_USER: $_d
+    chmod 700 $_d
+fi
+
+# copy authorized keys
+_f=/home/$_ADM_USER/.ssh/authorized_keys
+cp /mnt/c/temp/authorized_keys $_f
+chown $_ADM_USER: $_f
+chmod 600 $_f
+
+# copy sudoers
+_f=/etc/sudoers.d/ansible-access
+cp /mnt/c/temp/adm-sudoers $_f
+chown root: $_f
+chmod 400 $_f
+
+# copy sshd config
+_f=/etc/ssh/sshd_config
+cp /mnt/c/temp/sshd_config $_f
+chown root: $_f
+chmod 640 $_f
+
+/usr/sbin/sshd-gen-keys-start
+cp /etc/ssh/ssh_host_ecdsa_key.pub /mnt/c/temp/
+
+cp /mnt/c/temp/wsl-simpleservice /usr/sbin/
+chmod 755 /usr/sbin/wsl-simpleservice
+
+mkdir -p /etc/wsl-service
+cp /mnt/c/temp/sshd /etc/wsl-service/sshd

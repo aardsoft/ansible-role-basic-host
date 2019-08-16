@@ -1,0 +1,2 @@
+- name: unregister wsl distribution
+  win_command: "wsl --unregister {{item.key}}"

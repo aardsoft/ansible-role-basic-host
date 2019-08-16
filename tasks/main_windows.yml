@@ -1,3 +1,11 @@
+- set_fact:
+    windows_script_directory: 'c:\ci'
+  when: windows_script_directory is undefined
+
+- set_fact:
+    windows_temp_directory: 'c:\temp'
+  when: windows_temp_directory is undefined
+
 # https://support.microsoft.com/en-us/help/942817/how-to-change-the-remote-uac-localaccounttokenfilterpolicy-registry-se
 # Makes sure remote sessions of users in the admin group have admin privileges
 - name: configure LocalAccountTokenFilterPolicy
@@ -17,9 +25,19 @@
   register: wincmd_status
   changed_when: wincmd_status.rc != 0
 
-- name: make sure c:\temp exists
+- name: configure winrm for delayed startup
+  win_service:
+    name: WinRM
+    start_mode: delayed
+
+- name: make sure windows temp directory exists
   win_file:
-    path: 'c:\temp'
+    path: "{{windows_temp_directory}}"
+    state: directory
+
+- name: make sure windows script directory exists
+  win_file:
+    path: "{{windows_script_directory}}"
     state: directory
 
 # this doesn't take proxies, .. into account
@@ -81,3 +99,6 @@
     (item.value.state is undefined or item.value.state == 'present') and
     item.value.url is defined and item.value.product_id is defined and
     item.value.appdata_orphans is defined
+
+- include_tasks: manage_wsl.yml
+  when: wsl_distributions is defined

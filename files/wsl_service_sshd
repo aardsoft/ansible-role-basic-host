@@ -1,0 +1,2 @@
+/usr/sbin/sshd-gen-keys-start
+exec /usr/sbin/sshd -D -E /var/log/sshd.log
