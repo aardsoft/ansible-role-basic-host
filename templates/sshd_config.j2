@@ -18,7 +18,7 @@ Protocol {{sshd.protocol|default(2)}}
 {# bunch of HostKey directives matching the system. If this is ever #}
 {# run against a host without SSHd running yet (unlikely) no config #}
 {# is created, which only leads to warnings until next ansible run. #}
-{% if ssh_host_keys.matched > 0 %}
+{% if ssh_host_keys is defined and ssh_host_keys.matched > 0 %}
   {% for host_key in ssh_host_keys.files %}
 HostKey {{host_key.path}}
   {% endfor %}
