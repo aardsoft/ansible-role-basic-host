@@ -160,6 +160,22 @@
   tags:
     - access_setup
 
+- name: locate repo files (provisioning)
+  find:
+    paths: /etc/zypp/repos.d/
+    patterns: "*.repo"
+    recurse: no
+    file_type: file
+  register: find_result
+  when: marker.stat.exists == True
+
+- name: remove repo files (provisioning)
+  file:
+    state: absent
+    path: "{{ item.path }}"
+  with_items: "{{ find_result.files }}"
+  when: marker.stat.exists == True
+
 - name: set additional OBS repos
   zypper_repository:
     name: "{{ item }}"

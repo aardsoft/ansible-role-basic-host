@@ -2,6 +2,11 @@
     is_wsl: True
   when: ansible_kernel is search("Microsoft")
 
+- name: check provisioning marker
+  stat:
+    path: "/.provisioning-needed"
+  register: marker
+
 - name: set sudo package name
   set_fact:
     sudo_pkg: "sudo"
@@ -275,11 +280,6 @@
   tags:
     - access_setup
   when: adm_user is defined
-
-- name: check provisioning marker
-  stat:
-    path: "/.provisioning-needed"
-  register: marker
 
 - name: create networkd configuration directory
   file:
