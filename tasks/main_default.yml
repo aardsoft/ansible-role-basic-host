@@ -227,7 +227,13 @@
   when: adm_group is defined and adm_gid is defined
 
 - name: create management user
-  user: name={{ adm_user }} uid={{ adm_uid }} group={{ adm_group }} groups=disk shell=/bin/bash
+  user:
+    name: "{{ adm_user }}"
+    uid: "{{ adm_uid }}"
+    group: "{{ adm_group }}"
+    groups: disk
+    shell: /bin/bash
+    append: yes
   tags:
     - access_setup
   when: adm_user is defined and adm_uid is defined and adm_group is defined
