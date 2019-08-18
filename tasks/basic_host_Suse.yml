@@ -57,7 +57,6 @@
   tags:
     - access_setup
 
-
 - name: configure system proxy
   template:
     src: proxy.j2

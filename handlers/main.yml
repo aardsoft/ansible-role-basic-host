@@ -12,9 +12,12 @@
 
 - name: restart networkd
   systemd: name=systemd-networkd state=restarted daemon_reload=yes
+  when: ansible_service_mgr == 'systemd'
 
 - name: restart logind
   systemd: name=systemd-logind state=restarted
+  when: ansible_service_mgr == 'systemd'
 
 - name: stop NetworkManager
   systemd: name=NetworkManager state=stopped daemon_reload=yes
+  when: ansible_service_mgr == 'systemd'

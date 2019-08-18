@@ -74,6 +74,7 @@
     - base_config
   notify:
     - restart logind
+  when: ansible_service_mgr == 'systemd'
 
 - name: add linger users
   command: loginctl enable-linger "{{item}}"
