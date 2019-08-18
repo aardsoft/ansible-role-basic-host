@@ -1,3 +1,7 @@
+- set_fact:
+    is_wsl: True
+  when: ansible_kernel is search("Microsoft")
+
 - name: set sudo package name
   set_fact:
     sudo_pkg: "sudo"

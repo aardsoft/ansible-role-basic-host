@@ -1,3 +1,6 @@
+- set_fact:
+    is_wsl: False
+
 - set_fact: host_timezone=Europe/Helsinki
   when: host_timezone is undefined
   tags:
