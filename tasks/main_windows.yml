@@ -48,7 +48,7 @@
 - name: download windows installers
   win_get_url:
     url: "{{item.value.url}}"
-    dest: 'c:\temp\{{item.key}}'
+    dest: "{{windows_temp_directory}}\\{{item.key}}"
   with_dict: "{{windows_installers|default({})}}"
   when: >
     (item.value.state is undefined or item.value.state == 'present') and
@@ -70,7 +70,7 @@
     product_id: "{{item.value.product_id}}"
     state: absent
     arguments: "{{item.value.uninstall_arguments}}"
-    path: 'c:\temp\{{item.key}}'
+    path: "{{item.value.path|default(windows_temp_directory)}}\\{{item.key}}"
   when: >
     (item.value.state is defined and item.value.state == 'absent') and
     item.value.product_id is defined and
@@ -81,15 +81,17 @@
 # - general: install the package on a temp system, open powershell,
 #   cd HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall, and
 #   check contents with ls
+# - get-wmiobject Win32_Product | Format-Table IdentifyingNumber, Name, LocalPackage -AutoSize
 - name: install windows installers
   with_dict: "{{windows_installers|default({})}}"
   win_package:
     product_id: "{{item.value.product_id}}"
-    path: 'c:\temp\{{item.key}}'
+    path: "{{item.value.path|default(windows_temp_directory)}}\\{{item.key}}"
     arguments: "{{item.value.arguments|default('')}}"
   when: >
     (item.value.state is undefined or item.value.state == 'present') and
-    item.value.url is defined and item.value.product_id is defined
+    (item.value.url is defined or item.value.path is defined) and
+    item.value.product_id is defined
 
 # for whatever reason windows insists on broken store reference entries in
 # some cases -> nuke those
