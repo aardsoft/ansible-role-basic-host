@@ -53,6 +53,26 @@
   tags:
     - access_setup
 
+- set_fact:
+    _sig_group_mappings:
+      ansible26: configmanagement
+      ansible27: configmanagement
+      openstack-queens: cloud
+      openstack-rocky: cloud
+      openstack-stein: cloud
+      ceph-jewel: storage
+      ceph-nautilus: storage
+      gluster-4.0: storage
+      gluster-5: storage
+      nfs-ganesha-28: storage
+      ceph-luminous: storage
+      gluster-3.12: storage
+      gluster-4.1: storage
+      gluster-6: storage
+  tags:
+    - access_setup
+
+
 # media, sources, vault and debuginfo repositories are not provided by us
 # enabled repositories are configured through centos_repositories. Subkeys
 # are:
@@ -175,6 +195,27 @@
   tags:
     - access_setup
 
+- name: copy CentOS SIG keys
+  copy:
+    src: "{{item.value.gpgkey|default('RPM-GPG-KEY-CentOS-SIG-'+_sig_group_mappings[item.key]|capitalize)}}"
+    dest: "/etc/pki/rpm-gpg/{{item.value.key|default('RPM-GPG-KEY-CentOS-SIG-'+_sig_group_mappings[item.key]|capitalize)}}"
+    owner: root
+    mode: 0644
+  when: centos_sig_repositories is defined
+  with_dict: "{{centos_sig_repositories}}"
+  tags:
+    - access_setup
+
+- name: add CentOS SIG repositories
+  template:
+    src: "CentOS-SIG.repo.j2"
+    dest: /etc/yum.repos.d/Centos-SIG.repo
+    owner: root
+    mode: 0644
+  when: centos_sig_repositories is defined
+  tags:
+    - access_setup
+
 - name: add additional RPM repositories
   template:
     src: "rpm-repo.j2"
@@ -183,6 +224,8 @@
     mode: 0644
   with_dict: "{{ rpm_repos }}"
   when: rpm_repos is defined
+  tags:
+    - access_setup
 
 - name: add SPP repository (no token)
   template:
@@ -195,6 +238,8 @@
     hp_spp_repository is defined and
     (hp_spp_append_dist is undefined or hp_spp_append_dist == False)
     and server_type is defined and server_type == "proliant"
+  tags:
+    - access_setup
 
 - name: add SPP repository (dist token)
   template:
@@ -207,6 +252,8 @@
     hp_spp_repository is defined and
     (hp_spp_append_dist is defined and hp_spp_append_dist == True)
     and server_type is defined and server_type == "proliant"
+  tags:
+    - access_setup
 
 - name: configure dnf
   template:
@@ -223,12 +270,16 @@
 - name: configure python-firewall package (default)
   set_fact:
     python_firewall_package: python-firewall
+  tags:
+    - access_setup
 
 - name: configure python-firewall package (Fedora >= 29)
   set_fact:
     python_firewall_package: python3-firewall
   when:
     ansible_distribution == 'Fedora' and ansible_distribution_version|int >= 29
+  tags:
+    - access_setup
 
 - name: set HP SPP packages
   set_fact:
@@ -287,6 +338,8 @@
   when: >
     network_manager is defined and network_manager == "networkd"
     and ansible_distribution == "CentOS"
+  tags:
+    - access_setup
 
 - name: add HP SPP packages
   set_fact:
@@ -300,16 +353,22 @@
     unwanted_packages:
       - chrony
   when: unwanted_packages is undefined
+  tags:
+    - access_setup
 
 - name: expand package list for bare metal servers
   set_fact:
     base_packages: "{{ base_packages + bare_metal_packages }}"
   when: ansible_virtualization_role == "host"
+  tags:
+    - access_setup
 
 - name: append extra packages
   set_fact:
     base_packages: "{{ base_packages + redhat_extra_packages }}"
   when: redhat_extra_packages is defined
+  tags:
+    - access_setup
 
 - name: Get rid of unwanted packages (dnf)
   dnf:
@@ -328,12 +387,16 @@
     name: "{{ base_packages }}"
     state: present
   when: ansible_pkg_mgr == "dnf"
+  tags:
+    - access_setup
 
 - name: Install base packages (yum)
   yum:
     name: "{{ base_packages }}"
     state: present
   when: ansible_pkg_mgr == "yum"
+  tags:
+    - access_setup
 
 - name: configure static network interfaces (NM)
   template:

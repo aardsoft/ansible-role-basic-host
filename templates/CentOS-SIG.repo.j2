@@ -1,0 +1,27 @@
+#jinja2: lstrip_blocks: True
+# {{ ansible_managed }}
+#
+# An attempt to make SIG repos more manageable
+# SCLO should also be handled through this eventually
+#
+# baseurl=http://buildlogs.centos.org/centos/$releasever/storage/$basearch/nfs-ganesha-28/
+# baseurl=http://mirror.centos.org/$contentdir/$releasever/storage/$basearch/ceph-nautilus/
+# sources: http://vault.centos.org/$contentdir/$releasever/storage/Source/ceph-nautilus/
+# debuginfo:  http://debuginfo.centos.org/$contentdir/$releasever/storage/$basearch/
+# gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-SIG-Storage
+
+{% for repo in centos_sig_repositories %}
+[{{repo}}]
+{% set _group = _sig_group_mappings[repo] %}
+{% set _base = centos_mirror+'/$releasever/'+_group+'/$basearch/'+repo %}
+{% set _key = 'file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-SIG-'+_sig_group_mappings[repo]|capitalize %}
+name={{ centos_sig_repositories[repo]['description'] | default(repo) }}
+type={{ centos_sig_repositories[repo]['type'] | default('rpm-md') }}
+baseurl={{ centos_sig_repositories[repo]['baseurl'] | default(_base) }}
+enabled={{ centos_sig_repositories[repo]['enabled'] | default(1) }}
+gpgkey={{ centos_sig_repositories[repo]['gpgkey'] | default(_key) }}
+gpgcheck={{ centos_sig_repositories[repo]['gpgcheck'] | default(1) }}
+sslverify={{ centos_sig_repositories[repo]['sslverify'] | default(0) }}
+metadata_expire={{ centos_sig_repositories[repo]['metadata_expire'] | default(60) }}
+
+{% endfor %}
