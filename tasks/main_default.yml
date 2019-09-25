@@ -172,6 +172,26 @@
     mode: 0750
     state: directory
 
+# This supports a structure similar to:
+#
+# secret_files:
+#   ceph_mirrors:
+#     dest: /etc/ceph/frontend_mirrors.secret
+#     key: ceph/frontend_mirrors
+- name: add secret files
+  template:
+    src: secretfile.j2
+    dest: "{{item.value.dest}}"
+    owner: "{{item.value.owner|default('root')}}"
+    group: "{{item.value.group|default('root')}}"
+    mode: "{{item.value.mode|default(0400)}}"
+  with_dict: "{{secret_files|default({})}}"
+  when: >
+    item.value.dest is defined and
+    item.value.key is defined and
+    (item.value.state is undefined or
+     (item.value.state is defined and item.value.state != "absent"))
+
 - name: Install sudo (Debian)
   apt:
     name: "{{ sudo_pkg }}"
