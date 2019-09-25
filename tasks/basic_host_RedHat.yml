@@ -261,20 +261,25 @@
       - curl
       - firewalld
       - iotop
+      - iperf
       - iproute
       - jq
+      - fuse
       - net-tools
       - policycoreutils-python
       - procps-ng
       - psmisc
       - screen
       - strace
+      - sysstat
       - tzdata
       - usbutils
       - vim
       - wget
       - "{{python_firewall_package}}"
   when: base_packages is undefined
+  tags:
+    - access_setup
 
 - name: add systemd-networkd to base packages (CentOS)
   set_fact:

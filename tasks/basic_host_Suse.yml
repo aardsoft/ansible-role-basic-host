@@ -122,13 +122,16 @@
       - glibc-locale
       - insserv-compat
       - iotop
+      - iperf
       - iproute2
       - less
       - libopenssl1_0_0-hmac
+      - fuse
       - net-tools
       - python-xml
       - screen
       - strace
+      - sysstat
       - timezone
       - vim
       - wget

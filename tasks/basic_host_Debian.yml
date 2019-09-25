@@ -38,6 +38,7 @@
       - dosfstools
       - ftp
       - fuse
+      - iperf
       - iputils-ping
       - less
       - nvi
@@ -48,6 +49,7 @@
       - screen
       - sshfs
       - strace
+      - sysstat
       - wget
   when: base_packages is undefined
 
