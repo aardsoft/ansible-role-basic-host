@@ -447,6 +447,21 @@
   when: >
     firewalld_available == True and firewalld_rules is defined
 
+# to generate te files, use audit2allow against audit.log
+# as example: cat /var/log/audit/audit.log | audit2allow -m nginx > nginx.te
+- name: add custom selinux modules
+  include: add_selinux_modules.yml
+  with_dict: "{{selinux_te_files|default({})}}"
+  when: >
+    (item.value.state is undefined or
+     (item.value.state is defined and item.value.state != "absent"))
+
+- name: remove custom selinux modules
+  command: "semodule -r {{item.key}}"
+  with_dict: "{{selinux_te_files|default({})}}"
+  when: >
+    item.value.state is defined and item.value.state == "absent"
+
 - name: drop root .ssh (provisioning)
   file:
     path: "/root/.ssh"
