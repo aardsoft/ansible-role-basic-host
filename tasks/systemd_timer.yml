@@ -1,0 +1,55 @@
+# So far this supports simple timers with OnCalendar trigger as cron replacement.
+# Eventually it should get expanded to fully support systemd timers, though the
+# convenience wrappers might receive less functionality.
+#
+# The ability to use both a copied script or a command is present in the timer
+# file, but not yet supported by this role. If a script is present it should be
+# copied, and used as command.
+#
+# This file is the main entry point for adding more than one timer, and for
+# adding host-specific timers through 'systemd_timers' on basic_host run.
+#
+# For adding/removing a single timer include add_timer or remove_timer. See
+# documentation in those files for details.
+
+- name: add systemd timers
+  template:
+    src: systemd-timer-{{item.0}}.j2
+    dest: "/etc/systemd/system/{{item.1}}.{{item.0}}"
+  with_nested:
+    - ['timer', 'service']
+    - "{{systemd_timers}}"
+  when: >
+    systemd_timers[item.1].state is undefined or
+    (systemd_timers[item.1].state is defined and systemd_timers[item.1].state != "absent")
+
+- name: enable timer
+  systemd:
+    daemon_reload: yes
+    name: "{{item.key}}.timer"
+    state: started
+    enabled: yes
+  with_dict: "{{systemd_timers}}"
+  when: >
+    (item.value.state is undefined or
+     (item.value.state is defined and item.value.state != "absent"))
+
+- name: disable timer
+  systemd:
+    daemon_reload: yes
+    name: "{{item.key}}.timer"
+    state: stopped
+    enabled: no
+  with_dict: "{{systemd_timers}}"
+  when: >
+    item.value.state is defined and item.value.state == "absent"
+
+- name: remove systemd timers
+  file:
+    path: /etc/systemd/system/{{item.1}}.{{item.0}}
+    state: absent
+  with_nested:
+    - ['timer', 'service']
+    - "{{systemd_timers}}"
+  when: >
+    systemd_timers[item.1].state is defined and systemd_timers[item.1].state == "absent"

@@ -1,0 +1,6 @@
+[Unit]
+Description={{systemd_timers[item.1].description|default(item.1)}}
+
+[Service]
+Type=oneshot
+ExecStart={{systemd_timers[item.1].script|default(systemd_timers[item.1].command)}}

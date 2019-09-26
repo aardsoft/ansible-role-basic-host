@@ -476,6 +476,10 @@
 
 # non-provisioning related steps should go here, if possible
 
+- name: create systemd timers
+  include_tasks: systemd_timer.yml
+  when: systemd_timers is defined
+
 - name: create local groups (known gid)
   group:
     gid: "{{item.value.gid}}"

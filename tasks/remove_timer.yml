@@ -1,0 +1,19 @@
+# this is a convenience method to delete systemd timers
+#
+# - name: remove dummy timer
+#   include_role:
+#     name: basic-host
+#     tasks_from: remove_timer
+#   vars:
+#     systemd_timer_name: dummy-timer
+
+- set_fact:
+    systemd_timers: >
+      {{ {} | combine({
+        systemd_timer_name: {
+          'state': 'absent',
+        }
+      })}}
+
+- name: setup timer
+  include: systemd_timer.yml

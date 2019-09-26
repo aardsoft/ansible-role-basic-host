@@ -1,0 +1,9 @@
+[Unit]
+Description={{systemd_timers[item.1].description|default(item)}}
+
+[Timer]
+OnCalendar={{systemd_timers[item.1].oncalendar}}
+Persistent={{systemd_timers[item.1].persistent|default(true)}}
+
+[Install]
+WantedBy=timers.target
