@@ -1,31 +1,45 @@
+# setting selinux_module_dir avoids reloads on every single run
 - set_fact:
     selinux_module_dir: /tmp
   when: selinux_module_dir is undefined
 
-# might be better not in tmp/without cleanup to avoid the reload delay
+- name: create selinux module dir
+  file:
+    path: "{{selinux_module_dir}}"
+    state: directory
+    mode: 0755
+  when: selinux_module_dir != '/tmp'
+
 - name: copy type enforcement file
   copy:
     src: "{{item.key}}.te"
-    dest: "/tmp/{{item.key}}.te"
+    dest: "{{selinux_module_dir}}/{{item.key}}.te"
     owner: root
     group: root
     mode: 0644
   register: te_copy_result
 
 - name: compile selinux module
-  command: checkmodule -M -m -o /tmp/{{item.key}}.mod /tmp/{{item.key}}.te
+  command: checkmodule -M -m -o {{selinux_module_dir}}/{{item.key}}.mod {{selinux_module_dir}}/{{item.key}}.te
   when: te_copy_result is changed
 
 - name: build selinux policy package
-  command: semodule_package -o /tmp/{{item.key}}.pp -m /tmp/{{item.key}}.mod
+  command: semodule_package -o {{selinux_module_dir}}/{{item.key}}.pp -m {{selinux_module_dir}}/{{item.key}}.mod
   when: te_copy_result is changed
 
 # at least modern selinux replaces packages. This may fail on older systems
 - name: load/update selinux policy package
-  command: semodule -i /tmp/{{item.key}}.pp
+  command: semodule -i {{selinux_module_dir}}/{{item.key}}.pp
+  when: te_copy_result is changed
 
 - name: remove temporary files
   file:
-    path: /tmp/{{item.key}}.*
+    path: "{{selinux_module_dir}}/{{item.key}}.{{suffix}}"
     state: absent
+  with_items:
+    - mod
+    - pp
+    - te
+  loop_control:
+    loop_var: suffix
   when: selinux_module_dir == '/tmp'
