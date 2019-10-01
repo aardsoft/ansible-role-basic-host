@@ -93,6 +93,12 @@
     (item.value.url is defined or item.value.path is defined) and
     item.value.product_id is defined
 
+- name: add extra windows paths
+  with_dict: "{{windows_extra_paths|default({})}}"
+  win_path:
+    elements:
+      - "{{ item.value.path }}"
+
 # for whatever reason windows insists on broken store reference entries in
 # some cases -> nuke those
 - include_tasks: win_remove_applinks.yml
