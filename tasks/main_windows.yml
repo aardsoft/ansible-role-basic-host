@@ -40,6 +40,11 @@
     path: "{{windows_script_directory}}"
     state: directory
 
+- name: make sure management user never expires
+  win_user:
+    name: "{{ adm_user }}"
+    password_never_expires: yes
+
 - name: configure windows hostname
   win_hostname:
     name: "{{inventory_hostname}}"
