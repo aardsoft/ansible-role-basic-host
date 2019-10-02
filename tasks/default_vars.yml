@@ -6,6 +6,12 @@
   tags:
     - base_config
     - access_setup
+# see: https://docs.microsoft.com/en-us/previous-versions/windows/embedded/ms912391(v=winembedded.11)?redirectedfrom=MSDN
+- set_fact: host_timezone_win="FLE Standard Time"
+  when: host_timezone_win is undefined
+  tags:
+    - base_config
+    - access_setup
 - set_fact: adm_uid=10000
   when: adm_uid is undefined
   tags:
