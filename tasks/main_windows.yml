@@ -2,6 +2,10 @@
     windows_script_directory: 'c:\ci'
   when: windows_script_directory is undefined
 
+# subdirectory made available in windows search path
+- set_fact:
+    windows_script_directory_bin: '{{windows_script_directory}}\bin'
+
 - set_fact:
     windows_temp_directory: 'c:\temp'
   when: windows_temp_directory is undefined
@@ -48,6 +52,16 @@
   win_file:
     path: "{{windows_script_directory}}"
     state: directory
+
+- name: make sure windows script directory bin exists
+  win_file:
+    path: "{{windows_script_directory_bin}}"
+    state: directory
+
+- name: make sure windows script bin directory is in path
+  win_path:
+    elements:
+      - "{{windows_script_directory_bin}}"
 
 - name: make sure management user never expires
   win_user:
