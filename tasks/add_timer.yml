@@ -1,5 +1,5 @@
 # this is a convenience method to add systemd timers
-# 
+#
 # - name: do dummy timer
 #   include_role:
 #     name: basic-host
