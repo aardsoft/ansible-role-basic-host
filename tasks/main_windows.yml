@@ -186,5 +186,34 @@
     item.value.url is defined and item.value.product_id is defined and
     item.value.appdata_orphans is defined
 
+- name: create local users (without password)
+  win_user:
+    account_disabled: "{{item.value.disabled|default('no')}}"
+    name: "{{item.key}}"
+    fullname: "{{item.value.fullname|default(item.key)}}"
+    description: "{{item.value.comment|default('Created by ansible')}}"
+    groups: "{{item.value.groups|default('')}}"
+    state: "{{item.value.state|default('present')}}"
+    password_expired: "{{item.value.password_expired|default('no')}}"
+    password_never_expires: "{{item.value.password_never_expires|default('no')}}"
+    user_cannot_change_password: "{{item.value.user_cannot_change_password|default('yes')}}"
+  with_dict: "{{win_users}}"
+  when: win_users is defined and item.value.passdb_entry is undefined
+
+- name: create local users (with password)
+  win_user:
+    account_disabled: "{{item.value.disabled|default('no')}}"
+    name: "{{item.key}}"
+    fullname: "{{item.value.fullname|default(item.key)}}"
+    description: "{{item.value.comment|default('Created by ansible')}}"
+    groups: "{{item.value.groups|default('')}}"
+    state: "{{item.value.state|default('present')}}"
+    password: "{{lookup(passdb, item.value.passdb_entry)}}"
+    password_expired: "{{item.value.password_expired|default('no')}}"
+    password_never_expires: "{{item.value.password_never_expires|default('no')}}"
+    user_cannot_change_password: "{{item.value.user_cannot_change_password|default('yes')}}"
+  with_dict: "{{win_users}}"
+  when: win_users is defined and item.value.passdb_entry is defined
+
 - include_tasks: manage_wsl.yml
   when: wsl_distributions is defined
