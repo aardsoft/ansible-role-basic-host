@@ -30,6 +30,15 @@
     name: WinRM
     start_mode: delayed
 
+- name: check program files folder path
+  win_command: powershell.exe -Command "[environment]::getfolderpath('Programfiles')"
+  register: wincmd_status
+  changed_when: false
+
+- name: register program files folder path ({{wincmd_status}})
+  set_fact:
+    program_files_path: "{{wincmd_status.stdout_lines[0]}}"
+
 - name: make sure windows temp directory exists
   win_file:
     path: "{{windows_temp_directory}}"
