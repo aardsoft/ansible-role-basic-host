@@ -8,7 +8,12 @@
 # the ansible created files.
 
 [Match]
+{% if item.value.type is undefined or item.value.type is defined and item.value.type != "veth" %}
 Name={{item.key}}
+{% endif %}
+{% if item.value.hwaddr is defined and item.value.type is defined and item.value.type == "veth" %}
+MACAddress={{ item.value.hwaddr }}
+{% endif %}
 #MACAddress=
 #Path=
 #Driver=

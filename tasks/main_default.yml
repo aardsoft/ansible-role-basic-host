@@ -320,7 +320,7 @@
     network_manager is defined and network_manager == "networkd" and
     item.value.type is defined and item.value.type != "phys" and
     (item.value.manager is undefined or item.value.manager == "networkd") and
-    item.key != "ilo"
+    item.key != "ilo" and item.value.type != "veth"
   notify:
     - restart networkd
   tags:
