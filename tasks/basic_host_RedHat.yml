@@ -74,6 +74,19 @@
   tags:
     - access_setup
 
+- name: locate old SCLo repo files
+  find:
+    paths: /etc/yum.repos.d/
+    patterns: "CentOS-SCLo*.repo"
+    recurse: no
+    file_type: file
+  register: find_result
+
+- name: remove old SCLo repo files
+  file:
+    state: absent
+    path: "{{ item.path }}"
+  with_items: "{{ find_result.files }}"
 
 # media, sources, vault and debuginfo repositories are not provided by us
 # enabled repositories are configured through centos_repositories. Subkeys
@@ -82,13 +95,10 @@
 # - plus
 # - cr
 # - fasttrack
-# - sclo
-# - sclo_rh
 #
 # example:
 # centos_repositories
-#   sclo: 1
-#   sclo_rh: 1
+#   cr: 1
 - name: configure dist repos (CentOS)
   template:
     src: "{{item}}.j2"
@@ -99,8 +109,6 @@
     - CentOS-Base.repo
     - CentOS-CR.repo
     - CentOS-fasttrack.repo
-#    - CentOS-SCLo-scl.repo
-#    - CentOS-SCLo-scl-rh.repo
   when: ansible_distribution == "CentOS" and centos_mirror is defined
   tags:
     - access_setup
