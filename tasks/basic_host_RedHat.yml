@@ -69,6 +69,8 @@
       gluster-3.12: storage
       gluster-4.1: storage
       gluster-6: storage
+      sclo: sclo
+      rh: sclo
   tags:
     - access_setup
 
@@ -97,8 +99,8 @@
     - CentOS-Base.repo
     - CentOS-CR.repo
     - CentOS-fasttrack.repo
-    - CentOS-SCLo-scl.repo
-    - CentOS-SCLo-scl-rh.repo
+#    - CentOS-SCLo-scl.repo
+#    - CentOS-SCLo-scl-rh.repo
   when: ansible_distribution == "CentOS" and centos_mirror is defined
   tags:
     - access_setup
