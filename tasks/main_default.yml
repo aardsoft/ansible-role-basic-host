@@ -449,6 +449,9 @@
 
 # to generate te files, use audit2allow against audit.log
 # as example: cat /var/log/audit/audit.log | audit2allow -m nginx > nginx.te
+# or, in case there's already a module which should not be overriden, create
+# using a different name:
+# grep ctdb /var/log/audit/audit.log | audit2allow -M ctdb-ceph
 - name: add custom selinux modules
   include: add_selinux_modules.yml
   with_dict: "{{selinux_te_files|default({})}}"
