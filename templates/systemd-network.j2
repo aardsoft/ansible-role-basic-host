@@ -154,6 +154,14 @@ OutgoingInterface={{ item.value.policyrules[rule].outgoinginterface }}
   {% endfor %}
 {% endif %}
 
+
+{% if item.value.extra_ipv4 is defined %}
+ {% for ip in item.value.extra_ipv4 %}
+[Address]
+Address={{ip}}
+ {% endfor %}
+{% endif %}
+
 {# FIXME #}
 {% if item.value.addresses is defined %}
 #[Address]
