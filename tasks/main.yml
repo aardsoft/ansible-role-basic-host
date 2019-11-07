@@ -7,6 +7,19 @@
     - base_config
     - access_setup
 
+# Those two items are a workaround for ansible shortcomings when it comes to
+# variable inclusion. Note that it'll override host specific variables, so should
+# be used with care.
+- name: include additional host variables
+  include_vars: "../host_vars/{{item}}.yml"
+  with_items: "{{basic_host_extra_host_vars}}"
+  when: basic_host_extra_host_vars is defined
+
+- name: include additional group variables
+  include_vars: "../group_vars/{{item}}.yml"
+  with_items: "{{basic_host_extra_group_vars}}"
+  when: basic_host_extra_group_vars is defined
+
 - name: merge local network nodes into global one
   set_fact:
     network_nodes: "{{ {} | combine(network_nodes, local_network_nodes, recursive=True) }}"
