@@ -25,6 +25,16 @@
     network_nodes: "{{ {} | combine(network_nodes, local_network_nodes, recursive=True) }}"
   when: local_network_nodes is defined
 
+- name: merge local vlan definitions into global one
+  set_fact:
+    vlans: "{{ {} | combine(vlans, local_vlans, recursive=True) }}"
+  when: local_vlans is defined
+
+- name: merge local dhcp networks into global one
+  set_fact:
+    dhcp_networks: "{{ {} | combine(dhcp_networks, local_dhcp_networks, recursive=True) }}"
+  when: local_dhcp_networks is defined
+
 - name: set default password store
   set_fact:
     passdb: passwordstore
