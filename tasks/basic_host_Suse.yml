@@ -13,6 +13,15 @@
   tags:
     - access_setup
 
+- name: set core repo list
+  set_fact:
+    suse_core_repos:
+      - oss
+      - non-oss
+  when: suse_core_repos is undefined
+  tags:
+    - access_setup
+
 - name: set suse base URLs
   set_fact:
     suse_base_url: "{{suse_base_url|default('http://download.opensuse.org/')}}"
@@ -54,6 +63,15 @@
   set_fact:
     dist_base=http://download.opensuse.org/distribution/
   when: suse_release != "tumbleweed" and dist_base is undefined
+  tags:
+    - access_setup
+
+- name: override update URL
+  set_fact:
+    update_url: "{{suse_update_url_prefix}}/update/leap/{{suse_release}}"
+  when: >
+    suse_release|float >= 15 and suse_release|float <= 43 and
+    suse_update_url_prefix is defined
   tags:
     - access_setup
 
@@ -153,16 +171,6 @@
   tags:
     - access_setup
 
-- name: set core repos
-  set_fact:
-    core_repos:
-      - name: repo-oss
-        url: "{{ dist_base }}/{{ suse_release }}/repo/oss"
-      - name: repo-non-oss
-        url: "{{ dist_base }}/{{ suse_release }}/repo/non-oss"
-  tags:
-    - access_setup
-
 - name: locate repo files (provisioning)
   find:
     paths: /etc/zypp/repos.d/
@@ -192,12 +200,12 @@
 
 - name: configure core repos
   zypper_repository:
-    name: "{{ item.name }}"
-    repo: "{{ item.url }}"
+    name: "repo-{{ item }}"
+    repo: "{{ dist_base }}/{{ suse_release }}/repo/{{ item }}"
     state: present
     auto_import_keys: yes
     overwrite_multiple: yes
-  with_items: "{{core_repos}}"
+  with_items: "{{suse_core_repos}}"
   tags:
     - access_setup
 
@@ -208,9 +216,7 @@
     state: present
     auto_import_keys: yes
     overwrite_multiple: yes
-  with_items:
-    - oss
-    - non-oss
+  with_items: "{{suse_core_repos}}"
   when: update_url is defined
   tags:
     - access_setup
