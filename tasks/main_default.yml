@@ -92,6 +92,19 @@
     - restart logind
   when: ansible_service_mgr == 'systemd'
 
+- name: add journald configuration
+  template:
+    src: journald.conf.j2
+    dest: /etc/systemd/journald.conf
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - base_config
+  notify:
+    - restart journald
+  when: ansible_service_mgr == 'systemd'
+
 - name: add linger users
   command: loginctl enable-linger "{{item}}"
   changed_when: false
