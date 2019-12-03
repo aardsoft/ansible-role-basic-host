@@ -328,6 +328,7 @@
     group: root
     mode: 0755
     state: directory
+  when: network_manager is defined and network_manager == "networkd"
   tags:
     - access_setup
 
