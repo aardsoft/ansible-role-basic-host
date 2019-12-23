@@ -8,6 +8,19 @@
   tags:
     - access_setup
 
+- name: add network configuration
+  template:
+    src: interfaces.j2
+    dest: /etc/network/interfaces
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - access_setup
+  when: >
+    network_manager is defined and
+    network_manager == "networkd"
+
 - name: configure list of core packages
   set_fact:
     bare_metal_packages:
@@ -42,6 +55,7 @@
       - iperf
       - iputils-ping
       - less
+      - netcat-openbsd
       - nvi
       - openssh-server
       - openssl
