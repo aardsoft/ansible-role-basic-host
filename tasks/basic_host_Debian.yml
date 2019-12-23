@@ -137,12 +137,12 @@
 
 # this just pre-configures the bootloader, bootloader and kernel
 # install needs to happen separately (containers don't need kernels)
-- name: configure default boot devices
-  debconf:
-    name: grub-pc
-    question: 'grub-pc/install_devices'
-    value: "{{ host_bootdevices.stdout }}"
-    vtype: 'multiselect'
-  when: ansible_virtualization_role == "host" or
-        ansible_virtualization_role == "NA" and
-        host_bootdevices is defined
+#- name: configure default boot devices
+#  debconf:
+#    name: grub-pc
+#    question: 'grub-pc/install_devices'
+#    value: "{{ host_bootdevices.stdout }}"
+#    vtype: 'multiselect'
+#  when: ansible_virtualization_role == "host" or
+#        ansible_virtualization_role == "NA" and
+#        host_bootdevices is defined
