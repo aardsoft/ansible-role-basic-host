@@ -112,6 +112,7 @@
 
 - name: Update apt-file cache
   command: apt-file update
+  changed_when: false
 
 - name: Mask tty service
   file:
@@ -134,6 +135,7 @@
   register: host_bootdevices
   when: ansible_virtualization_role == "host" or
         ansible_virtualization_role == "NA"
+  changed_when: false
 
 # this just pre-configures the bootloader, bootloader and kernel
 # install needs to happen separately (containers don't need kernels)
