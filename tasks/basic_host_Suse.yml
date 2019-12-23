@@ -129,6 +129,7 @@
       - lvm2
       - nmap
       - ntp
+      - parted
       - sensors
       - smartmontools
       - tcpdump

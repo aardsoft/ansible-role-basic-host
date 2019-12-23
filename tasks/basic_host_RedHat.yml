@@ -312,6 +312,7 @@
       - lvm2
       - nmap
       - ntp
+      - parted
       - smartmontools
       - tcpdump
       - vconfig

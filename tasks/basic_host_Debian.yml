@@ -13,17 +13,18 @@
     bare_metal_packages:
       - bridge-utils
       - dmidecode
+      - ebtables
       - hdparm
       - ipmitool
-      - ebtables
       - lm-sensors
       - lsof
       - lvm2
       - makedev
       - mdadm
-      - nmap
       - nload
+      - nmap
       - ntp
+      - parted
       - smartmontools
       - tcpdump
       - vlan
