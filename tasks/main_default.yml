@@ -554,3 +554,32 @@
     shell: "{{item.value.shell|default('/bin/bash')}}"
   with_dict: "{{local_users}}"
   when: local_users is defined and item.value.uid is undefined
+
+- name: create .ssh for local users
+  file:
+    path: "{{item.value.home|default('/home/'+item.key)}}/.ssh"
+    owner: "{{item.key}}"
+    group: "{{item.value.group|default(item.key)}}"
+    mode: 0700
+    state: directory
+  with_dict: "{{local_users}}"
+  when: local_users is defined
+
+- name: copy authorized keys for local users
+  template:
+    src: authorized_key_template.j2
+    dest: "{{item.value.home|default('/home/'+item.key)}}/.ssh/authorized_keys"
+    owner: "{{item.key}}"
+    group: "{{item.value.group|default(item.key)}}"
+    mode: 0600
+  with_dict: "{{local_users}}"
+  when: local_users is defined and item.value.key_files is defined
+
+- name: copy authorized keys for local users
+  template:
+    src: sudoers_template.j2
+    dest: "/etc/sudoers.d/{{item.key}}"
+    owner: root
+    mode: 0440
+  with_dict: "{{local_users}}"
+  when: local_users is defined and item.value.sudoers is defined
