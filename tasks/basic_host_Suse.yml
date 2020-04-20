@@ -4,7 +4,18 @@
 - name: use os_release as suse release
   set_fact:
     suse_release: "{{os_release|float}}"
-  when: suse_release is undefined and os_release is defined
+  when: >
+    suse_release is undefined and
+    os_release is defined and os_release != "tumbleweed"
+
+- name: use os_release as suse release (tumbleweed)
+  set_fact:
+    suse_release: tumbleweed
+  when: >
+    suse_release is undefined and
+    os_release is defined and
+    (os_release == "tumbleweed" or os_release == "factory")
+
 
 - name: set suse release
   set_fact:
