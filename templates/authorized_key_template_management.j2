@@ -1,0 +1,8 @@
+# {{ ansible_managed }}
+{% if management_keys is defined %}
+  {% for file in management_keys %}
+{{lookup('file', 'authorized_keys.d/' + file)}}
+  {% endfor %}
+{% else %}
+{{lookup('file', 'authorized_keys')}}
+{% endif %}

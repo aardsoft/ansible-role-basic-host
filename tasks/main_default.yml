@@ -299,9 +299,11 @@
     - access_setup
   when: adm_user is defined
 
+# management user has a specialized template which also allows including
+# just one big authorized_keys
 - name: update management authorized_keys file
-  copy:
-    src: authorized_keys
+  template:
+    src: authorized_key_template_management.j2
     dest: /home/{{ adm_user }}/.ssh/authorized_keys
     owner: "{{ adm_user }}"
     group: "{{ adm_group }}"

@@ -17,8 +17,8 @@
     dest: "{{windows_temp_directory}}\\wsl-simpleservice"
 
 - name: copy authorized_keys to temp
-  win_copy:
-    src: authorized_keys
+  win_template:
+    src: authorized_key_template_management.j2
     dest: "{{windows_temp_directory}}\\authorized_keys"
 
 - name: copy sudoers to temp
