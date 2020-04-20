@@ -29,6 +29,14 @@
   tags:
     - access_setup
 
+- name: set dist token {{ansible_distribution_major_version}}
+  set_fact:
+    dist_token: fedora
+  when:
+    ansible_os_family == 'RedHat' and ansible_distribution == "Fedora"
+  tags:
+    - access_setup
+
 - set_fact:
     centos_repositories: {}
   when: centos_repositories is undefined
