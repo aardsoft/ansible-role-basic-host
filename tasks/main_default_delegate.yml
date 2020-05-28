@@ -1,0 +1,32 @@
+# this is the entry point to include when trying to perform access setup
+# through delegates (like for container deployment). This includes only
+# tasks which correctly handle delegation, and special care needs to be
+# taken not to break that when touching files included here.
+#
+# So far only suse is supported.
+#
+# Delegated access setup only does the following steps:
+# - configure core repositories
+# - install basic packages
+# - create and configure management user
+
+- debug: msg="Running for {{delegate_hostname|default(inventory_hostname)}}"
+
+- name: check provisioning marker
+  stat:
+    path: "/.provisioning-needed"
+  register: marker
+
+- include_tasks: "{{ ansible_os_family }}_basic_setup.yml"
+  when: ansible_os_family == "Debian" or ansible_os_family == "Suse" or ansible_os_family == "RedHat"
+  tags:
+    - base_config
+    - access_setup
+
+- include_tasks: "{{ ansible_os_family }}_package_install.yml"
+  when: ansible_os_family == "Debian" or ansible_os_family == "Suse" or ansible_os_family == "RedHat"
+  tags:
+    - base_config
+    - access_setup
+
+- include: manage_adm_user.yml

@@ -222,14 +222,6 @@
   tags:
     - access_setup
 
-- name: Install sudo (Suse)
-  zypper:
-    name: "{{ sudo_pkg }}"
-    state: present
-  when: ansible_os_family == "Suse"
-  tags:
-    - access_setup
-
 - name: Install sudo {{ansible_os_family}}/dnf
   dnf:
     name: "{{ sudo_pkg }}"

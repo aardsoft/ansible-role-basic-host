@@ -1,0 +1,228 @@
+# this is the part of the suse specific setup that needs to be able to run via
+# delegates as well.
+# When editing this be careful about weird ansible behaviour on delegates:
+# - delegation with delegate_facts set will correctly store the facts in
+#   the delegated to host
+# - variable expansion surprisingly takes place on the inventory host
+# - there is no variable specifying the host things were delegated to
+# To work around this, roles including this via delegation are expected to set
+# a `delegate_hostname' variable. Instead of directly accessing variables the
+# correct form is hostvars[delegate_hostname|default(inventory_hostname)].var
+
+- name: use os_release as suse release
+  set_fact:
+    suse_release: "{{hostvars[delegate_hostname|default(inventory_hostname)].os_release|float}}"
+  when: >
+    hostvars[delegate_hostname|default(inventory_hostname)].suse_release is undefined and
+    hostvars[delegate_hostname|default(inventory_hostname)].os_release is defined and
+    hostvars[delegate_hostname|default(inventory_hostname)].os_release != "tumbleweed"
+
+- name: use os_release as suse release (tumbleweed)
+  set_fact:
+    suse_release: tumbleweed
+  when: >
+    hostvars[delegate_hostname|default(inventory_hostname)].suse_release is undefined and
+    hostvars[delegate_hostname|default(inventory_hostname)].os_release is defined and
+    (hostvars[delegate_hostname|default(inventory_hostname)].os_release == "tumbleweed" or
+    hostvars[delegate_hostname|default(inventory_hostname)].os_release == "factory")
+
+- name: set suse release
+  set_fact:
+    suse_release: 15.0
+  when: >
+    hostvars[delegate_hostname|default(inventory_hostname)].suse_release is undefined
+  tags:
+    - access_setup
+
+- name: set core repo list
+  set_fact:
+    suse_core_repos:
+      - oss
+      - non-oss
+  when: >
+    hostvars[delegate_hostname|default(inventory_hostname)].suse_core_repos is undefined
+  tags:
+    - access_setup
+
+# those should generally be set in global group vars
+# to make things less messy, host specific base URL overrides are not
+# supported for delegates
+- name: set suse base URLs
+  set_fact:
+    suse_base_url: "{{suse_base_url|default('http://download.opensuse.org/')}}"
+    suse_base_url_obs: "{{suse_base_url_obs|default('http://download.opensuse.org/')}}"
+  tags:
+    - access_setup
+
+- name: set suse release
+  set_fact:
+    suse_release: tumbleweed
+    dist_base: "{{suse_base_url}}"
+    obs_base: "{{suse_base_url_obs}}/repositories/"
+    suse_long_release: openSUSE_Tumbleweed
+  when: >
+    hostvars[delegate_hostname|default(inventory_hostname)].suse_release == "tumbleweed"
+  tags:
+    - access_setup
+
+# ansible silently converts "42.2" to float, so string match doesn't work here
+- name: handle leap release naming ({{hostvars[delegate_hostname|default(inventory_hostname)].suse_release}})
+  set_fact:
+    suse_long_release: openSUSE_Leap_{{ hostvars[delegate_hostname|default(inventory_hostname)].suse_release }}
+    dist_base: "{{suse_base_url}}/distribution/leap/"
+    obs_base: "{{suse_base_url_obs}}/repositories/"
+    update_url: "{{suse_base_url}}/update/leap/{{ hostvars[delegate_hostname|default(inventory_hostname)].suse_release }}"
+  when: >
+    hostvars[delegate_hostname|default(inventory_hostname)].suse_release|float >= 15 and
+    hostvars[delegate_hostname|default(inventory_hostname)].suse_release|float <= 43
+  tags:
+    - access_setup
+
+- name: set suse longrelease ({{hostvars[delegate_hostname|default(inventory_hostname)].suse_release}})
+  set_fact:
+    suse_long_release: openSUSE_{{ hostvars[delegate_hostname|default(inventory_hostname)].suse_release }}
+    dist_base: "{{suse_base_url}}/distribution/"
+    obs_base: "{{suse_base_url_obs}}/repositories/"
+  when: >
+    hostvars[delegate_hostname|default(inventory_hostname)].suse_release is defined and
+    hostvars[delegate_hostname|default(inventory_hostname)].suse_long_release is undefined
+  tags:
+    - access_setup
+
+- name: set base URL
+  set_fact:
+    dist_base=http://download.opensuse.org/distribution/
+  when: >
+    hostvars[delegate_hostname|default(inventory_hostname)].suse_release != "tumbleweed" and
+    hostvars[delegate_hostname|default(inventory_hostname)].dist_base is undefined
+  tags:
+    - access_setup
+
+- name: override update URL
+  set_fact:
+    update_url: "{{suse_update_url_prefix}}/update/leap/{{hostvars[delegate_hostname|default(inventory_hostname)].suse_release}}"
+  when: >
+    hostvars[delegate_hostname|default(inventory_hostname)].suse_release|float >= 15 and
+    hostvars[delegate_hostname|default(inventory_hostname)].suse_release|float <= 43 and
+    suse_update_url_prefix is defined
+  tags:
+    - access_setup
+
+# this uses the global proxy_host as probably the template would need adjustments as well
+- name: configure system proxy
+  template:
+    src: proxy.j2
+    dest: /etc/sysconfig/proxy
+    owner: root
+    mode: 0755
+  when: >
+    proxy_host is defined and
+    hostvars[delegate_hostname|default(inventory_hostname)].skip_proxy is undefined
+  tags:
+    - access_setup
+
+- name: install zypper config
+  copy:
+    src: "{{ __zypper_conf }}"
+    dest: /etc/zypp/{{ __zypper_conf }}
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - zypp.conf
+    - zypper.conf
+  loop_control:
+    loop_var: __zypper_conf
+  tags:
+    - access_setup
+
+- name: set basic packages
+  set_fact:
+    bare_metal_packages:
+      - bridge-utils
+      - dmidecode
+      - hdparm
+      - ipmitool
+      - lsof
+      - lvm2
+      - nmap
+      - ntp
+      - parted
+      - sensors
+      - smartmontools
+      - tcpdump
+      - vlan
+    base_packages:
+      - ca-certificates
+      - ca-certificates-mozilla
+      - curl
+      - glibc-locale
+      - insserv-compat
+      - iotop
+      - iperf
+      - iproute2
+      - less
+      - libopenssl1_0_0-hmac
+      - fuse
+      - net-tools
+      - python-xml
+      - screen
+      - strace
+      - sudo
+      - sysstat
+      - timezone
+      - vim
+      - wget
+  when: >
+    hostvars[delegate_hostname|default(inventory_hostname)].base_packages is undefined
+  tags:
+    - access_setup
+
+- name: locate repo files (provisioning)
+  find:
+    paths: /etc/zypp/repos.d/
+    patterns: "*.repo"
+    recurse: no
+    file_type: file
+  register: find_result
+  when: >
+    marker.stat.exists == True
+
+- name: remove repo files (provisioning)
+  file:
+    state: absent
+    path: "{{ __repo_file.path }}"
+  with_items: "{{ find_result.files }}"
+  loop_control:
+    loop_var: __repo_file
+  when: >
+    marker.stat.exists == True
+
+# additional repositories are considered not relevant for initial access
+# repo_ssl_verify is expected to come via vars, and therefore should be usable
+- name: configure core repos
+  zypper_repository:
+    name: "repo-{{__repo}}"
+    repo: "{{ hostvars[delegate_hostname|default(inventory_hostname)].dist_base }}/{{ hostvars[delegate_hostname|default(inventory_hostname)].suse_release }}/repo/{{__repo}}?ssl_verify={{repo_ssl_verify|default('yes')}}"
+    state: present
+    auto_import_keys: yes
+    overwrite_multiple: yes
+  with_items: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_core_repos}}"
+  loop_control:
+    loop_var: __repo
+  tags:
+    - access_setup
+
+- name: configure update repo
+  zypper_repository:
+    name: "update-{{__repo}}"
+    repo: "{{ hostvars[delegate_hostname|default(inventory_hostname)].update_url }}/{{__repo}}?ssl_verify={{repo_ssl_verify|default('yes')}}"
+    state: present
+    auto_import_keys: yes
+    overwrite_multiple: yes
+  with_items: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_core_repos}}"
+  loop_control:
+    loop_var: __repo
+  when: update_url is defined
+  tags:
+    - access_setup
