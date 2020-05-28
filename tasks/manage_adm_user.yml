@@ -1,0 +1,52 @@
+- name: create management group
+  group: name={{ adm_group }} gid={{ adm_gid }} state=present
+  tags:
+    - access_setup
+  when: adm_group is defined and adm_gid is defined
+
+- name: create management user
+  user:
+    name: "{{ adm_user }}"
+    uid: "{{ adm_uid }}"
+    group: "{{ adm_group }}"
+    groups: disk
+    shell: /bin/bash
+    append: yes
+  tags:
+    - access_setup
+  when: adm_user is defined and adm_uid is defined and adm_group is defined
+
+- name: make sure management .ssh exists
+  file:
+    path: /home/{{ adm_user }}/.ssh
+    owner: "{{ adm_user }}"
+    group: "{{ adm_group }}"
+    mode: 0700
+    state: directory
+  tags:
+    - access_setup
+  when: adm_user is defined
+
+# management user has a specialized template which also allows including
+# just one big authorized_keys
+- name: update management authorized_keys file
+  template:
+    src: authorized_key_template_management.j2
+    dest: /home/{{ adm_user }}/.ssh/authorized_keys
+    owner: "{{ adm_user }}"
+    group: "{{ adm_group }}"
+    mode: 0600
+  tags:
+    - access_setup
+  when: adm_user is defined and adm_group is defined
+
+- name: add management sudoers configuration
+  template:
+    src: adm-sudoers.j2
+    dest: /etc/sudoers.d/ansible-access
+    owner: root
+    group: root
+    mode: 0440
+  tags:
+    - access_setup
+  when: adm_user is defined
