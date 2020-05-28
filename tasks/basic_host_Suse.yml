@@ -202,7 +202,7 @@
 - name: set additional OBS repos
   zypper_repository:
     name: "{{ item }}"
-    repo: "{{ obs_base }}/{{ item }}/{{ suse_long_release }}"
+    repo: "{{ obs_base }}/{{ item }}/{{ suse_long_release }}?ssl_verify={{repo_ssl_verify|default('yes')}}"
     state: present
     auto_import_keys: yes
     overwrite_multiple: yes
@@ -213,7 +213,7 @@
 - name: configure core repos
   zypper_repository:
     name: "repo-{{ item }}"
-    repo: "{{ dist_base }}/{{ suse_release }}/repo/{{ item }}"
+    repo: "{{ dist_base }}/{{ suse_release }}/repo/{{ item }}?ssl_verify={{repo_ssl_verify|default('yes')}}"
     state: present
     auto_import_keys: yes
     overwrite_multiple: yes
@@ -224,7 +224,7 @@
 - name: configure update repo
   zypper_repository:
     name: "update-{{ item }}"
-    repo: "{{ update_url }}/{{ item }}"
+    repo: "{{ update_url }}/{{ item }}?ssl_verify={{repo_ssl_verify|default('yes')}}"
     state: present
     auto_import_keys: yes
     overwrite_multiple: yes
@@ -240,7 +240,7 @@
 - name: add additional RPM repositories
   zypper_repository:
     name: "{{ item.key }}"
-    repo: "{{ item.value.baseurl }}"
+    repo: "{{ item.value.baseurl }}?ssl_verify={{repo_ssl_verify|default('yes')}}"
     state: present
     auto_import_keys: yes
     overwrite_multiple: yes
