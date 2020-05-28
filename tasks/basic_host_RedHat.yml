@@ -306,7 +306,6 @@
       - ssaducli
 #      - sut
       - hponcfg
-      - hpdiags
 
 - name: set basic packages
   set_fact:
@@ -371,6 +370,7 @@
   set_fact:
     unwanted_packages:
       - chrony
+      - hpdiags
   when: unwanted_packages is undefined
   tags:
     - access_setup
