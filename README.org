@@ -1,0 +1,196 @@
+* basic-host                                                          :TOC_4:
+  - [[#introduction][Introduction]]
+  - [[#configuration-options][configuration options]]
+    - [[#management-user-configuration][management user configuration]]
+    - [[#firewall-configuration][firewall configuration]]
+    - [[#password-store-configuration][password store configuration]]
+    - [[#time-zone-configuration][time zone configuration]]
+    - [[#dhcp_networks-key][=dhcp_networks= key]]
+    - [[#vlans-key][=vlans= key]]
+    - [[#hostgroup-specific-data-overrides][Host/group specific data overrides]]
+  - [[#configuration-flags][Configuration flags]]
+    - [[#is_wsl][is_wsl]]
+    - [[#firewalld_available][firewalld_available]]
+    - [[#server_type][server_type]]
+    - [[#server_model][server_model]]
+    - [[#server_gen][server_gen]]
+  - [[#tasks-designed-to-be-included-from-other-roles][Tasks designed to be included from other roles]]
+    - [[#add_timer][add_timer]]
+    - [[#install_packages][install_packages]]
+    - [[#main_default_delegate][main_default_delegate]]
+    - [[#remove_timer][remove_timer]]
+
+** Introduction
+
+The =basic-host= sits at the core of our Ansible deployment model. It'll eventually be supplemented by another role pre-parsing some of the yaml structures to make them easier usable by other roles consuming the data.
+
+The basic idea is to have very simple playbooks going through a list of host-groups, and applying roles to it. This roles purpose is to apply basic configuration expected to happen on any host, to leave every system in a setup in a similar basic state, no matter the exact operating system used.
+
+Additionally, it allows adding system specific basic operations like adding additional users or installing additional packages. More complicated or service specific configuration happens in specialised roles. Those roles still make use of data structures introduced by =basic-host=, and may utilise some common operations (like package installations) by including tasks from here.
+
+Ideally it should become possible to generate infrastructure playbooks by specifying the roles to be used for a customer infrastructure.
+
+To make this possible infrastructure metadata is maintained in the =network_nodes+ yaml structure. A minimal entry might look like this:
+
+#+BEGIN_SRC yaml
+network_nodes:
+  system1:
+    type: server
+    rack: 1
+    networks:
+      eth0:
+        vlan: test
+        ipv4: 10.10.10.10/29
+        hwaddr: aa:bb:cc:dd:ee:ff
+        port: 22
+#+END_SRC
+
+This would assume =system1= placed in the first rack to be connected to port 22 on the first switch in the rack. The switch port is in the vlan =test=, the interface connected has the MAC =aa:bb:cc:dd:ee:ff= and will be configured by DHCP.
+
+Even this simple example already has some implicit assumptions:
+
+- no switch entry: assume first switch in rack
+- no explicit DNS record: calculate based on system name and vlan name
+- no explicit network configuration type: assume DHCP
+- look up the vlan ID from a separate table
+
+It gets worse when introducing things like bridges:
+
+#+BEGIN_SRC yaml
+network_nodes:
+  system2:
+    type: server
+    rack: 1
+    networks:
+      eth0:
+        vlans:
+          - default
+          - test
+      vl.test:
+        vlan: test
+        ipv4: 10.10.10.11/29
+        hwaddr: aa:bb:cc:dd:ee:ef
+        port: 22
+      vl.default:
+        type: vlan
+        vlan: default
+        bridge: main
+      main:
+        type: bridge
+        static: yes
+        hwaddr: ff:ee:dd:cc:bb:aa
+        ipv4: 10.0.0.1/24
+#+END_SRC
+
+This configuration now adds two tagged vlans to =eth0=. One vlan receives an IP address via DHCP, the other is attached to a bridge, which has a static IP configured. Note that the interface name used is =main=, not =default= - the Linux network tooling doesn't like =default= as interface name.
+
+It adds some more implicit assumptions and layers of lookups:
+
+- to find the correct vlan looping over all interfaces is required. the =vl.interface= naming is just for easier readability, the relevant bit is the =vlan= key.
+- to find the correct vlan for a bridge also all interfaces need to be queried for the =bridge= key
+
+Currently each role using this information (mainly DHCP and DNS servers) needs to re-implement the same parsing logic for this. It also makes the templates for those unnecessarily complicated, and adding in additional keys hard.
+
+While it'd be easily possible to expect additional keys in each interface it'd add redundant information, which adds overhead and sources for errors. Instead, eventually a pre-parser should be written to solve those implicit dependencies by adding redundant information before other roles consume this data structure.
+
+To avoid redundancy in the Ansible hosts file it's possible to dynamically add hosts to the inventory based on their configuration in =network_nodes=. Currently this is mainly used for VMs and containers.
+
+** configuration options
+*** management user configuration
+The =basic-host= role creates a management user with passwordless =sudo= access on each managed system. UID/GID as well as user- and group name can be overridden. It is recommended to only change those values globally (=group_vars/all=), if at all.
+
+- =adm_uid= contains the UID of the management user, defaulting to =10000=.
+- =adm_gid= contains the GID of the management user, defaulting to =10000=.
+- =adm_user= contains the name of the management user, defaulting to =management=.
+- =adm_group= contains the name of the management group, defaulting to =management=.
+*** firewall configuration
+TODO
+*** password store configuration
+TODO
+
+*** time zone configuration
+As time zone specification is incompatible between Linux/UNIX and Windows two different configuration keys exist.
+
+For Linux =host_timezone= should be used, defaulting to =Europe/Helsinki=.
+
+For Windows =host_timezone_win= should be used, defaulting to =FLE Standard Time=. Microsoft documents the [[https://docs.microsoft.com/en-us/previous-versions/windows/embedded/ms912391(v=winembedded.11)?redirectedfrom=MSDN][list of available time zone descriptions.]]
+*** =dhcp_networks= key
+A configuration structure mainly consumed by DNS and DHCP roles, but documented here as it is shared across roles.
+
+#+BEGIN_SRC yaml
+dhcp_networks:
+  default:
+    subnets:
+      "192.168.1.1/24":
+        options:
+          - option routers 192.168.1.1
+        boot_options:
+          pxe:
+            - next-server 192.168.1.1
+      options:
+        - default-lease-time 86400
+  test2:
+    vlan_id: "2"
+    subnets:
+      "192.168.2.1/24":
+  test3:
+    dns_subdomain: false
+    subnets:
+      "192.168.2.1/24":
+#+END_SRC
+
+The name of each top level entry should match a vlan definition. It is used to look up the vlan ID, unless the =vlan_id= option is specified.
+
+Each configuration may contain multiple subnet definitions. Both on the top level and on subnet level the =options= key is available, containing a list of DHCP configuration options. The available options depend on the DHCP server implementation used in the setup - generally ISC DHCPD is recommended.
+
+Subnet specific options override options set on higher levels. =boot_options= also just takes DHCP configuration options, but is listed separately to allow different options based on boot method (PXE, UEFI).
+
+Without an explicitly configured dynamic address pool this configuration will just prepare the DHCP server to hand out static addresses to servers configured in the =network_nodes= structure, but not hand out addresses without explicitely configured systems.
+
+*** =vlans= key
+A simple key value list containing human readable vlan names and their IDs.
+
+#+BEGIN_SRC yaml
+vlans:
+  "default": "1"
+  "test": "2"
+#+END_SRC
+
+*** Host/group specific data overrides
+It is possible to override/add to some of the global structures for a host or group. Note that lists will get overwritten by the last definition, see [[https://github.com/aardsoft/ansible-role-basic-host/issues/1][Issue 1.]]
+
+- =local_network_nodes= is merged into =network_nodes= for this host or group, if defined.
+- =local_vlans= is merged into =vlans= for this host or group, if defined.
+- =local_dhcp_networks= is merged into =dhcp_networks= for this host or group, if defined.
+
+It also is possible to load additional tasks or variables from files. Each of those variables is a list of values:
+
+- =basic_host_extra_host_vars= will load additional variables from =host_vars/<value>.yml=.
+- =basic_host_extra_group_vars= will load additional variables from =group_vars/<value>.yml=.
+- =basic_host_extra_tasks= will load additional tasks from =playbooks/tasks/<value>.yml=
+
+** Configuration flags
+*** is_wsl
+Set to =true= if running inside of WSL was detected. Default is =false=.
+
+*** firewalld_available
+Set to =true= if firewalld was detected as available and running. Default is =false=. Firewalld usage can be forced by setting =firewalld_required= to true.
+
+*** server_type
+This is undefined by default, and only configured on select servers:
+
+- HP Proliant: =proliant=
+
+*** server_model
+This is undefined by default, and only defined if server_type is configured as well.
+
+*** server_gen
+This is undefined per default, and only defined if server_type is configured, and this particular server type has valid generations.
+
+- HP: =gen9=, =gen10=
+** Tasks designed to be included from other roles
+TODO
+*** add_timer
+*** install_packages
+*** main_default_delegate
+*** remove_timer
