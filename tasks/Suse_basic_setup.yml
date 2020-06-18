@@ -9,7 +9,7 @@
 # a `delegate_hostname' variable. Instead of directly accessing variables the
 # correct form is hostvars[delegate_hostname|default(inventory_hostname)].var
 
-- name: use os_release as suse release
+- name: use os_release as suse release ({{delegate_hostname|default(inventory_hostname)}})
   set_fact:
     suse_release: "{{hostvars[delegate_hostname|default(inventory_hostname)].os_release|float}}"
   when: >
