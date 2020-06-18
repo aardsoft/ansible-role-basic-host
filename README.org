@@ -106,7 +106,72 @@ The =basic-host= role creates a management user with passwordless =sudo= access 
 *** firewall configuration
 TODO
 *** password store configuration
-TODO
+
+Several roles require securely stored credentials to function correctly.
+
+The =passdb= variable configures which password store should be used as default. Without override it is set to =passwordstore=. While ansible supports other backends this is currently the only one all roles are tested with.
+
+When roles are calling the password store it is possible to pass extra arguments, defined in =passdb_extra_arg=. This defaults to = create={{passdb_password_create}} length={{passdb_password_length}}". The variables included there are configured as follows:
+
+- =passdb_password_create= controls if passwords should be created if they don't exist. It defaults to =true=.
+- =passdb_default_password_length= controls the length of newly created passwords, if not otherwise specified. It defaults to =20=.
+
+When using a password store in a role it should generally be possible to set a role specific password store, with fallback to the global setting. For the mariadb role this looks like this:
+
+#+BEGIN_SRC yaml
+- name: set default password store
+  set_fact:
+    mariadb_passdb: "{{passdb|default('passwordstore')}}"
+  when: mariadb_passdb is undefined
+#+END_SRC
+
+If the role is not supposed to autogenerate passwords this is sufficient for accessing passwords, after setting =mariadb_root_passdb_entry= to a valid key inside the password store:
+
+#+BEGIN_SRC yaml
+- name: set password for root/localhost (no-auth, socket)
+  mysql_user:
+    name: root
+    host: localhost
+    login_unix_socket: "{{mariadb_socket}}"
+    password: "{{lookup(mariadb_passdb, mariadb_root_passdb_entry)}}"
+  ignore_errors: True
+  when: mariadb_root_passdb_entry is defined and mariadb_socket is defined
+#+END_SRC
+
+For password creation additional variables need to be configured:
+
+#+BEGIN_SRC yaml
+- name: set default password length
+  set_fact:
+    mariadb_password_length: "{{passdb_password_length|default(20)}}"
+  when: mariadb_password_length is undefined
+
+- name: set default for password creation
+  set_fact:
+    mariadb_password_create: "{{passdb_password_create|default(True)}}"
+  when: mariadb_password_create is undefined
+
+- name: set passdb extra arguments
+  set_fact:
+    mariadb_passdb_extra_arg: " create={{mariadb_password_create}} length={{mariadb_password_length}}"
+#+END_SRC
+
+And now =mariadb_passdb_extra_arg= appended to the passdb call:
+
+#+BEGIN_SRC yaml
+- name: set password for root/localhost (no-auth, socket)
+  mysql_user:
+    name: root
+    host: localhost
+    login_unix_socket: "{{mariadb_socket}}"
+    password: "{{lookup(mariadb_passdb, mariadb_root_passdb_entry+mariadb_passdb_extra_arg)}}"
+  ignore_errors: True
+  when: mariadb_root_passdb_entry is defined and mariadb_socket is defined
+#+END_SRC
+
+If password change should be supported for roles requiring authentication to change the passwerd the recommended way is to provide a key to reference the old password (like =mariadb_old_root_passdb_entry=), move the old password to that key in the password store, and create a new password under the main key.
+
+In the role an authentication attempt should happen early on. On failure, authentication should be re-tried with the old password, and on success, a password change triggered.
 
 *** time zone configuration
 As time zone specification is incompatible between Linux/UNIX and Windows two different configuration keys exist.
