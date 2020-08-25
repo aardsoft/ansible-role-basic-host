@@ -1,0 +1,7 @@
+#jinja2: lstrip_blocks: True
+# {{ ansible_managed }}
+{% if global_environment is defined %}
+ {% for _value in global_environment %}
+{{_value}}
+ {% endfor %}
+{% endif %}

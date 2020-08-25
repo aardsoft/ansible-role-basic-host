@@ -79,6 +79,16 @@
   tags:
     - base_config
 
+- name: add environment
+  template:
+    src: environment.j2
+    dest: /etc/environment
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - base_config
+
 - name: add logind configuration
   template:
     src: logind.conf.j2
