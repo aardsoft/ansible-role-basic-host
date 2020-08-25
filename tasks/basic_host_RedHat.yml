@@ -382,10 +382,17 @@
   tags:
     - access_setup
 
-- name: append extra packages
+- name: append extra packages (redhat)
   set_fact:
     base_packages: "{{ base_packages + redhat_extra_packages }}"
   when: redhat_extra_packages is defined
+  tags:
+    - access_setup
+
+- name: append extra packages
+  set_fact:
+    base_packages: "{{ base_packages + extra_packages }}"
+  when: extra_packages is defined
   tags:
     - access_setup
 
