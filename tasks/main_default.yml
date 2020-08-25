@@ -248,13 +248,13 @@
   tags:
     - access_setup
 
-- name: Install python-selinux (Suse)
-  zypper:
-    name: "python-selinux"
-    state: present
-  when: ansible_os_family == "Suse"
-  tags:
-    - access_setup
+#- name: Install python-selinux (Suse)
+#  zypper:
+#    name: "python-selinux"
+#    state: present
+#  when: ansible_os_family == "Suse"
+#  tags:
+#    - access_setup
 
 - name: Install libselinux-python {{ansible_os_family}}/dnf
   dnf:
