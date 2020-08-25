@@ -1,0 +1,108 @@
+#!/bin/bash
+
+hp_spp_dists="rhel7 sles15 fedora"
+hp_spp_latest="2020.03"
+
+cleanup(){
+    echo "Cleaning up..."
+    umount $hp_spp_mountpoint
+}
+
+usage(){
+    if [ -n "$1" ]; then
+        echo "$1"
+    fi
+
+    cat <<-EOF
+hp-spp-tool create|copy [spp-release]
+
+copy     loop-mounts a HP SPP ISO and copies the files to local storage
+create   creates repository metadata in local storage
+
+This tool reads variables from /etc/hp-spp.conf. They can also be set before
+invoking this script. Variables used are:
+
+hp_spp_isopath     the directory containing all ISO files
+hp_spp_repopath    the directory in local storage for repositories
+hp_spp_dists       distribution tokens for subrepository generation. Defaults to:
+                   'rhel7 sles15 fedora'
+hp_spp_mountpoint  mountpoint to temporarily mount the ISO when copying files.
+                   Defaults to /mnt
+hp_spp_latest      latest SPP version to release. Defaults to the whatever is
+                   the latest release
+hp_spp_release     the release to use. May also be passed as second command
+                   line argument. Defaults to 'hp_spp_latest'
+
+ISO files are expected to be named spp-<release>.iso, i.e., spp-2019.09 for
+the September 2019 SPP.
+EOF
+
+    exit 1
+}
+
+copy_spp_packages(){
+    if [ -z "$hp_spp_isopath" ]; then
+        usage "No ISO path set"
+    fi
+
+    _iso_file="$hp_spp_isopath/spp-$hp_spp_release.iso"
+    if ! [ -f "$_iso_file" ]; then
+        usage "ISO '$_iso_file' not found"
+    fi
+
+    if ! [ -d "$hp_spp_repopath" ]; then
+        usage "Repository path '$hp_spp_repopath' does not exist"
+    fi
+
+    mount -o loop $_iso_file $hp_spp_mountpoint||usage "Failed to mount ISO"
+    rsync -avp /mnt/packages/ $hp_spp_repopath/$hp_spp_release/
+}
+
+create_spp_repos(){
+    if [ -z "$hp_spp_repopath" ]; then
+        usage "No SPP repository path set"
+    fi
+
+    _repodir="$hp_spp_repopath/$hp_spp_release"
+    cd $_repodir||usage "unable to chdir to $_repodir"
+    for dist in $hp_spp_dists; do
+        echo $dist
+        mkdir -p $dist
+        cd $dist
+        ln -fs ../*$dist* .
+        ln -fs ../hpdiags* .
+        find .. -maxdepth 1 -regex "^.*/[^.]*\.+[^.]*\.+[^.]*\.+[^.]*\.+[^.]*$" -exec ln -fs '{}' . \;
+        rm -Rf repodata $dist
+        createrepo .
+        cd $_repodir
+    done
+}
+
+if [ -f /etc/hp-spp.conf ]; then
+    . /etc/hp-spp.conf
+fi
+
+if [ -n "$2" ]; then
+    hp_spp_release=$2
+fi
+
+if [ -z "$hp_spp_release" ]; then
+    hp_spp_release=$hp_spp_latest
+fi
+
+if [ -z "$hp_spp_mountpoint" ]; then
+    hp_spp_mountpoint=/mnt
+fi
+trap cleanup INT TERM EXIT
+
+case "$1" in
+    "copy")
+        copy_spp_packages
+        ;;
+    "create")
+        create_spp_repos
+        ;;
+    *)
+        usage
+        ;;
+esac
