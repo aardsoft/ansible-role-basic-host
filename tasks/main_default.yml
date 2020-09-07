@@ -290,6 +290,7 @@
   template:
     src: systemd-netdev.j2
     dest: "/etc/systemd/network/{{item.key}}.netdev"
+    mode: 0644
   with_dict: "{{network_nodes[inventory_hostname].networks |default({})}}"
   when: >
     network_manager is defined and network_manager == "networkd" and
@@ -305,6 +306,7 @@
   template:
    src: systemd-network.j2
    dest: "/etc/systemd/network/{{item.key}}.network"
+   mode: 0644
   with_dict: "{{network_nodes[inventory_hostname].networks |default({})}}"
   when: >
     network_manager is defined and network_manager == "networkd" and
