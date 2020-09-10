@@ -275,6 +275,16 @@
 # This is split off to allow easier includes from roles using delegates
 - include: manage_adm_user.yml
 
+- name: copy scripts
+  copy:
+    src: "{{item}}"
+    dest: /usr/bin/{{item}}
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - hp-spp-tool
+
 - name: create networkd configuration directory
   file:
     path: /etc/systemd/network

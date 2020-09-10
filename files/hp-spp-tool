@@ -1,6 +1,6 @@
 #!/bin/bash
 
-hp_spp_dists="rhel7 sles15 fedora"
+hp_spp_dists="rhel8 rhel7 sles15 fedora"
 hp_spp_latest="2020.03"
 
 cleanup(){
