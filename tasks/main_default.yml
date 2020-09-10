@@ -115,12 +115,6 @@
     - restart journald
   when: ansible_service_mgr == 'systemd'
 
-- name: add linger users
-  command: loginctl enable-linger "{{item}}"
-  changed_when: false
-  when: logind_linger_users is defined
-  with_items: "{{logind_linger_users}}"
-
 - name: locate existing sshd host keys
   find:
     paths: /etc/ssh/
@@ -574,3 +568,10 @@
     mode: 0440
   with_dict: "{{local_users}}"
   when: local_users is defined and item.value.sudoers is defined
+
+# needs to be after user generation
+- name: add linger users
+  command: loginctl enable-linger "{{item}}"
+  changed_when: false
+  when: logind_linger_users is defined
+  with_items: "{{logind_linger_users}}"
