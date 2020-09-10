@@ -216,32 +216,6 @@
     (item.value.state is undefined or
      (item.value.state is defined and item.value.state != "absent"))
 
-- name: Install sudo (Debian)
-  apt:
-    name: "{{ sudo_pkg }}"
-    state: present
-    update_cache: yes
-    cache_valid_time: 3600
-  when: ansible_os_family == "Debian"
-  tags:
-    - access_setup
-
-- name: Install sudo {{ansible_os_family}}/dnf
-  dnf:
-    name: "{{ sudo_pkg }}"
-    state: present
-  when: ansible_os_family == "RedHat" and ansible_pkg_mgr == "dnf"
-  tags:
-    - access_setup
-
-- name: Install sudo {{ansible_os_family}}/yum
-  yum:
-    name: "{{ sudo_pkg }}"
-    state: present
-  when: ansible_os_family == "RedHat" and ansible_pkg_mgr == "yum"
-  tags:
-    - access_setup
-
 #- name: Install python-selinux (Suse)
 #  zypper:
 #    name: "python-selinux"
@@ -249,22 +223,6 @@
 #  when: ansible_os_family == "Suse"
 #  tags:
 #    - access_setup
-
-- name: Install libselinux-python {{ansible_os_family}}/dnf
-  dnf:
-    name: "libselinux-python"
-    state: present
-  when: ansible_os_family == "RedHat" and ansible_pkg_mgr == "dnf"
-  tags:
-    - access_setup
-
-- name: Install libselinux-python {{ansible_os_family}}/yum
-  yum:
-    name: "libselinux-python"
-    state: present
-  when: ansible_os_family == "RedHat" and ansible_pkg_mgr == "yum"
-  tags:
-    - access_setup
 
 # This is split off to allow easier includes from roles using delegates
 - include: manage_adm_user.yml
