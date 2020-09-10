@@ -1,4 +1,7 @@
 # {{ ansible_managed }}
+{% for line in item.value.sudoers_defaults|default({}) %}
+Defaults:{{item.key}} {{line}}
+{% endfor %}
 {% for line in item.value.sudoers %}
 {{item.key}} {{line}}
 {% endfor %}
