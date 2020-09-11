@@ -411,6 +411,15 @@
   when: >
     firewalld_available == True and firewalld_rules is defined
 
+- name: copy selinux configuration
+  template:
+    src: selinux.config.j2
+    dest: /etc/selinux/config
+    owner: root
+    group: root
+    mode: 0644
+  when: ansible_os_family == "RedHat"
+
 # to generate te files, use audit2allow against audit.log
 # as example: cat /var/log/audit/audit.log | audit2allow -m nginx > nginx.te
 # or, in case there's already a module which should not be overriden, create
