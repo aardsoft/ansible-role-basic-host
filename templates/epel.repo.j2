@@ -1,23 +1,29 @@
+{% if _os_release|int == 8 %}
+{% set _dir = "/Everything" %}
+{% else %}
+{% set _dir = "" %}
+{% endif %}
+
 [epel]
-name=Extra Packages for Enterprise Linux 7 - $basearch
-baseurl={{ epel_mirror }}/epel/7/$basearch
+name=Extra Packages for Enterprise Linux {{_os_release}} - $basearch
+baseurl={{ epel_mirror }}/epel/{{_os_release}}{{_dir}}/$basearch
 failovermethod=priority
 enabled={{ epel_repositories.epel | default('1') }}
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-{{_os_release}}
 
 [epel-debuginfo]
-name=Extra Packages for Enterprise Linux 7 - $basearch - Debug
-baseurl={{ epel_mirror }}/epel/7/$basearch/debug
+name=Extra Packages for Enterprise Linux {{_os_release}} - $basearch - Debug
+baseurl={{ epel_mirror }}/epel/{{_os_release}}{{_dir}}/$basearch/debug
 failovermethod=priority
 enabled={{ epel_repositories.epel_debug | default('0') }}
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-{{_os_release}}
 gpgcheck=1
 
 [epel-source]
-name=Extra Packages for Enterprise Linux 7 - $basearch - Source
-baseurl={{ epel_mirror }}/epel/7/SRPMS
+name=Extra Packages for Enterprise Linux {{_os_release}} - $basearch - Source
+baseurl={{ epel_mirror }}/epel/{{_os_release}}{{_dir}}/SRPMS
 failovermethod=priority
 enabled={{ epel_repositories.epel_source | default('0') }}
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-{{_os_release}}
 gpgcheck=1

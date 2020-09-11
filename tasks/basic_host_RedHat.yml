@@ -21,11 +21,33 @@
   tags:
     - access_setup
 
+- set_fact:
+    _os_release: "{{os_release|default(ansible_distribution_major_version)}}"
+  tags:
+    - access_setup
+
+# enable epel per default on CentOS <= 7 for legacy reasons
+- set_fact:
+    use_epel: True
+  when: >
+    ansible_distribution == "CentOS" and epel_mirror is defined and
+    use_epel is undefined and _os_release|int <= 7
+
 - name: set dist token {{ansible_distribution_major_version}}
   set_fact:
     dist_token: rhel7
-  when:
-    ansible_os_family == 'RedHat' and ansible_distribution_major_version|int == 7
+  when: >
+    ansible_os_family == 'RedHat' and
+    ansible_distribution_major_version|int == 7
+  tags:
+    - access_setup
+
+- name: set dist token {{ansible_distribution_major_version}}
+  set_fact:
+    dist_token: rhel8
+  when: >
+    ansible_os_family == 'RedHat' and
+    ansible_distribution_major_version|int == 8
   tags:
     - access_setup
 
@@ -121,6 +143,20 @@
   tags:
     - access_setup
 
+- name: configure additional CentOS 8 repositories
+  template:
+    src: "{{item}}.j2"
+    dest: /etc/yum.repos.d/{{item}}
+    owner: root
+    mode: 0644
+  with_items:
+    - CentOS-AppStream.repo
+  when: >
+    ansible_distribution == "CentOS" and centos_mirror is defined
+    and _os_release|int == 8
+  tags:
+    - access_setup
+
 # available repository keys, the ones with asterisk are enabled per default:
 # - fedora*
 # - source
@@ -158,6 +194,18 @@
   tags:
     - access_setup
 
+- name: drop dist repos included in base (CentOS8)
+  file:
+    state: absent
+    path: /etc/yum.repos.d/{{item}}
+  with_items:
+    - CentOS-centosplus.repo
+    - CentOS-Extras.repo
+  when: >
+    ansible_distribution == "CentOS" and _os_release|int >= 8
+  tags:
+    - access_setup
+
 - name: configure epel repos (CentOS)
   template:
     src: "{{item}}.j2"
@@ -167,14 +215,29 @@
   with_items:
     - epel.repo
     - epel-testing.repo
-  when: ansible_distribution == "CentOS" and epel_mirror is defined
+  when: >
+    ansible_distribution == "CentOS" and epel_mirror is defined and
+    use_epel is defined and use_epel == True
+  tags:
+    - access_setup
+
+- name: drop epel repos when not configured (CentOS)
+  file:
+    state: absent
+    path: /etc/yum.repos.d/{{item}}
+  with_items:
+    - epel.repo
+    - epel-testing.repo
+  when: >
+    ansible_distribution == "CentOS" and epel_mirror is defined and
+    use_epel is undefined or use_epel != True
   tags:
     - access_setup
 
 - name: add epel repo key (CentOS)
   copy:
-    src: "RPM-GPG-KEY-EPEL-7"
-    dest: /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+    src: "RPM-GPG-KEY-EPEL-{{_os_release}}"
+    dest: "/etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-{{_os_release}}"
     owner: root
     mode: 0644
   when: ansible_distribution == "CentOS" and epel_mirror is defined
@@ -230,7 +293,9 @@
     dest: /etc/yum.repos.d/Centos-SIG.repo
     owner: root
     mode: 0644
-  when: centos_sig_repositories is defined
+  when: >
+    centos_sig_repositories is defined and
+    _os_release|int == 7
   tags:
     - access_setup
 
@@ -291,11 +356,27 @@
   tags:
     - access_setup
 
-- name: configure python-firewall package (Fedora >= 29)
+- name: configure python-firewall package (Fedora >= 29, Centos >= 8)
   set_fact:
     python_firewall_package: python3-firewall
-  when:
-    ansible_distribution == 'Fedora' and ansible_distribution_version|int >= 29
+  when: >
+    (ansible_distribution == 'Fedora' and _os_release|int >= 29) or
+    (ansible_distribution == 'CentOS' and _os_release|int >= 8)
+  tags:
+    - access_setup
+
+- name: configure python-selinux package (default)
+  set_fact:
+    python_selinux_package: libselinux-python
+  tags:
+    - access_setup
+
+- name: configure python-selinux package (Fedora >= 29, Centos >= 8)
+  set_fact:
+    python_selinux_package: python3-libselinux
+  when: >
+    (ansible_distribution == 'Fedora' and _os_release|int >= 29) or
+    (ansible_distribution == 'CentOS' and _os_release|int >= 8)
   tags:
     - access_setup
 
@@ -307,10 +388,23 @@
 #      - sut
       - hponcfg
 
+- name: add base packages for Fedora and Centos < 8
+  set_fact:
+    extra_base_packages_centos7:
+      - screen
+      - policycoreutils-python
+    extra_bare_base_packages_centos7:
+      - ntp
+      - bridge-utils
+  when: >
+    (ansible_distribution == 'Fedora') or
+    (ansible_distribution == 'CentOS' and _os_release|int <= 7)
+  tags:
+    - access_setup
+
 - name: set basic packages
   set_fact:
     bare_metal_packages:
-      - bridge-utils
       - dmidecode
       - hdparm
       - ipmitool
@@ -318,7 +412,6 @@
       - lsof
       - lvm2
       - nmap
-      - ntp
       - parted
       - smartmontools
       - tcpdump
@@ -335,16 +428,16 @@
       - jq
       - fuse
       - net-tools
-      - policycoreutils-python
       - procps-ng
       - psmisc
-      - screen
       - strace
+      - sudo
       - sysstat
       - tzdata
       - usbutils
       - vim
       - wget
+      - "{{python_selinux_package}}"
       - "{{python_firewall_package}}"
   when: base_packages is undefined
   tags:
@@ -355,7 +448,7 @@
     base_packages: "{{ base_packages }} + [ 'systemd-networkd' ]"
   when: >
     network_manager is defined and network_manager == "networkd"
-    and ansible_distribution == "CentOS"
+    and ansible_distribution == "CentOS" and _os_release|int <= 7
   tags:
     - access_setup
 
@@ -379,6 +472,23 @@
   set_fact:
     base_packages: "{{ base_packages + bare_metal_packages }}"
   when: ansible_virtualization_role == "host"
+  tags:
+    - access_setup
+
+- name: expand package list for bare metal servers (Centos 7)
+  set_fact:
+    base_packages: "{{ base_packages + extra_bare_base_packages_centos7 }}"
+  when: >
+    ansible_virtualization_role == "host" and
+    extra_bare_base_packages_centos7 is defined
+  tags:
+    - access_setup
+
+- name: expand package list for Centos 7/Fedora
+  set_fact:
+    base_packages: "{{ base_packages + extra_base_packages_centos7 }}"
+  when: >
+    extra_base_packages_centos7 is defined
   tags:
     - access_setup
 

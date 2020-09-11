@@ -9,33 +9,53 @@
 #
 # If the mirrorlist= does not work for you, as a fall back you can try the
 # remarked out baseurl= line instead.
-#
-#
+
+{% if _os_release|int == 7 %}
+{% set _gpg_key = "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7" %}
+{% elif _os_release|int == 8 %}
+{% set _gpg_key = "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial" %}
+{% else %}
+{% set _gpg_key = _os_release|int %}
+{% endif %}
 
 [base]
 name=CentOS-$releasever - Base
+{% if _os_release|int == 7 %}
 baseurl={{ centos_mirror }}/$releasever/os/$basearch/
+{% elif _os_release|int == 8 %}
+baseurl={{ centos_mirror }}/$releasever/BaseOS/$basearch/os/
+{% endif %}
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+gpgkey={{_gpg_key}}
 
+{% if _os_release|int == 7 %}
 #released updates
 [updates]
 name=CentOS-$releasever - Updates
 baseurl={{ centos_mirror }}/$releasever/updates/$basearch/
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+gpgkey={{_gpg_key}}
+{% endif %}
 
 #additional packages that may be useful
 [extras]
 name=CentOS-$releasever - Extras
+{% if _os_release|int == 7 %}
 baseurl={{ centos_mirror }}/$releasever/extras/$basearch/
+{% elif _os_release|int == 8 %}
+baseurl={{ centos_mirror }}/$releasever/extras/$basearch/os/
+{% endif %}
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+gpgkey={{_gpg_key}}
 
 #additional packages that extend functionality of existing packages
 [centosplus]
 name=CentOS-$releasever - Plus
+{% if _os_release|int == 7 %}
 baseurl={{ centos_mirror }}/$releasever/centosplus/$basearch/
+{% elif _os_release|int == 8 %}
+baseurl={{ centos_mirror }}/$releasever/centosplus/$basearch/os/
+{% endif %}
 gpgcheck=1
 enabled={{ centos_repositories.plus | default('0') }}
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+gpgkey={{_gpg_key}}

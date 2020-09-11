@@ -1,23 +1,23 @@
 [epel-testing]
-name=Extra Packages for Enterprise Linux 7 - Testing - $basearch
-baseurl={{ epel_mirror }}/epel/testing/7/$basearch
+name=Extra Packages for Enterprise Linux {{_os_release}} - Testing - $basearch
+baseurl={{ epel_mirror }}/epel/testing/{{_os_release}}/$basearch
 failovermethod=priority
 enabled=0
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-{{_os_release}}
 
 [epel-testing-debuginfo]
-name=Extra Packages for Enterprise Linux 7 - Testing - $basearch - Debug
-baseurl={{ epel_mirror }}/epel/testing/7/$basearch/debug
+name=Extra Packages for Enterprise Linux {{_os_release}} - Testing - $basearch - Debug
+baseurl={{ epel_mirror }}/epel/testing/{{_os_release}}/$basearch/debug
 failovermethod=priority
 enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-{{_os_release}}
 gpgcheck=1
 
 [epel-testing-source]
-name=Extra Packages for Enterprise Linux 7 - Testing - $basearch - Source
-baseurl={{ epel_mirror }}/epel/testing/7/SRPMS
+name=Extra Packages for Enterprise Linux {{_os_release}} - Testing - $basearch - Source
+baseurl={{ epel_mirror }}/epel/testing/{{_os_release}}/SRPMS
 failovermethod=priority
 enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-{{_os_release}}
 gpgcheck=1
