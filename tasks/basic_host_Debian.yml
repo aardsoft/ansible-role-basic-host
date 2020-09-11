@@ -21,6 +21,16 @@
     network_manager is defined and
     network_manager == "networkd"
 
+- name: set sudo package name for Debian
+  set_fact:
+    sudo_pkg: "sudo-ldap"
+  when: >
+    ansible_distribution == 'Debian' and
+    sudo_pkg is undefined
+  tags:
+    - base_config
+    - access_setup
+
 - name: configure list of core packages
   set_fact:
     bare_metal_packages:
