@@ -60,6 +60,7 @@
     state: present
     auto_import_keys: yes
     overwrite_multiple: yes
+    disable_gpg_check: "{{ item.value.gpg_check|default('yes')}}"
   with_dict: "{{ rpm_repos }}"
   when: rpm_repos is defined
   tags:
