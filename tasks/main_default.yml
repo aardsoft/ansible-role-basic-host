@@ -197,6 +197,7 @@
     mode: "{{item.value.mode|default(0400)}}"
   with_dict: "{{secret_files|default({})}}"
   when: >
+    default_passdb_available == True and
     item.value.dest is defined and
     item.value.key is defined and
     (item.value.state is undefined or
