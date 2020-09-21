@@ -6,6 +6,14 @@
 # table. Fortunately firewalld is smart enough to not add duplicate rules,
 # _and_ logs if a rule is already exist/doesn't exist, which simplifies state
 # handling here.
+#
+# Once firewalld 0.9 is widely available parts of this should get easier.
+# To forward traffic between two interfaces in the same zone:
+# firewall-cmd --zone=internal --add-forward
+# https://github.com/firewalld/firewalld/pull/613
+#
+# for debugging, recent firewalld added
+# firewall-cmd --set-log-denied=all
 
 - name: enable firewalld routed port ({{rule.key}}) (permanent)
   command: >
