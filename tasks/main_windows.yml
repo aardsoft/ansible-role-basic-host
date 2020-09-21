@@ -119,6 +119,9 @@
     ntp_servers is defined and
     (windows_time is undefined or windows_time == "ntp")
 
+# TODO: ICMP should be enabled per default for Windows
+#- name: configure ICMP in firewall
+
 - name: configure windows hostname
   win_hostname:
     name: "{{inventory_hostname}}"
