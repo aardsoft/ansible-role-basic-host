@@ -1,5 +1,9 @@
 - set_fact:
+    default_passdb_available: False
     is_wsl: False
+  tags:
+    - base_config
+    - access_setup
 
 - set_fact: host_timezone=Europe/Helsinki
   when: host_timezone is undefined

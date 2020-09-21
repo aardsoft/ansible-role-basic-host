@@ -59,6 +59,29 @@
     - base_config
     - access_setup
 
+- name: check default password store access
+  set_fact:
+    _passdb_check_value: "{{lookup(passdb, passdb_check_entry)}}"
+  register: _passdb_result
+  ignore_errors: True
+  when: >
+    passdb_check_entry is defined
+
+# This is for backwards compatibility. This will fail during execution if
+# password store is not available
+- name: setting default password store availability to true without check
+  set_fact:
+    default_passdb_available: True
+  when: _passdb_result is skipped
+
+- name: setting default password store availability to true
+  set_fact:
+    default_passdb_available: True
+  when: _passdb_result is succeeded
+
+- debug: msg="Passdb is not available, some roles may fail"
+  when: _passdb_result is failed
+
 - name: include main tasks for non-Windows
   include_tasks: main_default.yml
   tags:
