@@ -98,9 +98,10 @@ Tunnel={{tunnel}}
 
 {% if item.value.routes is defined %}
   {% for route in item.value.routes %}
-    {% if item.value.routes[route].gateway is defined %}
 [Route]
+      {% if item.value.routes[route].gateway is defined %}
 Gateway={{ item.value.routes[route].gateway }}
+      {% endif %}
       {% if item.value.routes[route].destination is defined %}
 Destination={{ item.value.routes[route].destination }}
       {% endif %}
@@ -117,8 +118,6 @@ PreferredSource={{ item.value.routes[route].preferredsource }}
       {% if item.value.routes[route].table is defined %}
 Table={{ item.value.routes[route].table }}
       {% endif %}
-
-    {% endif %}
   {% endfor %}
 {% endif %}
 
