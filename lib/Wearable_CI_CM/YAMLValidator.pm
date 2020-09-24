@@ -218,8 +218,13 @@ sub validateNetworkSection {
               push @{$vlans->{phy}}, $if_key =~ /^vl.(.*)/g;
             } elsif (defined %$networks{$if_key}->{type}
                      and %$networks{$if_key}->{type} eq "bridge"){
-              print "Bridge: $key, $if_key\n";
-              push @{$bridges->{phy}}, $if_key;
+              if (defined %$networks{$if_key}->{empty} and
+                  %$networks{$if_key}->{empty} == 1){
+                print "Empty bridge: $key, $if_key\n";
+              } else {
+                print "Bridge: $key, $if_key\n";
+                push @{$bridges->{phy}}, $if_key;
+              }
             } elsif (defined %$networks{$if_key}->{type}
                      and %$networks{$if_key}->{type} eq "bond"){
               print "Bond: $key, $if_key\n";
