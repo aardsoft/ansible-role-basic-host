@@ -19,6 +19,8 @@
     - [[#install_packages][install_packages]]
     - [[#main_default_delegate][main_default_delegate]]
     - [[#remove_timer][remove_timer]]
+  - [[#references][References]]
+    - [[#windows-specific-documentation][Windows specific documentation]]
 
 ** Introduction
 
@@ -259,3 +261,11 @@ TODO
 *** install_packages
 *** main_default_delegate
 *** remove_timer
+** References
+*** Windows specific documentation
+- [[https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_execution_policies?view=powershell-6][PowerShell execution policies]]
+- [[https://devblogs.microsoft.com/commandline/background-task-support-in-wsl/][Background tasks in WSL]]. Note that this does not provide a mechanism for starting background tasks on bootup.
+- Old Windows versions may trigger [[https://github.com/Microsoft/WSL/issues/651][Error 0x80070005]]
+- [[https://ss64.com/nt/syntax-variables.html][List of standard Windows environment variables]]
+- [[https://4sysops.com/archives/enabling-powershell-remoting-fails-due-to-public-network-connection-type/][PowerShell remoting issues]]. TL;DR: PowerShell remote requires a non-public firewall zone. We're using SSH for that reason, but also set firewall zone to private in case PowerShell access is required
+- [[https://docs.microsoft.com/en-us/visualstudio/install/tools-for-managing-visual-studio-instances?view=vs-2019][Detect VS studio instances with vswhere]]
