@@ -8,7 +8,10 @@
 # This setting allows to turn the proxy on and off while
 # preserving the particular proxy setup.
 #
-PROXY_ENABLED="{{ proxy_enabled | default("no") }}"
+{% if proxy_host is undefined %}
+{% set proxy_host=hostvars[delegate_hostname|default(inventory_hostname)].proxy_host %}
+{% endif %}
+PROXY_ENABLED="{{ hostvars[delegate_hostname|default(inventory_hostname)].proxy_enabled | default("no") }}"
 
 ## Type:	string
 ## Default:	""

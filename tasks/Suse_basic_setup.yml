@@ -116,7 +116,7 @@
     owner: root
     mode: 0755
   when: >
-    proxy_host is defined and
+    hostvars[delegate_hostname|default(inventory_hostname)].proxy_host is defined and
     hostvars[delegate_hostname|default(inventory_hostname)].skip_proxy is undefined
   tags:
     - access_setup
@@ -223,6 +223,6 @@
   with_items: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_core_repos}}"
   loop_control:
     loop_var: __repo
-  when: update_url is defined
+  when: hostvars[delegate_hostname|default(inventory_hostname)].update_url is defined
   tags:
     - access_setup
