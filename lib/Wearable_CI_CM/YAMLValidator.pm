@@ -246,7 +246,13 @@ sub validateNetworkSection {
         }
 
         if (defined %$networks{$if_key}->{bridge}){
-          push(@{$bridges->{br}}, %$networks{$if_key}->{bridge});
+          my $bridge_if=%$networks{$if_key}->{bridge};
+          # multiple interfaces might be configured in a bridge through
+          # ansible, especially if a bridge is not just used for making
+          # an interface available to containers/vms
+          unless (grep(/^$bridge_if$/, @{$bridges->{br}})){
+            push(@{$bridges->{br}}, %$networks{$if_key}->{bridge});
+          }
         }
 
         if (defined %$networks{$if_key}->{bond}){
