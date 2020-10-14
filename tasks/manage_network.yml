@@ -24,6 +24,25 @@
   tags:
     - access_setup
 
+# link files need a prefix to be evaluated before the 99-default.link
+# ideally eventually all networkd configuration files should get migrated to
+# this naming scheme
+- name: configure network links (networkd)
+  template:
+    src: systemd-link.j2
+    dest: "/etc/systemd/network/{{systemd.networkd_prefix|default(10)}}-{{item.key}}.link"
+    mode: 0644
+  with_dict: "{{network_nodes[inventory_hostname].networks |default({})}}"
+  when: >
+    network_manager is defined and network_manager == "networkd" and
+    item.value.link_flags is defined and
+    (item.value.manager is undefined or item.value.manager == "networkd") and
+    item.key != "ilo"
+  notify:
+    - restart networkd
+  tags:
+    - access_setup
+
 - name: configure virtual network devices (networkd)
   template:
     src: systemd-netdev.j2
