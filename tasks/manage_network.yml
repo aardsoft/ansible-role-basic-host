@@ -75,7 +75,7 @@
     - access_setup
 
 - name: enable networkd services
-  service: name="{{item}}" enabled=yes
+  systemd: name="{{item}}" enabled=yes force=yes
   with_items:
     - systemd-networkd
     - systemd-networkd-wait-online
