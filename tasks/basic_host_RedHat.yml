@@ -299,12 +299,19 @@
   tags:
     - access_setup
 
+- include_tasks: manage_extra_repositories.yml
+  when: package_repositories is defined
+  tags:
+    - access_setup
+
 - name: add additional RPM repositories
   template:
     src: "rpm-repo.j2"
     dest: /etc/yum.repos.d/{{item.key}}.repo
     owner: root
     mode: 0644
+  loop_control:
+    loop_var: _repository
   with_dict: "{{ rpm_repos }}"
   when: rpm_repos is defined
   tags:
@@ -316,6 +323,8 @@
     dest: /etc/yum.repos.d/hp-spp.repo
     owner: root
     mode: 0644
+  loop_control:
+    loop_var: _repository
   with_dict: { hp_spp: { baseurl: '{{hp_spp_repository}}', description: "HP SPP" }}
   when: >
     hp_spp_repository is defined and
@@ -330,6 +339,8 @@
     dest: /etc/yum.repos.d/hp-spp.repo
     owner: root
     mode: 0644
+  loop_control:
+    loop_var: _repository
   with_dict: { hp_spp: { baseurl: '{{hp_spp_repository}}/{{dist_token}}', description: "HP SPP" }}
   when: >
     hp_spp_repository is defined and

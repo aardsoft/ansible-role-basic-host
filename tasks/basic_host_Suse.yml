@@ -49,6 +49,11 @@
   tags:
     - access_setup
 
+- include_tasks: manage_extra_repositories.yml
+  when: package_repositories is defined
+  tags:
+    - access_setup
+
 # TODO: add support for extra keys:
 #       - description
 #       - gpgcheck

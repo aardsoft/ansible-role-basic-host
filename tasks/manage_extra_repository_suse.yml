@@ -1,0 +1,16 @@
+- name: add {{_repository.value.name|default(_repository.key)}}
+  zypper_repository:
+    name: "{{_repository.value.name|default(_repository.key)}}"
+    repo: "{{_repository.value.baseurl}}"
+    state: "{{_repository.value.state|default('present')}}"
+    auto_import_keys: yes
+    overwrite_multiple: yes
+    disable_gpg_check: >
+      {% if _repository.value.gpg_check is defined and
+            _repository.value.gpg_check == False %}
+      yes
+      {% else %}
+      no
+      {% endif %}
+  tags:
+    - access_setup

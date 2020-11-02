@@ -1,0 +1,28 @@
+- name: manage extra suse rpm repositories {{suse_long_release|default("")}}
+  include: manage_extra_repository_suse.yml
+  with_dict: "{{package_repositories}}"
+  loop_control:
+    loop_var: _repository
+  when: >
+    _repository.value.type is defined and _repository.value.type == "rpm" and
+    _repository.value.dists is defined and
+    suse_long_release is defined and suse_long_release in _repository.value.dists
+  tags:
+    - access_setup
+
+# for now this only supports RedHat based distributions in general, and matching
+# the major version for a specific distribution, which for us should be good
+# enough for now
+- name: manage extra RedHat repositories {{ansible_distribution+"_"+ansible_distribution_major_version}}
+  include: manage_extra_repository_redhat.yml
+  with_dict: "{{package_repositories}}"
+  loop_control:
+    loop_var: _repository
+  when: >
+    _repository.value.type is defined and _repository.value.type == "rpm" and
+    _repository.value.dists is defined and
+    (ansible_os_family == "RedHat" and
+     (ansible_os_family in _repository.value.dists or
+      ansible_distribution+"_"+ansible_distribution_major_version in _repository.value.dists))
+  tags:
+    - access_setup
