@@ -538,11 +538,12 @@
   template:
     src: ifcfg.j2
     dest: "/etc/sysconfig/network-scripts/ifcfg-{{item.key}}"
+    mode: 0644
   with_dict: "{{network_nodes[inventory_hostname].networks |default({})}}"
   when: >
     item.value.static is defined and item.value.static == True
-    and network_manager is undefined or
-    (network_manager is defined and network_manager == "networkmanager")
+    and (network_manager is undefined or
+    (network_manager is defined and network_manager == "networkmanager"))
   tags:
     - access_setup
 

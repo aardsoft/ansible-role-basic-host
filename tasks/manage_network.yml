@@ -93,6 +93,7 @@
   when: network_manager is defined and network_manager != "networkmanager"
   tags:
     - access_setup
+  ignore_errors: True
 
 - name: enable network manager services
   service: name="{{item}}" enabled=yes state=started
