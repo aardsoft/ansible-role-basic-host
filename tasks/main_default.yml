@@ -183,6 +183,24 @@
     mode: 0750
     state: directory
 
+- name: create directory for secret files
+  file:
+    path: "{{_secret.value.dest|dirname}}"
+    owner: "{{_secret.value.owner|default('root')}}"
+    group: "{{_secret.value.group|default('root')}}"
+    mode: "{{_secret.value.dirmode}}"
+    state: directory
+  with_dict: "{{secret_files|default({})}}"
+  loop_control:
+    loop_var: _secret
+  when: >
+    default_passdb_available == True and
+    _secret.value.dest is defined and
+    _secret.value.key is defined and
+    _secret.value.dirmode is defined and
+    (_secret.value.state is undefined or
+     (_secret.value.state is defined and _secret.value.state != "absent"))
+
 # This supports a structure similar to:
 #
 # secret_files:
@@ -192,17 +210,19 @@
 - name: add secret files
   template:
     src: secretfile.j2
-    dest: "{{item.value.dest}}"
-    owner: "{{item.value.owner|default('root')}}"
-    group: "{{item.value.group|default('root')}}"
-    mode: "{{item.value.mode|default(0400)}}"
+    dest: "{{_secret.value.dest}}"
+    owner: "{{_secret.value.owner|default('root')}}"
+    group: "{{_secret.value.group|default('root')}}"
+    mode: "{{_secret.value.mode|default(0400)}}"
   with_dict: "{{secret_files|default({})}}"
+  loop_control:
+    loop_var: _secret
   when: >
     default_passdb_available == True and
-    item.value.dest is defined and
-    item.value.key is defined and
-    (item.value.state is undefined or
-     (item.value.state is defined and item.value.state != "absent"))
+    _secret.value.dest is defined and
+    _secret.value.key is defined and
+    (_secret.value.state is undefined or
+     (_secret.value.state is defined and _secret.value.state != "absent"))
 
 #- name: Install python-selinux (Suse)
 #  zypper:
