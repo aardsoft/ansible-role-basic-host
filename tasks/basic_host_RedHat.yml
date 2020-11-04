@@ -307,7 +307,7 @@
 - name: add additional RPM repositories
   template:
     src: "rpm-repo.j2"
-    dest: /etc/yum.repos.d/{{item.key}}.repo
+    dest: /etc/yum.repos.d/{{_repository.key}}.repo
     owner: root
     mode: 0644
   loop_control:
