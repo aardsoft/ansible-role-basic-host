@@ -17,7 +17,7 @@
 {% set journald = {} %}
 {% endif %}
 [Journal]
-Storage={{journal.storage|default('auto')}}
+Storage={{journald.storage|default('auto')}}
 #Compress=yes
 #Seal=yes
 #SplitMode=uid
@@ -30,7 +30,7 @@ Storage={{journal.storage|default('auto')}}
 #RuntimeMaxUse=
 #RuntimeKeepFree=
 #RuntimeMaxFileSize=
-#MaxRetentionSec=
+MaxRetentionSec={{journald.storage|default('1month')}}
 #MaxFileSec=1month
 #ForwardToSyslog=yes
 #ForwardToKMsg=no
