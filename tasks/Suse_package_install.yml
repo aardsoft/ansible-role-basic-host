@@ -3,3 +3,5 @@
     name: "{{ hostvars[delegate_hostname|default(inventory_hostname)].base_packages }}"
     state: present
     update_cache: yes
+  tags:
+    - access_setup

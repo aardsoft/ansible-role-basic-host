@@ -5,6 +5,7 @@
   copy:
     src: "{{item}}"
     dest: "/etc/pki/ca-trust/source/anchors/{{item}}"
+    mode: 0644
   with_items: "{{ca_certificates|default({})}}"
 
 # this would be better tied to actually changing CA files, but handlers
@@ -32,6 +33,8 @@
   when: >
     ansible_distribution == "CentOS" and epel_mirror is defined and
     use_epel is undefined and _os_release|int <= 7
+  tags:
+    - access_setup
 
 - name: set dist token {{ansible_distribution_major_version}}
   set_fact:
