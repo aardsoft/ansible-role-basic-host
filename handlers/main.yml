@@ -25,3 +25,7 @@
 - name: stop NetworkManager
   systemd: name=NetworkManager state=stopped daemon_reload=yes
   when: ansible_service_mgr == 'systemd'
+
+- name: restart rbdmap
+  systemd: name=rbdmap
+  when: ansible_service_mgr == 'systemd'

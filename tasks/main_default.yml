@@ -354,6 +354,21 @@
     state: absent
   when: marker.stat.exists == True
 
+- name: configure minimal ceph clients
+  template:
+    src: ceph-minimal.conf.j2
+    dest: /etc/ceph/ceph.conf
+    owner: root
+    group: root
+    mode: 0644
+  when: >
+    ceph_minimal is defined and
+    ceph_minimal_client is defined and ceph_minimal_client == True
+
+- name: configure rbd mapping
+  include: rbd_mappings.yml
+  when: rbd_mappings is defined
+
 # non-provisioning related steps should go here, if possible
 - name: configure displaymanager
   template:

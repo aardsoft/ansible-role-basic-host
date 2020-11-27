@@ -1,0 +1,5 @@
+# RbdDevice		Parameters
+#poolname/imagename	id=client,keyring=/etc/ceph/ceph.client.keyring
+{% for mapping in rbd_mappings %}
+{{rbd_mappings[mapping].image}}	{{rbd_mappings[mapping].parameters}}
+{% endfor %}

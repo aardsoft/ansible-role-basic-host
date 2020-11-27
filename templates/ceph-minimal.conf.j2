@@ -1,0 +1,6 @@
+#jinja2: lstrip_blocks: True
+# {{ ansible_managed }}
+
+[global]
+mon host = {{ceph_minimal.mon_host}}
+public network = {{ceph_minimal.public_network}}

@@ -1,0 +1,15 @@
+- name: configure rbd mappings
+  template:
+    src: rbdmap.j2
+    dest: /etc/ceph/rbdmap
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - restart rbdmap
+  when: >
+    ceph_minimal is defined and
+    ceph_minimal_client is defined and ceph_minimal_client == True
+
+- name: enable rbdmap service
+  service: name=rbdmap enabled=yes state=started
