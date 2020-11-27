@@ -1,0 +1,12 @@
+- name: configure mounts (fstab)
+  mount:
+    name: "{{mount.value.name}}"
+    src: "{{mount.value.src}}"
+    fstype: "{{mount.value.fstype}}"
+    opts: "{{mount.value.opts|default('defaults')}}"
+    state: "{{mount.value.state|default('mounted')}}"
+  loop_control:
+    loop_var: mount
+  with_dict: "{{mounts}}"
+  when: >
+    (mount.manager is undefined or mount.manager != "systemd")

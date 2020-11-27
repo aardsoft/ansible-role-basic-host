@@ -369,6 +369,10 @@
   include: rbd_mappings.yml
   when: rbd_mappings is defined
 
+- name: configure mounts
+  include: mounts.yml
+  when: mounts is defined
+
 # non-provisioning related steps should go here, if possible
 - name: configure displaymanager
   template:
