@@ -355,6 +355,14 @@
   when: marker.stat.exists == True
 
 # non-provisioning related steps should go here, if possible
+- name: configure displaymanager
+  template:
+    src: displaymanager.j2
+    dest: /etc/sysconfig/displaymanager
+    owner: root
+    group: root
+    mode: 0644
+  when: displaymanager is defined
 
 - name: create systemd timers
   include_tasks: systemd_timer.yml
