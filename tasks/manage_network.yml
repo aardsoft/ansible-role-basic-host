@@ -122,6 +122,17 @@
   when: >
     network_manager is defined and network_manager == "networkd"
 
+- name: configure wireguard interfaces
+  include: manage_wireguard.yml
+  with_dict: "{{network_nodes[inventory_hostname].networks |default({})}}"
+  loop_control:
+    loop_var: _iface
+  when: >
+    _iface.value.manager is defined and _iface.value.manager == "wg" and
+    wireguard is defined and wireguard[_iface.key] is defined
+  tags:
+    - access_setup
+
 # this seems to go mostly away, so relying on distributions no longer
 # works. Only disable when explicitely required.
 - name: remove bridge filtering keys on unsupported distributions

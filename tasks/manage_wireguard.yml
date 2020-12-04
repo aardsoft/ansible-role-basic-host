@@ -1,0 +1,25 @@
+- name: read private key file
+  slurp:
+    src: "{{wireguard[_iface.key].interface.private_key_file}}"
+  when: wireguard[_iface.key].interface.private_key_file is defined
+  register: _wg_private_key
+  tags:
+    - access_setup
+
+- name: configure wireguard interfaces
+  template:
+   src: wireguard.conf.j2
+   dest: "/etc/wireguard/{{_iface.key}}.conf"
+   mode: 0600
+  register: __iface_changed
+  tags:
+    - access_setup
+
+- name: enable and start wireguard service
+  systemd:
+    name: "wg-quick@{{_iface.key}}"
+    state: restarted
+    enabled: yes
+  when: __iface_changed is defined and __iface_changed is changed
+  tags:
+    - access_setup
