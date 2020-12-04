@@ -1,0 +1,8 @@
+- name: running cleanup handlers
+  include_role:
+    name: "{{_role}}"
+    tasks_from: cleanup_handler
+  loop_control:
+    loop_var: _role
+  with_items: "{{basic_host_cleanup_handlers}}"
+  when: basic_host_cleanup_handlers is defined

@@ -1,0 +1,11 @@
+- fail:
+    msg: "'cleanup_handlers' needs to be set for registering handlers"
+  when: cleanup_handlers is undefined
+
+- set_fact:
+    basic_host_cleanup_handlers: "{{basic_host_cleanup_handlers + cleanup_handlers}}"
+  when: basic_host_cleanup_handlers is defined
+
+- set_fact:
+    basic_host_cleanup_handlers: "{{cleanup_handlers}}"
+  when: basic_host_cleanup_handlers is undefined
