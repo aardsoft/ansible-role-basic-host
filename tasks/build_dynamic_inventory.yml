@@ -1,0 +1,11 @@
+# add_host just adds to existing groups, so we can call it without issues
+# later on again in roles like lxc, kvm, ..
+- name: add dynamic hosts and groups
+  add_host:
+    hostname: "{{ item.key }}"
+    groups: "{{ item.value.groups }}"
+    inventory_dir: '{{ inventory_dir }}'
+  with_dict: "{{network_nodes}}"
+  when: >
+    item.value.groups is defined and
+    (item.value.state is undefined or item.value.state == "started")
