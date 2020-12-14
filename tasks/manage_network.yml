@@ -14,13 +14,13 @@
   tags:
     - access_setup
 
-- name: install networkd (opensuse)
+- name: install networkd (opensuse, {{distribution_version}})
   zypper:
     name: "systemd-network"
     state: present
   when: >
     ansible_os_family == "Suse" and
-    ansible_facts.services["systemd-networkd"] is undefined
+    ansible_facts.services["systemd-networkd.service"] is undefined
   tags:
     - access_setup
 
