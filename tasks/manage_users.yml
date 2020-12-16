@@ -1,95 +1,112 @@
 - name: create local groups (known gid)
   group:
-    gid: "{{item.value.gid}}"
-    name: "{{item.key}}"
-    state: "{{item.value.state|default('present')}}"
+    gid: "{{__group.value.gid}}"
+    name: "{{__group.key}}"
+    state: "{{__group.value.state|default('present')}}"
   with_dict: "{{local_groups}}"
-  when: local_groups is defined and item.value.gid is defined
+  when: local_groups is defined and __group.value.gid is defined
+  loop_control:
+    loop_var: __group
 
 - name: create local groups (unknown gid)
   group:
-    system: "{{item.value.system|default(true)}}"
-    name: "{{item.key}}"
-    state: "{{item.value.state|default('present')}}"
+    system: "{{__group.value.system|default(true)}}"
+    name: "{{__group.key}}"
+    state: "{{__group.value.state|default('present')}}"
   with_dict: "{{local_groups}}"
-  when: local_groups is defined and item.value.gid is undefined
+  when: local_groups is defined and __group.value.gid is undefined
+  loop_control:
+    loop_var: __group
 
 # groups are optional, but if not specified, all non-default groups
 # will be cleaned
 # flags which might make sense to add: seuser remove
 - name: create local users (known uid)
   user:
-    name: "{{item.key}}"
-    uid: "{{item.value.uid}}"
-    comment: "{{item.value.comment|default('Created by ansible')}}"
-    group: "{{item.value.group|default(item.key)}}"
-    groups: "{{item.value.groups|default('')}}"
-    home: "{{item.value.home|default('/home/'+item.key)}}"
-    move_home: "{{item.value.move_home|default('no')}}"
-    system: "{{item.value.system|default(false)}}"
-    password_lock: "{{item.value.password_lock|default('no')}}"
-    state: "{{item.value.state|default('present')}}"
-    shell: "{{item.value.shell|default('/bin/bash')}}"
+    name: "{{__user.key}}"
+    uid: "{{__user.value.uid}}"
+    comment: "{{__user.value.comment|default('Created by ansible')}}"
+    group: "{{__user.value.group|default(__user.key)}}"
+    groups: "{{__user.value.groups|default('')}}"
+    home: "{{__user.value.home|default('/home/'+__user.key)}}"
+    move_home: "{{__user.value.move_home|default('no')}}"
+    system: "{{__user.value.system|default(false)}}"
+    password_lock: "{{__user.value.password_lock|default('no')}}"
+    state: "{{__user.value.state|default('present')}}"
+    shell: "{{__user.value.shell|default('/bin/bash')}}"
   with_dict: "{{local_users}}"
-  when: local_users is defined and item.value.uid is defined
+  when: local_users is defined and __user.value.uid is defined
+  loop_control:
+    loop_var: __user
 
 - name: create local users (unknown uid)
   user:
-    name: "{{item.key}}"
-    uid: "{{item.value.uid}}"
-    comment: "{{item.value.comment|default('Created by ansible')}}"
-    group: "{{item.value.group|default(item.key)}}"
-    groups: "{{item.value.groups|default('')}}"
-    home: "{{item.value.home|default('/home/'+item.key)}}"
-    move_home: "{{item.value.move_home|default('no')}}"
-    system: "{{item.value.system|default(true)}}"
-    password_lock: "{{item.value.password_lock|default('no')}}"
-    state: "{{item.value.state|default('present')}}"
-    shell: "{{item.value.shell|default('/bin/bash')}}"
+    name: "{{__user.key}}"
+    comment: "{{__user.value.comment|default('Created by ansible')}}"
+    group: "{{__user.value.group|default(__user.key)}}"
+    groups: "{{__user.value.groups|default('')}}"
+    home: "{{__user.value.home|default('/home/'+__user.key)}}"
+    move_home: "{{__user.value.move_home|default('no')}}"
+    system: "{{__user.value.system|default(true)}}"
+    password_lock: "{{__user.value.password_lock|default('no')}}"
+    state: "{{__user.value.state|default('present')}}"
+    shell: "{{__user.value.shell|default('/bin/bash')}}"
   with_dict: "{{local_users}}"
-  when: local_users is defined and item.value.uid is undefined
+  when: local_users is defined and __user.value.uid is undefined
+  loop_control:
+    loop_var: __user
 
 - name: configure user passwords
   user:
     name: root
-    password: "{{lookup(passdb, item.value.passdb_entry)|password_hash('sha512', 65534 | random(seed=inventory_hostname) | string)}}"
+    password: "{{lookup(passdb, __user.value.passdb_entry)|password_hash('sha512', 65534 | random(seed=inventory_hostname) | string)}}"
   with_dict: "{{local_users}}"
   when: >
-    local_users is defined and item.value.passdb_entry is defined and
+    local_users is defined and __user.value.passdb_entry is defined and
     default_passdb_available == True
+  loop_control:
+    loop_var: __user
 
 - name: create .ssh for local users
   file:
-    path: "{{item.value.home|default('/home/'+item.key)}}/.ssh"
-    owner: "{{item.key}}"
-    group: "{{item.value.group|default(item.key)}}"
+    path: "{{__user.value.home|default('/home/'+__user.key)}}/.ssh"
+    owner: "{{__user.key}}"
+    group: "{{__user.value.group|default(__user.key)}}"
     mode: 0700
     state: directory
   with_dict: "{{local_users}}"
   when: local_users is defined
+  loop_control:
+    loop_var: __user
 
 - name: copy authorized keys for local users
   template:
     src: authorized_key_template.j2
-    dest: "{{item.value.home|default('/home/'+item.key)}}/.ssh/authorized_keys"
-    owner: "{{item.key}}"
-    group: "{{item.value.group|default(item.key)}}"
+    dest: "{{__user.value.home|default('/home/'+__user.key)}}/.ssh/authorized_keys"
+    owner: "{{__user.key}}"
+    group: "{{__user.value.group|default(__user.key)}}"
     mode: 0600
   with_dict: "{{local_users}}"
-  when: local_users is defined and item.value.key_files is defined
+  when: local_users is defined and __user.value.key_files is defined
+  loop_control:
+    loop_var: __user
 
 - name: copy sudors configuration for local users
   template:
     src: sudoers_template.j2
-    dest: "/etc/sudoers.d/{{item.key}}"
+    dest: "/etc/sudoers.d/{{__user.key}}"
     owner: root
     mode: 0440
   with_dict: "{{local_users}}"
-  when: local_users is defined and item.value.sudoers is defined
+  when: local_users is defined and __user.value.sudoers is defined
+  loop_control:
+    loop_var: __user
 
 # needs to be after user generation
 - name: add linger users
-  command: loginctl enable-linger "{{item}}"
+  command: loginctl enable-linger "{{__user}}"
   changed_when: false
   when: logind_linger_users is defined
   with_items: "{{logind_linger_users}}"
+  loop_control:
+    loop_var: __user

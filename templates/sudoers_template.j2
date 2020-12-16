@@ -1,7 +1,7 @@
 # {{ ansible_managed }}
-{% for line in item.value.sudoers_defaults|default({}) %}
-Defaults:{{item.key}} {{line}}
+{% for line in __user.value.sudoers_defaults|default({}) %}
+Defaults:{{__user.key}} {{line}}
 {% endfor %}
-{% for line in item.value.sudoers %}
-{{item.key}} {{line}}
+{% for line in __user.value.sudoers %}
+{{__user.key}} {{line}}
 {% endfor %}

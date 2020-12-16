@@ -1,4 +1,4 @@
 # {{ ansible_managed }}
-{% for file in item.value.key_files %}
+{% for file in __user.value.key_files %}
 {{lookup('file', 'authorized_keys.d/' + file)}}
 {% endfor %}
