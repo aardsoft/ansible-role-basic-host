@@ -1,0 +1,10 @@
+- name: copy sudors configuration for local users
+  template:
+    src: sudoers_template.j2
+    dest: "/etc/sudoers.d/{{__user.key}}"
+    owner: root
+    mode: 0440
+  loop_control:
+    loop_var: __user
+  with_dict: "{{_sudo_dict}}"
+  when: _sudo_dict is defined and __user.value.sudoers is defined
