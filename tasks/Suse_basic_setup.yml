@@ -178,6 +178,15 @@
   tags:
     - access_setup
 
+- name: add podman
+  set_fact:
+    bare_metal_packages: "{{ bare_metal_packages }} + [ 'podman' ]"
+  when: >
+    ansible_virtualization_role == "host" and
+    use_podman is defined and use_podman == True
+  tags:
+    - access_setup
+
 - name: locate repo files (provisioning)
   find:
     paths: /etc/zypp/repos.d/

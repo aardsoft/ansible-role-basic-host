@@ -419,6 +419,12 @@
     (displaymanager.state is undefined or
      displaymanager.state != "absent")
 
+- name: configure container registry
+  include_tasks: containers.yml
+  when: >
+    use_podman is defined and
+    use_podman == True
+
 - name: create systemd timers
   include_tasks: systemd_timer.yml
   when: systemd_timers is defined

@@ -482,6 +482,15 @@
   tags:
     - access_setup
 
+- name: add podman
+  set_fact:
+    bare_metal_packages: "{{ bare_metal_packages }} + [ 'podman' ]"
+  when: >
+    ansible_virtualization_role == "host" and
+    use_podman is defined and use_podman == True
+  tags:
+    - access_setup
+
 - name: expand package list for bare metal servers
   set_fact:
     base_packages: "{{ base_packages + bare_metal_packages }}"
