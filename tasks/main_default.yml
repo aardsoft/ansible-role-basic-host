@@ -295,6 +295,20 @@
     __zones_changed is defined and
     __zones_changed is changed
 
+- name: configure masquerading for zones
+  firewalld:
+    zone: "{{__zone}}"
+    immediate: yes
+    state: enabled
+    permanent: yes
+    masquerade: yes
+  loop_control:
+    loop_var: __zone
+  with_items: "{{firewalld_masquerade_zones}}"
+  when: >
+    firewalld_available == True and
+    firewalld_masquerade_zones is defined
+
 - name: configure firewalld zones for networkd managed interfaces
   firewalld:
     zone: "{{ item.value.zone }}"
