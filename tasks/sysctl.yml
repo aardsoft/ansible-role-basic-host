@@ -1,0 +1,7 @@
+- name: set sysctl value
+  sysctl:
+    name: "{{_sysctl.value.name|default(_sysctl.key)}}"
+    value: "{{_sysctl.value.value}}"
+    sysctl_set: yes
+    ignoreerrors: "{{_sysctl.value.ignoreerrors|default('no')}}"
+    state: "{{_sysctl.value.state|default('present')}}"

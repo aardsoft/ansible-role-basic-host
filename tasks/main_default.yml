@@ -237,6 +237,14 @@
   tags:
     - access_setup
 
+- name: configure sysctl
+  include: sysctl.yml
+  loop_control:
+    loop_var: _sysctl
+  with_dict: "{{sysctl_keys|default({})}}"
+  tags:
+    - access_setup
+
 - name: copy scripts
   copy:
     src: "{{item}}"
