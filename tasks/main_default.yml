@@ -403,7 +403,21 @@
     owner: root
     group: root
     mode: 0644
-  when: displaymanager is defined
+  when: >
+    displaymanager is defined and
+    (displaymanager.state is undefined or
+     displaymanager.state != "absent")
+
+# TODO: allow reverting this
+- name: set graphical target as default
+  file:
+    src: /usr/lib/systemd/system/graphical.target
+    dest: /etc/systemd/system/default.target
+    state: link
+  when: >
+    displaymanager is defined and
+    (displaymanager.state is undefined or
+     displaymanager.state != "absent")
 
 - name: create systemd timers
   include_tasks: systemd_timer.yml
