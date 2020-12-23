@@ -24,6 +24,12 @@
   tags:
     - access_setup
 
+- set_fact:
+    __networkd_links: []
+    __networkd_netdevs: []
+    __networkd_networks: []
+    __wpa_supplicant_ifaces: []
+
 # link files need a prefix to be evaluated before the 99-default.link
 # ideally eventually all networkd configuration files should get migrated to
 # this naming scheme
@@ -43,6 +49,16 @@
   tags:
     - access_setup
 
+- name: track network links (networkd)
+  set_fact:
+    __networkd_links: "{{__networkd_links + [item.key+'.link']}}"
+  with_dict: "{{network_nodes[inventory_hostname].networks |default({})}}"
+  when: >
+    network_manager is defined and network_manager == "networkd" and
+    item.value.link_flags is defined and
+    (item.value.manager is undefined or item.value.manager == "networkd") and
+    item.key != "ilo"
+
 - name: configure virtual network devices (networkd)
   template:
     src: systemd-netdev.j2
@@ -59,6 +75,16 @@
   tags:
     - access_setup
 
+- name: track network devices (networkd)
+  set_fact:
+    __networkd_netdevs: "{{__networkd_netdevs +  [item.key+'.netdev']}}"
+  with_dict: "{{network_nodes[inventory_hostname].networks |default({})}}"
+  when: >
+    network_manager is defined and network_manager == "networkd" and
+    item.value.type is defined and item.value.type != "phys" and
+    (item.value.manager is undefined or item.value.manager == "networkd") and
+    item.key != "ilo" and item.value.type != "veth"
+
 - name: configure static network interfaces (networkd)
   template:
    src: systemd-network.j2
@@ -73,6 +99,146 @@
     - restart networkd
   tags:
     - access_setup
+
+- name: track network interfaces (networkd)
+  set_fact:
+    __networkd_networks: "{{__networkd_networks + [item.key+'.network']}}"
+  with_dict: "{{network_nodes[inventory_hostname].networks |default({})}}"
+  when: >
+    network_manager is defined and network_manager == "networkd" and
+    (item.value.manager is undefined or item.value.manager == "networkd") and
+    item.key != "ilo"
+
+- debug:
+    msg:
+      - "Expecting following device files:"
+      - "{{__networkd_links}}"
+      - "{{__networkd_netdevs}}"
+      - "{{__networkd_networks}}"
+  when: >
+    network_manager is defined and network_manager == "networkd"
+
+- name: configure wpa supplicant
+  debug:
+    msg: "wpa interface {{__iface}}"
+  with_dict: "{{network_nodes[inventory_hostname].networks |default({})}}"
+  when: >
+    network_manager is defined and network_manager == "networkd" and
+    (__iface.value.manager is undefined or __iface.value.manager == "networkd") and
+    __iface.key != "ilo" and
+    __iface.value.wlan_passdb_entry is defined and
+    default_passdb_available == True
+  loop_control:
+    loop_var: __iface
+  tags:
+    - access_setup
+
+- name: collect wpa supplicant interfaces
+  set_fact:
+    __wpa_supplicant_ifaces: "{{__wpa_supplicant_ifaces + [__iface.key]}}"
+  with_dict: "{{network_nodes[inventory_hostname].networks |default({})}}"
+  when: >
+    network_manager is defined and network_manager == "networkd" and
+    (__iface.value.manager is undefined or __iface.value.manager == "networkd") and
+    __iface.key != "ilo" and
+    __iface.value.wlan_passdb_entry is defined and
+    default_passdb_available == True
+  loop_control:
+    loop_var: __iface
+  tags:
+    - access_setup
+
+- name: mask global wpa supplicant
+  systemd:
+    name: wpa_supplicant.service
+    masked: yes
+    state: stopped
+    force: yes
+  when: >
+    network_manager is defined and network_manager == "networkd" and
+    __wpa_supplicant_ifaces is defined and
+    __wpa_supplicant_ifaces|count >= 1
+  tags:
+    - access_setup
+
+- name: create wpa_supplicant configuration files
+  template:
+    src: wpa_supplicant.conf.j2
+    dest: /etc/wpa_supplicant/wpa_supplicant.conf
+    owner: root
+    group: root
+    mode: 0600
+  when: >
+    network_manager is defined and network_manager == "networkd" and
+    __wpa_supplicant_ifaces is defined and
+    __wpa_supplicant_ifaces|count >= 1
+  notify:
+    - restart wpa_supplicant
+  tags:
+    - access_setup
+
+- name: locate networkd link files
+  find:
+    paths: /etc/systemd/network
+    patterns: "*.link"
+    recurse: no
+    file_type: file
+  register: __networkd_link_files
+  when: >
+    network_manager is defined and network_manager == "networkd"
+
+- name: locate networkd netdev files
+  find:
+    paths: /etc/systemd/network
+    patterns: "*.netdev"
+    recurse: no
+    file_type: file
+  register: __networkd_netdev_files
+  when: >
+    network_manager is defined and network_manager == "networkd"
+
+- name: locate networkd network files
+  find:
+    paths: /etc/systemd/network
+    patterns: "*.network"
+    recurse: no
+    file_type: file
+  register: __networkd_network_files
+  when: >
+    network_manager is defined and network_manager == "networkd"
+
+- name: remove old .link files
+  file:
+    state: absent
+    path: "{{ __file.path }}"
+  loop_control:
+    loop_var: __file
+  with_items: "{{ __networkd_link_files.files|default({}) }}"
+  when: >
+    network_manager is defined and network_manager == "networkd" and
+    __file.path|basename not in __networkd_links
+
+- name: remove old .netdev files
+  file:
+    state: absent
+    path: "{{ __file.path }}"
+  loop_control:
+    loop_var: __file
+  with_items: "{{ __networkd_netdev_files.files|default({}) }}"
+  when: >
+    network_manager is defined and network_manager == "networkd" and
+    __file.path|basename not in __networkd_netdevs
+
+- name: remove old .network files
+  file:
+    state: absent
+    path: "{{ __file.path }}"
+  loop_control:
+    loop_var: __file
+  with_items: "{{ __networkd_network_files.files|default({}) }}"
+  when: >
+    network_manager is defined and network_manager == "networkd" and
+    __file.path|basename not in __networkd_networks
 
 - name: enable networkd services
   systemd: name="{{item}}" enabled=yes force=yes
