@@ -79,6 +79,14 @@
   loop_control:
     loop_var: __user
 
+# create include file so this can be done without nested loop
+- name: create local ssh keypairs
+  include_tasks: ssh_keypair.yml
+  with_dict: "{{local_users}}"
+  when: local_users is defined and __user.value.local_keys is defined
+  loop_control:
+    loop_var: __user
+
 - name: copy authorized keys for local users
   template:
     src: authorized_key_template.j2

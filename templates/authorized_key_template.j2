@@ -2,3 +2,10 @@
 {% for file in __user.value.key_files %}
 {{lookup('file', 'authorized_keys.d/' + file)}}
 {% endfor %}
+{% if __user.value.local_keys is defined and _local_public_keys is defined%}
+{% for _key in _local_public_keys.results %}
+{% set __key_name = _key['__key'].key %}
+# {{_key['__key'].key}}
+{{__user.value.local_keys[__key_name]['options']|default('from="127.0.0.1"')}} {{_key['content']|b64decode}}
+{% endfor %}
+{% endif %}
