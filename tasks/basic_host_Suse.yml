@@ -71,13 +71,13 @@
   tags:
     - access_setup
 
-# this should be merged in ansible 2.4, for now we need to carry a
-# newer zypper.py
 - name: Upgrade the system
   zypper:
     name: '*'
     state: dist-upgrade
-  when: skip_updates is undefined or force_updates is defined
+  when: >
+    (skip_updates is undefined or skip_updates == False) or
+    (force_updates is defined and force_updates == True)
 
 - include: Suse_package_install.yml
 
