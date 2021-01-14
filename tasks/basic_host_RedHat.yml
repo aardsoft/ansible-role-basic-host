@@ -457,6 +457,14 @@
   tags:
     - access_setup
 
+- name: add wireguard
+  set_fact:
+    base_packages: "{{ base_packages }} + [ 'wireguard-tools' ]"
+  when: >
+    wireguard is defined
+  tags:
+    - access_setup
+
 - name: add systemd-networkd to base packages (CentOS)
   set_fact:
     base_packages: "{{ base_packages }} + [ 'systemd-networkd' ]"

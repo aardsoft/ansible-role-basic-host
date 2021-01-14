@@ -1,3 +1,44 @@
+- stat:
+    path: "{{wireguard[_iface.key].interface.private_key_file}}"
+  register: _wireguard_private_key_file
+  when: wireguard[_iface.key].interface.private_key_file is defined
+  tags:
+    - access_setup
+
+- stat:
+    path: "{{wireguard[_iface.key].interface.public_key_file}}"
+  register: _wireguard_public_key_file
+  when: wireguard[_iface.key].interface.public_key_file is defined
+  tags:
+    - access_setup
+
+- name: create wireguard private key
+  shell: "wg genkey > {{wireguard[_iface.key].interface.private_key_file}}"
+  when: >
+    wireguard[_iface.key].interface.private_key_file is defined and
+    _wireguard_private_key_file.stat.exists == False
+  tags:
+    - access_setup
+
+- name: adjust wireguard private key permissions
+  file:
+    path: "{{wireguard[_iface.key].interface.private_key_file}}"
+    owner: root
+    mode: 0600
+  when: >
+    wireguard[_iface.key].interface.private_key_file is defined
+  tags:
+    - access_setup
+
+- name: create wireguard public key
+  shell: "wg pubkey < {{wireguard[_iface.key].interface.private_key_file}} > {{wireguard[_iface.key].interface.public_key_file}}"
+  when: >
+    wireguard[_iface.key].interface.private_key_file is defined and
+    wireguard[_iface.key].interface.public_key_file is defined and
+    _wireguard_public_key_file.stat.exists == False
+  tags:
+    - access_setup
+
 - name: read private key file
   slurp:
     src: "{{wireguard[_iface.key].interface.private_key_file}}"
@@ -20,6 +61,8 @@
     name: "wg-quick@{{_iface.key}}"
     state: restarted
     enabled: yes
-  when: __iface_changed is defined and __iface_changed is changed
+  when: >
+    __iface_changed is defined and __iface_changed is changed and
+    wireguard[_iface.key].interface.active|default(True) == True
   tags:
     - access_setup
