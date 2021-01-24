@@ -8,19 +8,39 @@
 # the ansible created files.
 
 [Match]
-{% if item.value.type is undefined or item.value.type is defined and item.value.type != "veth" %}
+{% if item.value.match is undefined %}
+ {% if item.value.type is undefined or item.value.type is defined and item.value.type != "veth" %}
 Name={{item.key}}
-{% endif %}
-{% if item.value.hwaddr is defined and item.value.type is defined and item.value.type == "veth" %}
+ {% endif %}
+ {% if item.value.hwaddr is defined and item.value.type is defined and item.value.type == "veth" %}
 MACAddress={{ item.value.hwaddr }}
+ {% endif %}
+{% else %}
+ {% if item.value.match.name is defined %}
+Name={{item.value.match.name}}
+ {% endif %}
+ {% if item.value.match.path is defined %}
+Path={{item.value.match.path}}
+ {% endif %}
+ {% if item.value.match.driver is defined %}
+Driver={{item.value.match.driver}}
+ {% endif %}
+ {% if item.value.match.type is defined %}
+Type={{item.value.match.type}}
+ {% endif %}
+ {% if item.value.match.host is defined %}
+Host={{item.value.match.host}}
+ {% endif %}
+ {% if item.value.match.virtualization is defined %}
+Virtualization={{item.value.match.virtualization}}
+ {% endif %}
+ {% if item.value.match.architecture is defined %}
+Virtualization={{item.value.match.architecture}}
+ {% endif %}
+ {% if item.value.match.mac_address is defined %}
+MACAddress={{item.value.match.mac_address}}
+ {% endif %}
 {% endif %}
-#MACAddress=
-#Path=
-#Driver=
-#Type=
-#Host=
-#Virtualization=
-#Architecture=
 
 [Link]
 {# for now only force MAC addresses on bridges #}
