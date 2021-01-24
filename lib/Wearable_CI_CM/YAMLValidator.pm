@@ -233,6 +233,8 @@ sub validateNetworkSection {
               # port specification -> error
             } elsif (defined %$networks{$if_key}->{type}
                      and %$networks{$if_key}->{type} eq "dummy"){
+            } elsif (defined %$networks{$if_key}->{manager}
+                     and %$networks{$if_key}->{manager} eq "wg"){
             } else {
               $s->{result}->{errors}++;
               $s->{result}->{error_messages}.=
