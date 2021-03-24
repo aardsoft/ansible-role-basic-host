@@ -183,6 +183,13 @@
     mode: 0750
     state: directory
 
+- name: create and mount logical volumes
+  include_tasks: logical_volume.yml
+  with_dict: "{{logical_volumes}}"
+  loop_control:
+    loop_var: _volume
+  when: logical_volumes is defined
+
 - name: create directory for secret files
   file:
     path: "{{_secret.value.dest|dirname}}"
