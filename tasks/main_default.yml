@@ -280,6 +280,24 @@
   tags:
     - access_setup
 
+- name: add firewalld config file
+  template:
+    src: firewalld.conf.j2
+    dest: /etc/firewalld/firewalld.conf
+    owner: root
+    group: root
+    mode: 0600
+  ignore_errors: True
+  register: firewalld_config
+  when: firewalld_required is defined and firewalld_required == True
+
+- name: restart firewalld
+  service: name=firewalld state=restarted
+  ignore_errors: True
+  when: >
+    firewalld_required is defined and firewalld_required == True and
+    firewalld_config is changed
+
 - name: check if firewalld is available and working
   firewalld:
     zone: block
