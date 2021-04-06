@@ -88,6 +88,20 @@
     - restart logind
   when: ansible_service_mgr == 'systemd'
 
+- name: add resolved configuration
+  template:
+    src: resolved.conf.j2
+    dest: /etc/systemd/resolved.conf
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - base_config
+# Don't restart for now - it's not much used yet
+#  notify:
+#    - restart resolved
+  when: ansible_service_mgr == 'systemd'
+
 - name: add journald configuration
   template:
     src: journald.conf.j2
