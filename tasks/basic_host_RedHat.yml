@@ -411,7 +411,7 @@
       - ntp
       - bridge-utils
   when: >
-    (ansible_distribution == 'Fedora') or
+    (ansible_distribution == 'Fedora' and _os_release|int <= 30) or
     (ansible_distribution == 'CentOS' and _os_release|int <= 7)
   tags:
     - access_setup
