@@ -157,7 +157,6 @@
       - ca-certificates-mozilla
       - curl
       - glibc-locale
-      - insserv-compat
       - iotop
       - iperf
       - iproute2
