@@ -467,6 +467,15 @@
     (displaymanager.state is undefined or
      displaymanager.state != "absent")
 
+- name: configure profile.d files
+  include_tasks: profile.yml
+  tags:
+    - base_config
+    - access_setup
+  when: >
+    removed_profiled_files is defined or
+    profiled_files is defined
+
 - name: configure container registry
   include_tasks: containers.yml
   when: >
