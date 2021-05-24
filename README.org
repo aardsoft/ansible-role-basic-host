@@ -5,6 +5,7 @@
     - [[#firewall-configuration][firewall configuration]]
     - [[#password-store-configuration][password store configuration]]
     - [[#time-zone-configuration][time zone configuration]]
+    - [[#udev-rules][udev rules]]
     - [[#dhcp_networks-key][=dhcp_networks= key]]
     - [[#vlans-key][=vlans= key]]
     - [[#hostgroup-specific-data-overrides][Host/group specific data overrides]]
@@ -181,6 +182,10 @@ As time zone specification is incompatible between Linux/UNIX and Windows two di
 For Linux =host_timezone= should be used, defaulting to =Europe/Helsinki=.
 
 For Windows =host_timezone_win= should be used, defaulting to =FLE Standard Time=. Microsoft documents the [[https://docs.microsoft.com/en-us/previous-versions/windows/embedded/ms912391(v=winembedded.11)?redirectedfrom=MSDN][list of available time zone descriptions.]]
+*** udev rules
+Rule files in the search path can be added through the variables =udev_rule_files= and =removed_udev_rule_files=. For looking up the filename in the ansible tree =.j2= is appended, for the filesystem location =.rules= is appended - i.e., an entrie of =foo= will have ansible search for =foo.j2=, and generate =foo.rules=.
+
+This variable intentionally is a simple list to allow easy merging of multiple declarations over several variable files.
 *** =dhcp_networks= key
 A configuration structure mainly consumed by DNS and DHCP roles, but documented here as it is shared across roles.
 

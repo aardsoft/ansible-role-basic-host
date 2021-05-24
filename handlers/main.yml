@@ -42,3 +42,7 @@
     network_manager is defined and network_manager == "networkd" and
     __wpa_supplicant_ifaces is defined and
     __wpa_supplicant_ifaces|count >= 1
+
+- name: reload udev rules
+  shell: udevadm control --reload-rules && udevadm trigger
+  ignore_errors: true

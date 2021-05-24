@@ -1,0 +1,22 @@
+- name: delete old udev rules
+  file:
+    state: absent
+    path: "/etc/udev/rules.d/{{_file}}.rules"
+  when: removed_udev_rule_files is defined
+  with_items: "{{removed_udev_rule_files}}"
+  loop_control:
+    loop_var: _file
+  notify:
+    - reload udev rules
+
+- name: add udev rules
+  template:
+    src: "{{_file}}.j2"
+    dest: "/etc/udev/rules.d/{{_file}}.rules"
+    mode: 0644
+  when: udev_rule_files is defined
+  with_items: "{{udev_rule_files}}"
+  loop_control:
+    loop_var: _file
+  notify:
+    - reload udev rules
