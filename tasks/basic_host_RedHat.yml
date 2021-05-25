@@ -451,6 +451,7 @@
       - usbutils
       - vim
       - wget
+      - mc
       - "{{python_selinux_package}}"
       - "{{python_firewall_package}}"
   when: base_packages is undefined

@@ -172,6 +172,7 @@
       - timezone
       - vim
       - wget
+      - mc
   when: >
     hostvars[delegate_hostname|default(inventory_hostname)].base_packages is undefined
   tags:

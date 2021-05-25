@@ -76,6 +76,7 @@
       - strace
       - sysstat
       - wget
+      - mc
   when: base_packages is undefined
 
 - name: expand package list for bare metal servers
