@@ -26,6 +26,7 @@
 - name: add resolv.conf
   tags:
     - base_config
+    - access_setup
   copy:
     src: resolv.conf.{{ resolv_location }}
     dest: /etc/resolv.conf
@@ -37,6 +38,7 @@
 - name: add resolv.conf (template)
   tags:
     - base_config
+    - access_setup
   template:
     src: resolv.conf.j2
     dest: /etc/resolv.conf
