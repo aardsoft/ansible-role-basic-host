@@ -7,6 +7,15 @@
     - base_config
     - access_setup
 
+# Keep this disabled until we're either using ansible-data-utilities everywhere,
+# or we find a way to properly catch errors here
+#- block:
+#    - name: trying to load additional filters
+#      include_role:
+#        name: ansible-data-utilities
+#        tasks_from: test_filters
+#  ignore_errors: yes
+
 # Those two items are a workaround for ansible shortcomings when it comes to
 # variable inclusion. Note that it'll override host specific variables, so should
 # be used with care.
