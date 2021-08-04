@@ -258,7 +258,7 @@
     dest: "{{_secret.value.dest}}"
     owner: "{{_secret.value.owner|default('root')}}"
     group: "{{_secret.value.group|default('root')}}"
-    mode: "{{_secret.value.mode|default(0400)}}"
+    mode: "{{_secret.value.mode|default('u=r,g=,o=')}}"
   with_dict: "{{secret_files|default({})}}"
   loop_control:
     loop_var: _secret
