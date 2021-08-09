@@ -40,6 +40,7 @@
     __networkd_netdevs: []
     __networkd_networks: []
     __wpa_supplicant_ifaces: []
+    __netplan_cfg: []
 
 # link files need a prefix to be evaluated before the 99-default.link
 # ideally eventually all networkd configuration files should get migrated to
@@ -59,6 +60,35 @@
     - restart networkd
   tags:
     - access_setup
+
+- name: track network configurations (netplan)
+  set_fact:
+    __netplan_cfg: "{{__netplan_cfg + ['51-'+iface.key+'.yaml']}}"
+  with_dict: "{{network_nodes[inventory_hostname].networks |default({})}}"
+  when: >
+    network_manager is defined and network_manager == "netplan" and
+    (iface.value.manager is undefined or iface.value.manager == "netplan") and
+    iface.key != "ilo"
+  loop_control:
+    loop_var: iface
+
+# this might need additional restrictions if netplan support gets extended
+- name: configure network configurations (netplan)
+  template:
+    src: netplan.yaml.j2
+    dest: "/etc/netplan/51-{{iface.key}}.yaml"
+    mode: 0644
+  with_dict: "{{network_nodes[inventory_hostname].networks |default({})}}"
+  when: >
+    network_manager is defined and network_manager == "netplan" and
+    (iface.value.manager is undefined or iface.value.manager == "netplan") and
+    iface.key != "ilo"
+#  notify:
+#    - restart networkd
+  tags:
+    - access_setup
+  loop_control:
+    loop_var: iface
 
 - name: track network links (networkd)
   set_fact:
@@ -129,6 +159,13 @@
   when: >
     network_manager is defined and network_manager == "networkd"
 
+- debug:
+    msg:
+      - "Expecting following device files:"
+      - "{{__netplan_cfg}}"
+  when: >
+    network_manager is defined and network_manager == "netplan"
+
 - name: configure wpa supplicant
   debug:
     msg: "wpa interface {{__iface}}"
@@ -187,6 +224,27 @@
     - restart wpa_supplicant
   tags:
     - access_setup
+
+- name: locate netplan configuration files
+  find:
+    paths: /etc/netplan
+    patterns: "*.yaml"
+    recurse: no
+    file_type: file
+  register: __netplan_config_files
+  when: >
+    network_manager is defined and network_manager == "netplan"
+
+- name: remove old netplan configuration files
+  file:
+    state: absent
+    path: "{{ __file.path }}"
+  loop_control:
+    loop_var: __file
+  with_items: "{{ __netplan_config_files.files|default({}) }}"
+  when: >
+    network_manager is defined and network_manager == "netplan" and
+    __file.path|basename not in __netplan_cfg
 
 - name: locate networkd link files
   find:
