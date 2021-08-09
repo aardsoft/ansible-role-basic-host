@@ -52,7 +52,7 @@
       - tcpdump
       - vlan
     base_packages:
-      - "{{ sudo_pkg }}"
+      - "{{ sudo_pkg|default('sudo') }}"
       - apt-file
       - apt-transport-https
       - attr
