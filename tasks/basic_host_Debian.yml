@@ -85,6 +85,14 @@
   when: ansible_virtualization_role == "host" or
         ansible_virtualization_role == "NA"
 
+- name: add wireguard
+  set_fact:
+    base_packages: "{{ base_packages }} + [ 'wireguard-tools' ]"
+  when: >
+    wireguard is defined
+  tags:
+    - access_setup
+
 - name: append extra packages
   set_fact:
     base_packages: "{{ base_packages + debian_extra_packages }}"
