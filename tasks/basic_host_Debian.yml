@@ -1,7 +1,7 @@
 - name: add apt configuration
   template:
     src: apt-conf.j2
-    dest: /etc/apt/apt.conf.d/basic_host
+    dest: /etc/apt/apt.conf.d/99basic_host
     owner: root
     group: root
     mode: 0644
