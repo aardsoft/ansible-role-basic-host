@@ -11,10 +11,10 @@
 # IP-Address  Full-Qualified-Hostname  Short-Hostname
 #
 
-127.0.0.1	localhost
+127.0.0.1	localhost {%if hostname_in_hosts|default(false)==true%}{{inventory_hostname.split('.')[0]}}{%endif%}
 
 # special IPv6 addresses
-::1             localhost ipv6-localhost ipv6-loopback
+::1             localhost ipv6-localhost ipv6-loopback {%if hostname_in_hosts|default(false)==true%}{{inventory_hostname.split('.')[0]}}{%endif%}
 
 fe00::0         ipv6-localnet
 
