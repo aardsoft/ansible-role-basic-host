@@ -1,3 +1,14 @@
+- name: copy cloud-init template
+  template:
+    src: cloud-init.yaml.j2
+    dest: /etc/cloud/cloud.cfg.d/99-disable-network-config.cgf
+    owner: root
+    group: root
+    mode: 0644
+  when: cloud_init is defined
+  tags:
+    - access_setup
+
 - name: create networkd configuration directory
   file:
     path: /etc/systemd/network

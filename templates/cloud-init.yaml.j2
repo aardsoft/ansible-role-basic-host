@@ -1,0 +1,6 @@
+#jinja2: lstrip_blocks: True
+# {{ ansible_managed }}
+
+{% if cloud_init.network_config is defined and cloud_init.network_config == "no" %}
+network: {config: disabled}
+{% endif %}
