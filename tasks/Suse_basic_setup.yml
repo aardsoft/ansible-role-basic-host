@@ -153,6 +153,7 @@
       - tcpdump
       - vlan
     base_packages:
+      - bind-utils
       - ca-certificates
       - ca-certificates-mozilla
       - curl
