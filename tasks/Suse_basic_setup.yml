@@ -44,21 +44,25 @@
   tags:
     - access_setup
 
-# those should generally be set in global group vars
-# to make things less messy, host specific base URL overrides are not
-# supported for delegates
+- debug:
+    msg:
+      - "Hostname: {{delegate_hostname|default(inventory_hostname)}}"
+      - "Base URL: {{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url}}"
+  tags:
+    - access_setup
+
 - name: set suse base URLs
   set_fact:
-    suse_base_url: "{{suse_base_url|default('http://download.opensuse.org/')}}"
-    suse_base_url_obs: "{{suse_base_url_obs|default('http://download.opensuse.org/')}}"
+    suse_base_url: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url|default('http://download.opensuse.org/')}}"
+    suse_base_url_obs: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url_obs|default('http://download.opensuse.org/')}}"
   tags:
     - access_setup
 
 - name: set suse release
   set_fact:
     suse_release: tumbleweed
-    dist_base: "{{suse_base_url}}"
-    obs_base: "{{suse_base_url_obs}}/repositories/"
+    dist_base: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url}}"
+    obs_base: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url_obs}}/repositories/"
     suse_long_release: openSUSE_Tumbleweed
   when: >
     hostvars[delegate_hostname|default(inventory_hostname)].suse_release == "tumbleweed"
@@ -69,9 +73,9 @@
 - name: handle leap release naming ({{hostvars[delegate_hostname|default(inventory_hostname)].suse_release}})
   set_fact:
     suse_long_release: openSUSE_Leap_{{ hostvars[delegate_hostname|default(inventory_hostname)].suse_release }}
-    dist_base: "{{suse_base_url}}/distribution/leap/"
-    obs_base: "{{suse_base_url_obs}}/repositories/"
-    update_url: "{{suse_base_url}}/update/leap/{{ hostvars[delegate_hostname|default(inventory_hostname)].suse_release }}"
+    dist_base: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url}}/distribution/leap/"
+    obs_base: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url_obs}}/repositories/"
+    update_url: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url}}/update/leap/{{ hostvars[delegate_hostname|default(inventory_hostname)].suse_release }}"
   when: >
     hostvars[delegate_hostname|default(inventory_hostname)].suse_release|float >= 15 and
     hostvars[delegate_hostname|default(inventory_hostname)].suse_release|float <= 43
@@ -81,8 +85,8 @@
 - name: set suse longrelease ({{hostvars[delegate_hostname|default(inventory_hostname)].suse_release}})
   set_fact:
     suse_long_release: openSUSE_{{ hostvars[delegate_hostname|default(inventory_hostname)].suse_release }}
-    dist_base: "{{suse_base_url}}/distribution/"
-    obs_base: "{{suse_base_url_obs}}/repositories/"
+    dist_base: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url}}/distribution/"
+    obs_base: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url_obs}}/repositories/"
   when: >
     hostvars[delegate_hostname|default(inventory_hostname)].suse_release is defined and
     hostvars[delegate_hostname|default(inventory_hostname)].suse_long_release is undefined
@@ -218,7 +222,7 @@
 
 # additional repositories are considered not relevant for initial access
 # repo_ssl_verify is expected to come via vars, and therefore should be usable
-- name: configure core repos
+- name: "configure core repos (base: {{hostvars[delegate_hostname|default(inventory_hostname)].dist_base}})"
   zypper_repository:
     name: "repo-{{__repo}}"
     repo: "{{ hostvars[delegate_hostname|default(inventory_hostname)].dist_base }}/{{ hostvars[delegate_hostname|default(inventory_hostname)].suse_release }}/repo/{{__repo}}?ssl_verify={{repo_ssl_verify|default('yes')}}"
@@ -231,7 +235,7 @@
   tags:
     - access_setup
 
-- name: configure update repo
+- name: "configure update repo (update base: {{hostvars[delegate_hostname|default(inventory_hostname)].update_url}})"
   zypper_repository:
     name: "update-{{__repo}}"
     repo: "{{ hostvars[delegate_hostname|default(inventory_hostname)].update_url }}/{{__repo}}?ssl_verify={{repo_ssl_verify|default('yes')}}"
