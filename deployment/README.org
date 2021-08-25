@@ -1,0 +1,43 @@
+* Host deployment                                                     :TOC_4:
+  - [[#introduction][Introduction]]
+  - [[#windows][Windows]]
+    - [[#ssh-deployment][SSH deployment]]
+
+** Introduction
+
+New hosts - no matter the OS - should start out in a small configuration, ideally without much differences between deployments. To achieve that (and to reduce the manual labour) infrastructure for unattended installations should be used whenever possible.
+
+For Linux the recommended setup is netbooting with AutoYAST or Kickstart, with management keys pre-loaded for the root user. This allows easy passwordless running of the access playbook directly after installation.
+
+For Windows the recommended setup is a customised ISO with management user pre-generated, SSH pre-installed and SSH keys pre-loaded. Setting up the management user with correct permissions during the initial ansible run is slightly more complicated on Windows - so making sure this user exists during bootstrap simplifies things.
+
+This page collects information related to managing the automated installation systems, as well as scripts to quickly take over a system which could not be bootstrapped automatically.
+
+** Windows
+
+The easiest way for managing Windows via Ansible is by just making sure SSH is available on the Windows server.
+
+*** SSH deployment
+
+The [[./deploy-ssh.ps1][deploy-ssh]] powershell script can be used both for installing SSH during an unattended Windows installation (with the SSH installer provided on the media), as well as enable it later on.
+
+It will search for the installer =OpenSSH-Win64.zip= in =c:\ci=, the current directory and in the current users Download directory, in that order. If not found it will try to download it from the [[https://github.com/PowerShell/Win32-OpenSSH/releases][Win32-OpenSSH release page]].
+
+#+BEGIN_SRC shell
+> Invoke-WebRequest -Uri https://raw.githubusercontent.com/aardsoft/ansible-role-basic-host/master/deployment/deploy-ssh.ps1 -OutFile deploy-ssh.ps1
+> ./deploy-ssh.ps1
+#+END_SRC
+
+On old Windows versions it may be required to force Powershell to use recent TLS mechanisms for the download - set the following if above throws SSL errors:
+
+#+BEGIN_SRC shell
+> [Net.ServicePointManager]::SecurityProtocol = "tls12, tls11, tls"
+#+END_SRC
+
+If using RDP to connect to the server the connection may get terminated while running =deploy-ssh.ps1=, though SSH access should be reachable from that point:
+
+#+BEGIN_SRC shell
+$ ssh -o PubkeyAuthentication=no Administrator@windows-system
+#+END_SRC
+
+Depending on the Windows version it may now be possible to also run an access playbook, or manual setup of SSH keys may be required.
