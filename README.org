@@ -26,7 +26,10 @@
 
 ** Introduction
 
-The =basic-host= sits at the core of our Ansible deployment model. It'll eventually be supplemented by another role pre-parsing some of the yaml structures to make them easier usable by other roles consuming the data.
+The =basic-host= sits at the core of our Ansible deployment model. Typcially ansible discovers host information for the inventory, and then acts on this information - which doesn't work very well if setting up those sources is part of the Ansible managed infrastructure. To solve this some information typically discovered is configured in a globally availably YAML data structure - this allows us to set up information services, followed by deploying everything else in a single ansible run.
+
+Some things can be made to work easier with modern Ansible versions - to allow that without breaking backwards compatibility as well as making use by other roles easier pre-parsing of some of the YAML-structures will be implemented in [[https://github.com/aardsoft/ansible-data-utilities][ansible-data-utilities.]] Some commonly used filters and includes will also eventually move there.
+
 
 The basic idea is to have very simple playbooks going through a list of host-groups, and applying roles to it. This roles purpose is to apply basic configuration expected to happen on any host, to leave every system in a setup in a similar basic state, no matter the exact operating system used.
 
@@ -34,7 +37,7 @@ Additionally, it allows adding system specific basic operations like adding addi
 
 Ideally it should become possible to generate infrastructure playbooks by specifying the roles to be used for a customer infrastructure.
 
-To make this possible infrastructure metadata is maintained in the =network_nodes+ yaml structure. A minimal entry might look like this:
+To make this possible infrastructure metadata is maintained in the =network_nodes= yaml structure. A minimal entry might look like this:
 
 #+BEGIN_SRC yaml
 network_nodes:
