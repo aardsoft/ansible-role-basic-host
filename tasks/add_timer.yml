@@ -15,7 +15,8 @@
         systemd_timer_name: {
           'description': systemd_timer_description|default(systemd_timer_name),
           'oncalendar': systemd_timer_oncalendar,
-          'command': systemd_timer_command,
+          'command': systemd_timer_command|default('/bin/true'),
+          'add_service': systemd_timer_add_service|default(True),
         }
       })}}
 

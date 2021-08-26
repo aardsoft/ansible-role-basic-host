@@ -48,22 +48,34 @@
   set_fact:
     passdb: passwordstore
   when: passdb is undefined
+  tags:
+    - base_config
+    - access_setup
 
 - name: set default password length
   set_fact:
     passdb_password_length: 20
   when: passdb_password_length is undefined
+  tags:
+    - base_config
+    - access_setup
 
 - name: set default for password creation
   set_fact:
     passdb_password_create: True
   when: passdb_password_create is undefined
+  tags:
+    - base_config
+    - access_setup
 
 - name: set passdb extra arguments
   set_fact:
     passdb_extra_arg: " create={{passdb_password_create}} length={{passdb_password_length}}"
 
 - include_tasks: default_vars.yml
+  tags:
+    - base_config
+    - access_setup
   tags:
     - base_config
     - access_setup
@@ -75,6 +87,9 @@
   ignore_errors: True
   when: >
     passdb_check_entry is defined
+  tags:
+    - base_config
+    - access_setup
 
 # This is for backwards compatibility. This will fail during execution if
 # password store is not available
@@ -82,14 +97,23 @@
   set_fact:
     default_passdb_available: True
   when: _passdb_result is skipped
+  tags:
+    - base_config
+    - access_setup
 
 - name: setting default password store availability to true
   set_fact:
     default_passdb_available: True
   when: _passdb_result is succeeded
+  tags:
+    - base_config
+    - access_setup
 
 - debug: msg="Passdb is not available, some roles may fail"
   when: _passdb_result is failed
+  tags:
+    - base_config
+    - access_setup
 
 - name: include main tasks for non-Windows
   include_tasks: main_default.yml

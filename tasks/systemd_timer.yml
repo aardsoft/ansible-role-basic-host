@@ -12,7 +12,17 @@
 # For adding/removing a single timer include add_timer or remove_timer. See
 # documentation in those files for details.
 
-- name: add systemd timers
+- set_fact:
+    _timer_types:
+      - timer
+      - service
+
+- set_fact:
+    _timer_types:
+      - timer
+    when:
+
+- name: add systemd timers with service
   template:
     src: systemd-timer-{{item.0}}.j2
     dest: "/etc/systemd/system/{{item.1}}.{{item.0}}"
@@ -21,8 +31,25 @@
     - ['timer', 'service']
     - "{{systemd_timers}}"
   when: >
-    systemd_timers[item.1].state is undefined or
-    (systemd_timers[item.1].state is defined and systemd_timers[item.1].state != "absent")
+    (systemd_timers[item.1].state is undefined or
+     (systemd_timers[item.1].state is defined and systemd_timers[item.1].state != "absent")) and
+    (systemd_timers[item.1].add_service is undefined or
+     (systemd_timers[item.1].add_service is defined and systemd_timers[item.1].add_service != False))
+
+# this could be written simpler, but to make it easier for future changes it's
+# intentionally written as the above one
+- name: add systemd timers without service
+  template:
+    src: systemd-timer-{{item.0}}.j2
+    dest: "/etc/systemd/system/{{item.1}}.{{item.0}}"
+    mode: 0644
+  with_nested:
+    - ['timer']
+    - "{{systemd_timers}}"
+  when: >
+    (systemd_timers[item.1].state is undefined or
+     (systemd_timers[item.1].state is defined and systemd_timers[item.1].state != "absent")) and
+    (systemd_timers[item.1].add_service is defined and systemd_timers[item.1].add_service == False)
 
 - name: enable timer
   systemd:
