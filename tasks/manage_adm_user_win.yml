@@ -1,0 +1,61 @@
+# Unlike the Linux management user there might often be a need to use
+# the Windows one for interactive logins. Additionally, logging in on
+# Windows is not copy & paste friendly. It therefore makes sense to
+# allow specifying a separate password for the Windows user. If
+# undefined the default password will be used.
+- name: configure management user password (Windows password)
+  win_user:
+    name: "{{ adm_user }}"
+    password: "{{lookup(passdb, adm_passdb_entry_win)}}"
+    groups:
+      - Administrators
+  when: adm_passdb_entry_win is defined
+  tags:
+    - base_config
+    - access_setup
+
+- name: configure management user password (Global password)
+  win_user:
+    name: "{{ adm_user }}"
+    password: "{{lookup(passdb, adm_passdb_entry)}}"
+    groups:
+      - Administrators
+  when: >
+    adm_passdb_entry_win is undefined and
+    adm_passdb_entry is defined
+  tags:
+    - base_config
+    - access_setup
+
+- name: make sure management user never expires {{windows_ssh_key_directory}}
+  win_user:
+    name: "{{ adm_user }}"
+    password_never_expires: yes
+    password_expired: no
+  tags:
+    - base_config
+    - access_setup
+
+# this deploys a key file shared for all administrators, which is
+# enabled in the default configuration. This saves a lot of headache
+# over using a user specific keyfile for management user here
+- name: create shared Administrator authorized_keys file
+  win_template:
+    src: authorized_key_template_management.j2
+    dest: '%ProgramData%\ssh\administrators_authorized_keys'
+  tags:
+    - access_setup
+    - base_config
+  when: adm_user is defined and adm_group is defined
+
+- name: check adm user
+  win_command: powershell.exe -
+  args:
+    stdin: Write-Host test
+  become: yes
+  become_user: management
+  become_method: runas
+  tags:
+    - access_setup
+    - base_config
+  changed_when: false

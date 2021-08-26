@@ -5,6 +5,18 @@
     - base_config
     - access_setup
 
+# windows creates the home directory not on user creation, but first
+# logon -> creating users and directly trying to add ssh keys can be
+# problematic. Using a separate key directory solves that - but also
+# creates a lot of problems with permissions. Just create the directory
+# in case it is required.
+- set_fact:
+     windows_ssh_key_directory: '%ProgramData%\ssh_keys'
+  when: windows_ssh_key_directory is undefined
+  tags:
+    - base_config
+    - access_setup
+
 # subdirectory made available in windows search path
 - set_fact:
     windows_script_directory_bin: '{{windows_script_directory}}\bin'
@@ -102,30 +114,18 @@
     - base_config
     - access_setup
 
-- name: make sure management user never expires
-  win_user:
-    name: "{{ adm_user }}"
-    password_never_expires: yes
-    password_expired: no
+- name: make sure SSH key directory exists ({{windows_ssh_key_directory}})
+  win_file:
+    path: "{{windows_ssh_key_directory}}"
+    state: directory
+  tags:
+    - access_setup
+    - base_config
 
-# Unlike the Linux management user there might often be a need to use
-# the Windows one for interactive logins. Additionally, logging in on
-# Windows is not copy & paste friendly. It therefore makes sense to
-# allow specifying a separate password for the Windows user. If
-# undefined the default password will be used.
-- name: configure management user password (Windows password)
-  win_user:
-    name: "{{ adm_user }}"
-    password: "{{lookup(passdb, adm_passdb_entry_win)}}"
-  when: adm_passdb_entry_win is defined
-
-- name: configure management user password (Global password)
-  win_user:
-    name: "{{ adm_user }}"
-    password: "{{lookup(passdb, adm_passdb_entry)}}"
-  when: >
-    adm_passdb_entry_win is undefined and
-    adm_passdb_entry is defined
+- include: manage_adm_user_win.yml
+  tags:
+    - base_config
+    - access_setup
 
 - name: set windows hardware clock to UTC
   win_regedit:
