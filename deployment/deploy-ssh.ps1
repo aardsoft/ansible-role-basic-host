@@ -7,12 +7,6 @@ $installer_search_path = @("c:\ci",
                            $PWD,
                            (New-Object -ComObject Shell.Application).NameSpace('shell:Downloads').Self.Path)
 
-try {
-    New-Item "test" -ItemType Directory
-} catch {
-    Write-Error "Unable to create directory $_"
-}
-
 foreach ($p in $installer_search_path){
     "Searching installer in $p"
 
