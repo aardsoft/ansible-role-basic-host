@@ -1,4 +1,4 @@
-- name: unmount logical volume
+- name: unmount logical volume {{_volume.key}}
   mount:
     name: "{{_volume.value.mountpoint}}"
     src: "LABEL={{_volume.value.name|default(_volume.key)}}"
@@ -8,7 +8,7 @@
     _volume.value.state == 'absent' and
     _volume.value.mountpoint is defined
 
-- name: create logical volume
+- name: create logical volume {{_volume.key}}
   lvol:
     vg: "{{_volume.value.vg|default('vg0')}}"
     lv: "{{_volume.value.name|default(_volume.key)}}"
@@ -20,7 +20,7 @@
   when: >
     _volume.value.size is defined
 
-- name: create filesystem on logical volume
+- name: create filesystem on logical volume {{_volume.key}}
   filesystem:
     fstype: "{{_volume.value.fstype|default('ext4')}}"
     dev: "/dev/{{_volume.value.vg|default('vg0')}}/{{_volume.value.name|default(_volume.key)}}"
@@ -30,7 +30,7 @@
     _volume.value.state|default('present') != 'absent' and
     _volume.value.mountpoint is defined
 
-- name: mount logical volume
+- name: mount logical volume {{_volume.key}}
   mount:
     name: "{{_volume.value.mountpoint}}"
     src: "LABEL={{_volume.value.name|default(_volume.key)}}"
