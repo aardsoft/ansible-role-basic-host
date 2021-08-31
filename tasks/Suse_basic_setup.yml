@@ -147,7 +147,6 @@
       - dmidecode
       - hdparm
       - ipmitool
-      - lsof
       - lvm2
       - nmap
       - ntp
@@ -167,6 +166,7 @@
       - iproute2
       - less
       - libopenssl1_0_0-hmac
+      - lsof
       - fuse
       - net-tools
       - python-xml
@@ -177,6 +177,7 @@
       - timezone
       - vim
       - wget
+      - which
       - mc
   when: >
     hostvars[delegate_hostname|default(inventory_hostname)].base_packages is undefined
