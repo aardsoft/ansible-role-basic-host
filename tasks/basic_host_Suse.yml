@@ -24,12 +24,13 @@
 - include: Suse_basic_setup.yml
 
 # extra packages are assumed to be not required for just providing access
+# having access_setup tags here could lead to conflicts during lxc provisioning
+# when using delegates, and the host delegated to doesn't have own packages
+# defined
 - name: expand package list for bare metal servers
   set_fact:
     base_packages: "{{ base_packages + bare_metal_packages }}"
   when: ansible_virtualization_role == "host"
-  tags:
-    - access_setup
 
 - name: append extra packages
   set_fact:
