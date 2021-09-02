@@ -1,0 +1,14 @@
+- name: check target directory for zip installer
+  win_stat:
+    path: "{{_installer.value.dest}}"
+  register: _installer_stat
+
+# this is less picky about the archive than win_unzip, at least on older windows
+# systems; check if that can be done better eventually.
+# for porting to 2.10 this probably should become win_powershell
+- name: unpack windows installers
+  win_shell: |
+    Add-Type -AssemblyName System.IO.Compression.FileSystem;
+    [System.IO.Compression.ZipFile]::ExtractToDirectory("{{_installer.value.path|default(windows_temp_directory)}}\\{{_installer.key}}", "{{_installer.value.dest}}")
+  when: >
+    _installer_stat.stat.exists == False

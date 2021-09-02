@@ -193,6 +193,7 @@
     (item.value.state is undefined or item.value.state == 'present') and
     item.value.url is defined
 
+# TODO: check checksums using win_stat, if available; extract zips
 - name: remove windows installers
   with_dict: "{{windows_installers|default({})}}"
   win_package:
@@ -231,6 +232,17 @@
     (item.value.state is undefined or item.value.state == 'present') and
     (item.value.url is defined or item.value.path is defined) and
     item.value.product_id is defined
+
+- include_tasks: win_unpack_zips.yml
+  with_dict: "{{windows_installers|default({})}}"
+  loop_control:
+    loop_var: _installer
+  when: >
+    (_installer.value.state is undefined or _installer.value.state == 'present') and
+    (_installer.value.url is defined or _installer.value.path is defined) and
+    _installer.value.product_id is undefined and
+    _installer.value.dest is defined and
+    _installer.key.endswith(".zip")
 
 - name: add extra windows paths
   with_dict: "{{windows_extra_paths|default({})}}"
