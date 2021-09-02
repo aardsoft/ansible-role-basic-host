@@ -1,0 +1,68 @@
+- name: configure TLS 1.2
+  win_regedit:
+    path: 'hklm:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.2\{{item}}'
+    name: DisabledByDefault
+    data: 0
+    type: dword
+  with_items:
+    - Client
+    - Server
+  tags:
+    - base_config
+    - access_setup
+
+- name: disable TLS 1.0
+  win_regedit:
+    path: 'hklm:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.0\{{item}}'
+    name: Enabled
+    data: 0
+    type: dword
+  with_items:
+    - Client
+    - Server
+  tags:
+    - base_config
+    - access_setup
+
+- name: disable TLS 1.1
+  win_regedit:
+    path: 'hklm:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.1\{{item}}'
+    name: Enabled
+    data: 0
+    type: dword
+  with_items:
+    - Client
+    - Server
+  tags:
+    - base_config
+    - access_setup
+
+# with that loop for architecture we'll might be generating additional
+# hierarchies on 32 bit Windows - but then again, you shouldn't be running
+# a 32bit Windows nowadays, plus the hierarchies might already be there due
+# to other misbehaving software anyway...
+- name: enable TLS 1.2 for .net 2.x
+  win_regedit:
+    path: 'hklm:\SOFTWARE\{{item}}Microsoft\.NETFramework\v2.0.50727'
+    name: SystemDefaultTlsVersions
+    data: 1
+    type: dword
+  with_items:
+    - ''
+    - Wow6432Node\
+  tags:
+    - base_config
+    - access_setup
+
+- name: enable TLS 1.2 for .net 4.x
+  win_regedit:
+    path: 'hklm:\SOFTWARE\{{item}}Microsoft\.NETFramework\v4.0.30319'
+    name: SchUseStrongCrypto
+    data: 1
+    type: dword
+  with_items:
+    - ''
+    - Wow6432Node\
+  tags:
+    - base_config
+    - access_setup

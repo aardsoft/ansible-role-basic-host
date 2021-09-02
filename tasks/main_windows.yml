@@ -43,6 +43,11 @@
     - base_config
     - access_setup
 
+# This is in a separate file as there are a lot of keys, and we probably still
+# didn't get all of them
+- name: configure TLS
+  include_tasks: win_configure_tls.yml
+
 - name: set connection profiles to private
   win_command: "powershell.exe Set-NetConnectionProfile -NetworkCategory Private"
   register: wincmd_status
