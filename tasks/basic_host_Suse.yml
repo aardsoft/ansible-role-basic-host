@@ -105,6 +105,7 @@
     - wickedd-dhcp6
     - wickedd-nanny
     - wickedd
+  ignore_errors: True
   tags:
     - access_setup
 
