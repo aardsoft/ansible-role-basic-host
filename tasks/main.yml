@@ -76,9 +76,6 @@
   tags:
     - base_config
     - access_setup
-  tags:
-    - base_config
-    - access_setup
 
 - name: check default password store access
   set_fact:
