@@ -1,0 +1,43 @@
+- name: unmount volume {{_volume.key}}
+  mount:
+    name: "{{_volume.value.mountpoint}}"
+    src: "LABEL={{_volume.value.name|default(_volume.key)}}"
+    state: absent
+  when: >
+    _volume.value.state is defined and
+    _volume.value.state == 'absent' and
+    _volume.value.mountpoint is defined
+
+# TODO: support creating partitions
+- name: create logical volume {{_volume.key}}
+  lvol:
+    vg: "{{_volume.value.vg|default('vg0')}}"
+    lv: "{{_volume.value.name|default(_volume.key)}}"
+    size: "{{_volume.value.size}}"
+    force: "{{_volume.value.force|default('no')}}"
+    shrink: "{{_volume.value.shrink|default('no')}}"
+    state: "{{_volume.value.state|default('present')}}"
+    resizefs: "{{_volume.value.resizefs|default('yes')}}"
+  when: >
+    _volume.value.state|default('present') != 'absent' and
+    _volume.value.size is defined
+
+- name: create filesystem on volume {{_volume.key}}
+  filesystem:
+    fstype: "{{_volume.value.fstype|default('ext4')}}"
+    dev: "/dev/{{_volume.value.dev|default(_volume.key)}}"
+    resizefs: "{{_volume.value.resizefs|default('yes')}}"
+    opts: "{{_volume.value.opts|default('-L '+_volume.value.name|default(_volume.key))}}"
+  when: >
+    _volume.value.state|default('present') != 'absent' and
+    _volume.value.mountpoint is defined
+
+- name: mount logical volume {{_volume.key}}
+  mount:
+    name: "{{_volume.value.mountpoint}}"
+    src: "LABEL={{_volume.value.name|default(_volume.key)}}"
+    state: "{{_volume.value.mount_state|default('mounted')}}"
+    fstype: "{{_volume.value.fstype|default('ext4')}}"
+  when: >
+    _volume.value.state|default('present') != 'absent' and
+    _volume.value.mountpoint is defined

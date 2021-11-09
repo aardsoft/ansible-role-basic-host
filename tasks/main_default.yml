@@ -221,6 +221,13 @@
     removed_udev_rule_files is defined or
     udev_rule_files is defined
 
+- name: create and mount volumes
+  include_tasks: volume.yml
+  with_dict: "{{volumes}}"
+  loop_control:
+    loop_var: _volume
+  when: volumes is defined
+
 - name: create and mount logical volumes
   include_tasks: logical_volume.yml
   with_dict: "{{logical_volumes}}"
