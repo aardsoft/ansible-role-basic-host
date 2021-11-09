@@ -78,12 +78,18 @@
       - wget
       - mc
   when: base_packages is undefined
+  tags:
+    - base_config
+    - access_setup
 
 - name: expand package list for bare metal servers
   set_fact:
     base_packages: "{{ base_packages + bare_metal_packages }}"
   when: ansible_virtualization_role == "host" or
         ansible_virtualization_role == "NA"
+  tags:
+    - base_config
+    - access_setup
 
 - name: add wireguard
   set_fact:
@@ -106,6 +112,9 @@
     group: root
     mode: 0644
   when: apt_source is defined
+  tags:
+    - base_config
+    - access_setup
 
 - name: configure locale selection
   debconf:
@@ -130,12 +139,25 @@
   file: path=/etc/locale.gen state=absent
   when: ansible_os_family == "Debian" and "en_US.utf8" not in locales.stdout
 
+# TODO: force cache refresh after installing those
+- name: install bootstrap packages
+  apt:
+    deb: "{{_deb}}"
+  with_items: "{{bootstrap_debs}}"
+  when: bootstrap_debs is defined
+  loop_control:
+    loop_var: _deb
+  tags:
+    - access_setup
+
 - name: install base packages
   apt:
     name: "{{ base_packages }}"
     state: present
     update_cache: yes
     cache_valid_time: 3600
+  tags:
+    - access_setup
 
 - name: clean apt cache
   command: apt-get -y clean
