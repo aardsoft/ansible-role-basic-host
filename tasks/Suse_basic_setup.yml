@@ -16,6 +16,8 @@
     hostvars[delegate_hostname|default(inventory_hostname)].suse_release is undefined and
     hostvars[delegate_hostname|default(inventory_hostname)].os_release is defined and
     hostvars[delegate_hostname|default(inventory_hostname)].os_release != "tumbleweed"
+  tags:
+    - access_setup
 
 - name: use os_release as suse release (tumbleweed)
   set_fact:
@@ -25,6 +27,8 @@
     hostvars[delegate_hostname|default(inventory_hostname)].os_release is defined and
     (hostvars[delegate_hostname|default(inventory_hostname)].os_release == "tumbleweed" or
     hostvars[delegate_hostname|default(inventory_hostname)].os_release == "factory")
+  tags:
+    - access_setup
 
 - name: set suse release
   set_fact:
