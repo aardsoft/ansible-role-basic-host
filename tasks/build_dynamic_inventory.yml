@@ -9,3 +9,6 @@
   when: >
     item.value.groups is defined and
     (item.value.state is undefined or item.value.state == "started")
+  tags:
+    - base_config
+    - access_setup

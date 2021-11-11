@@ -1,0 +1,47 @@
+# This should be called from a playbook entry like the following to
+# dynamically populate host vars, after VM registration:
+#
+#- hosts: dynamic-containers
+#  gather_facts: false
+#  tasks:
+#    - include_role:
+#        name: basic-host
+#        tasks_from: update_dynamic_hostvars
+#
+# This used to be in libvirt - but a better place is here (and later on a
+# separate role for the core setup) as it can handle things like cloud
+# instances as well.
+
+# variable dump looks like __hostname is set, but the lookup fails
+# it also looks like the item is not delegated -> maybe the loop is the issue?
+- name: set facts for ({{inventory_hostname}})
+  set_fact:
+    __hostname: "{{fact_hostname|default(inventory_hostname)}}"
+  tags:
+    - base_config
+    - access_setup
+
+- name: copy os-release
+  set_fact:
+    os_release: "{{ network_nodes[__hostname]['os_release'] }}"
+  when: network_nodes[__hostname]['os_release'] is defined
+  tags:
+    - base_config
+    - access_setup
+
+- name: copy os-release (lxc)
+  set_fact:
+    os_release: "{{ network_nodes[__hostname]['lxc']['os_release'] }}"
+  when: network_nodes[__hostname]['lxc']['os_release'] is defined
+  tags:
+    - base_config
+    - access_setup
+
+- name: update facts from host_vars
+  set_fact:
+    "{{ item }}": "{{ network_nodes[__hostname]['host_vars'][item] }}"
+  with_items: "{{ network_nodes[__hostname]['host_vars'] }}"
+  when: network_nodes[__hostname]['host_vars'] is defined
+  tags:
+    - base_config
+    - access_setup
