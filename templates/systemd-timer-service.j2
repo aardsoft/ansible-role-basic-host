@@ -1,6 +1,12 @@
+#jinja2: lstrip_blocks: True
+# {{ ansible_managed }}
+
 [Unit]
 Description={{systemd_timers[item.1].description|default(item.1)}}
 
 [Service]
 Type=oneshot
+{% if systemd_timers[item.1].user is defined and systemd_timers[item.1].user != 'root' %}
+User={{systemd_timers[item.1].user}}
+{% endif %}
 ExecStart={{systemd_timers[item.1].script|default(systemd_timers[item.1].command)}}

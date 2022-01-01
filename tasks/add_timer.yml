@@ -17,6 +17,7 @@
           'oncalendar': systemd_timer_oncalendar,
           'command': systemd_timer_command|default('/bin/true'),
           'add_service': systemd_timer_add_service|default(True),
+          'user': systemd_timer_user|default('root'),
         }
       })}}
 
