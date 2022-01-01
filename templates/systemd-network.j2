@@ -62,7 +62,9 @@ Unmanaged={{ item.value.unmanaged | default('no')}}
 {# TODO: check if it's a dict. in that case, add multiple address #}
 {#       sections instead                                         #}
 {# TODO: add prefixes #}
+  {% if item.value.ipv4 is defined %}
 Address={{ item.value.ipv4 }}
+  {% endif %}
   {% if item.value.gateway is defined %}
 Gateway={{ item.value.gateway }}
   {% endif %}
@@ -183,17 +185,37 @@ Address={{ip}}
 
 {# FIXME #}
 {% if item.value.addresses is defined %}
-#[Address]
-#Address=
-#Peer=
-#Broadcast=
-#Label=
-#PreferredLifetime=
-#HomeAddress=
-#DuplicateAddressDetection=
-#ManageTemporaryAddress=
-#PrefixRoute=
-#AutoJoin=
+  {% for address in item.value.addresses %}
+[Address]
+Address={{address}}
+    {% if item.value.addresses[address].peer is defined %}
+Peer={{item.value.addresses[address].peer}}
+    {% endif %}
+    {% if item.value.addresses[address].broadcast is defined %}
+Broadcast={{item.value.addresses[address].broadcast}}
+    {% endif %}
+    {% if item.value.addresses[address].label is defined %}
+Label={{item.value.addresses[address].label}}
+    {% endif %}
+    {% if item.value.addresses[address].preferred_lifetime is defined %}
+PreferredLifetime={{item.value.addresses[address].preferred_lifetime}}
+    {% endif %}
+    {% if item.value.addresses[address].home_address is defined %}
+HomeAddress={{item.value.addresses[address].home_address}}
+    {% endif %}
+    {% if item.value.addresses[address].duplicate_address_detection is defined %}
+DuplicateAddressDetection={{item.value.addresses[address].duplicate_address_detection}}
+    {% endif %}
+    {% if item.value.addresses[address].manage_temporary_address is defined %}
+ManageTemporaryAddress={{item.value.addresses[address].manage_temporary_address}}
+    {% endif %}
+    {% if item.value.addresses[address].prefix_route is defined %}
+PrefixRoute={{item.value.addresses[address].prefix_route}}
+    {% endif %}
+    {% if item.value.addresses[address].auto_join is defined %}
+AutoJoin={{item.value.addresses[address].auto_join}}
+    {% endif %}
+  {% endfor %}
 {% endif %}
 
 #[IPv6AddressLabel]
