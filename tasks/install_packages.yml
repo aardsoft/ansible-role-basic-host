@@ -7,22 +7,26 @@
     state: present
     update_cache: yes
     cache_valid_time: 3600
+  retries: "{{package_install_retries|default(3)}}"
   when: ansible_os_family == "Debian"
 
 - name: Install packages for {{role_name}} (SuSE)
   zypper:
     name: "{{ role_packages }}"
     state: present
+  retries: "{{package_install_retries|default(3)}}"
   when: ansible_os_family == "Suse"
 
 - name: Install packages for {{role_name}} (RedHat/dnf)
   dnf:
     name: "{{ role_packages }}"
     state: present
+  retries: "{{package_install_retries|default(3)}}"
   when: ansible_os_family == "RedHat" and ansible_pkg_mgr == "dnf"
 
 - name: Install packages for {{role_name}} (RedHat/yum)
   yum:
     name: "{{ role_packages }}"
     state: present
+  retries: "{{package_install_retries|default(3)}}"
   when: ansible_os_family == "RedHat" and ansible_pkg_mgr == "yum"
