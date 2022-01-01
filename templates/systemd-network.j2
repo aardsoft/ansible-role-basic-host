@@ -215,6 +215,14 @@ PrefixRoute={{item.value.addresses[address].prefix_route}}
     {% if item.value.addresses[address].auto_join is defined %}
 AutoJoin={{item.value.addresses[address].auto_join}}
     {% endif %}
+
+    {% if item.value.addresses[address].gateway is defined %}
+[Route]
+Gateway={{item.value.addresses[address].gateway}}
+    {# TODO: add the remaining route section options as well - probably most #}
+    {#       sensible way would be by making route section an include, and   #}
+    {#       re-using it                                                     #}
+    {% endif %}
   {% endfor %}
 {% endif %}
 
