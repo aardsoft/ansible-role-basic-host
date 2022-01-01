@@ -273,7 +273,7 @@ sub validateNetworkSection {
             $s->{result}->{errors}++;
             $s->{result}->{error_messages}.=
               "ILO interface without VLan: $key, $if_key\n";
-          } elsif (%$networks{$if_key}->{vlan} ne "ilo"){
+          } elsif (%$networks{$if_key}->{vlan} ne "ilo" && %$networks{$if_key}->{vlan} ne "ipmi"){
             $s->{result}->{errors}++;
             $s->{result}->{error_messages}.=
               "ILO interface outside 'ilo' VLan: $key, $if_key\n";
