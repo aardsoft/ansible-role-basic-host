@@ -175,19 +175,18 @@
   tags:
     - base_config
 
-- name: set hostname
-  copy:
-    content: "{{ hostname }}"
+- name: set hostname (/etc/hostname)
+  template:
+    src: hostname.j2
     dest: /etc/hostname
-  when: hostname.stat.exists == False and hostname is defined
+    mode: 0644
 
-- name: set hostname
-  copy:
-    content: "{{ inventory_hostname.split('.')[0] }}"
-    dest: /etc/hostname
-  when: hostname.stat.exists == False and hostname is undefined
-  tags:
-    - base_config
+- name: set runtime hostname
+  ansible.builtin.hostname:
+    name: "{{ hostname | default(inventory_hostname.split('.')[0]) }}"
+    use: systemd
+  when: >
+    ansible_service_mgr == 'systemd'
 
 - include_tasks: debug_variables.yml
   when: debug_variables is defined and debug_variables == True
