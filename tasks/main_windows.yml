@@ -132,52 +132,18 @@
     - base_config
     - access_setup
 
-- name: set windows hardware clock to UTC
-  win_regedit:
-    path: HKLM:\SYSTEM\CurrentControlSet\Control\TimeZoneInformation
-    name: RealTimeIsUniversal
-    data: 1
-    type: dword
-
-# this needs a new login for SSH sessions, but seems to directly change
-# for the desktop and running WSL instances. Given that usually we only set
-# that at the very beginning, before anything else is up, it's probably fine
-# not to force a reboot.
-- name: set windows timezone
-  win_timezone:
-    timezone: "{{host_timezone_win}}"
-
-- name: start windows time service, if necessary
-  win_service:
-    name: w32time
-    start_mode: auto
-    state: started
-  when: >
-    ntp_servers is defined and
-    (windows_time is undefined or windows_time == "ntp")
-
-- name: configure NTP servers
-  win_command: w32tm /config /manualpeerlist:"{{ ntp_servers|join(' ') }}" /reliable:yes /update
-  changed_when: false
-  when: >
-    ntp_servers is defined and
-    (windows_time is undefined or windows_time == "ntp")
+- ansible.builtin.include_role:
+    name: data-utilities
+    tasks_from: manage_time
+  tags:
+    - base_config
 
 # TODO: ICMP should be enabled per default for Windows
 #- name: configure ICMP in firewall
 
-- name: configure windows hostname
-  win_hostname:
-    name: "{{inventory_hostname}}"
-  register: hostname_status
-
-# if a host or group has troubles coming up reliably
-# set windows_post_reboot_delay either in group or host vars.
-- name: reboot after hostname change
-  win_reboot:
-    reboot_timeout: 600
-    post_reboot_delay: "{{windows_post_reboot_delay|default(0)}}"
-  when: hostname_status.reboot_required
+- ansible.builtin.include_role:
+    name: data-utilities
+    tasks_from: manage_hostname
 
 # this doesn't take proxies, .. into account
 # the assumption is that there's a local, controlled mirror

@@ -1,5 +1,4 @@
 - set_fact:
-    default_passdb_available: False
     is_wsl: False
   tags:
     - base_config

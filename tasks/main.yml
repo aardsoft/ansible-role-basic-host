@@ -1,8 +1,8 @@
-- name: verify ansible version
-  assert:
-    that: "ansible_version.full is version_compare('2.8', '>=')"
-    msg: >
-      "Minimum ansible version required for running this is 2.8"
+- include_role:
+    name: data-utilities
+    tasks_from: check_versions
+  vars:
+    data_utilities_minver: 0.1
   tags:
     - base_config
     - access_setup
@@ -44,70 +44,17 @@
     dhcp_networks: "{{ {} | combine(dhcp_networks, local_dhcp_networks, recursive=True) }}"
   when: local_dhcp_networks is defined
 
-- name: set default password store
-  set_fact:
-    passdb: passwordstore
-  when: passdb is undefined
+- include_role:
+    name: data-utilities
+    tasks_from: setup_passdb
   tags:
     - base_config
     - access_setup
-
-- name: set default password length
-  set_fact:
-    passdb_password_length: 20
-  when: passdb_password_length is undefined
-  tags:
-    - base_config
-    - access_setup
-
-- name: set default for password creation
-  set_fact:
-    passdb_password_create: True
-  when: passdb_password_create is undefined
-  tags:
-    - base_config
-    - access_setup
-
-- name: set passdb extra arguments
-  set_fact:
-    passdb_extra_arg: " create={{passdb_password_create}} length={{passdb_password_length}}"
 
 - include_tasks: default_vars.yml
   tags:
     - base_config
     - access_setup
-
-- name: check default password store access
-  set_fact:
-    _passdb_check_value: "{{lookup(passdb, passdb_check_entry)}}"
-  register: _passdb_result
-  ignore_errors: True
-  when: >
-    passdb_check_entry is defined
-  tags:
-    - base_config
-    - access_setup
-
-# This is for backwards compatibility. This will fail during execution if
-# password store is not available
-- name: setting default password store availability to true without check
-  set_fact:
-    default_passdb_available: True
-  when: _passdb_result is skipped
-  tags:
-    - base_config
-    - access_setup
-
-- name: setting default password store availability to true
-  set_fact:
-    default_passdb_available: True
-  when: _passdb_result is succeeded
-  tags:
-    - base_config
-    - access_setup
-
-- debug: msg="Passdb is not available, some roles may fail"
-  when: _passdb_result is failed
   tags:
     - base_config
     - access_setup

@@ -26,59 +26,15 @@
     password: "{{lookup(passdb, root_passdb_entry)|password_hash('sha512', 65534 | random(seed=inventory_hostname) | string)}}"
   when: >
     root_passdb_entry is defined and
-    default_passdb_available == True
+    default_passdb_available == True and
+    ansible_os_family != Darwin
 
-- name: set resolv location to site, if necessary
+- ansible.builtin.include_role:
+    name: data-utilities
+    tasks_from: manage_nameservices
   tags:
     - base_config
     - access_setup
-  set_fact:
-    resolv_location: "{{ site_region }}"
-  when: site_region is defined and resolv_location is undefined
-
-- name: add resolv.conf
-  tags:
-    - base_config
-    - access_setup
-  copy:
-    src: resolv.conf.{{ resolv_location }}
-    dest: /etc/resolv.conf
-    owner: root
-    group: root
-    mode: 0644
-  when: resolv_location is defined
-
-- name: add resolv.conf (template)
-  tags:
-    - base_config
-    - access_setup
-  template:
-    src: resolv.conf.j2
-    dest: /etc/resolv.conf
-    owner: root
-    group: root
-    mode: 0644
-  when: nameservers is defined
-
-- name: add adjtime
-  copy:
-    src: adjtime
-    dest: /etc/adjtime
-    owner: root
-    group: root
-    mode: 0644
-  tags:
-    - base_config
-
-- name: add hosts
-  template:
-    src: hosts.j2
-    dest: /etc/hosts
-    owner: root
-    group: root
-    mode: 0644
-  tags:
-    - base_config
 
 - name: add environment
   template:
@@ -101,20 +57,6 @@
     - base_config
   notify:
     - restart logind
-  when: ansible_service_mgr == 'systemd'
-
-- name: add resolved configuration
-  template:
-    src: resolved.conf.j2
-    dest: /etc/systemd/resolved.conf
-    owner: root
-    group: root
-    mode: 0644
-  tags:
-    - base_config
-# Don't restart for now - it's not much used yet
-#  notify:
-#    - restart resolved
   when: ansible_service_mgr == 'systemd'
 
 - name: add journald configuration
@@ -152,41 +94,17 @@
   notify:
     - restart sshd
 
-# timezone command was added in 2.2 only
-- name: set /etc/timezone
-  copy:
-    content: "{{ host_timezone }}"
-    dest: /etc/timezone
-    mode: 0644
+- ansible.builtin.include_role:
+    name: data-utilities
+    tasks_from: manage_time
   tags:
     - base_config
 
-- name: set /etc/localtime
-  file:
-    src: "/usr/share/zoneinfo/{{ host_timezone }}"
-    dest: /etc/localtime
-    state: link
-    force: yes
+- ansible.builtin.include_role:
+    name: data-utilities
+    tasks_from: manage_hostname
   tags:
     - base_config
-
-- stat: path=/etc/hostname
-  register: hostname_file
-  tags:
-    - base_config
-
-- name: set hostname (/etc/hostname)
-  template:
-    src: hostname.j2
-    dest: /etc/hostname
-    mode: 0644
-
-- name: set runtime hostname
-  ansible.builtin.hostname:
-    name: "{{ hostname | default(inventory_hostname.split('.')[0]) }}"
-    use: systemd
-  when: >
-    ansible_service_mgr == 'systemd'
 
 - include_tasks: debug_variables.yml
   when: debug_variables is defined and debug_variables == True
