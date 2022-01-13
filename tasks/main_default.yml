@@ -27,7 +27,7 @@
   when: >
     root_passdb_entry is defined and
     default_passdb_available == True and
-    ansible_os_family != Darwin
+    ansible_os_family != "Darwin"
 
 - ansible.builtin.include_role:
     name: data-utilities
