@@ -31,13 +31,13 @@
   set_fact:
     base_packages: "{{ base_packages + bare_metal_packages }}"
   when: ansible_virtualization_role == "host"
+  tags:
+    - access_setup
 
 - name: append extra packages
   set_fact:
     base_packages: "{{ base_packages + suse_extra_packages }}"
   when: suse_extra_packages is defined
-  tags:
-    - access_setup
 
 - name: set additional OBS repos
   zypper_repository:

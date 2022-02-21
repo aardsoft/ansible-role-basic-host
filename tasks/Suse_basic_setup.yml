@@ -201,7 +201,8 @@
       - which
       - mc
   when: >
-    hostvars[delegate_hostname|default(inventory_hostname)].base_packages is undefined
+    (delegate_hostame is undefined and hostvars[inventory_hostname].base_packages is undefined) or
+    (delegate_hostname is defined and hostvars[delegate_hostname].base_packages is undefined)
   tags:
     - access_setup
 
@@ -214,11 +215,14 @@
   tags:
     - access_setup
 
+# using just base_packages here would pull in base_packages from the host
+# delegated from, overriding our new assignments - and break if that host
+# adds extra packages not available in the delegated to repositories
 - name: add wireguard
   set_fact:
-    base_packages: "{{ base_packages }} + [ 'wireguard-tools' ]"
+    base_packages: "{{ hostvars[delegate_hostname|default(inventory_hostname)].base_packages }} + [ 'wireguard-tools' ]"
   when: >
-    wireguard is defined
+    hostvars[delegate_hostname|default(inventory_hostname)].wireguard is defined
   tags:
     - access_setup
 
