@@ -12,11 +12,24 @@
   tags:
     - access_setup
 
+- name: copy wireguard private key from passdb
+  ansible.builtin.template:
+    src: wireguard_key.j2
+    dest: "{{wireguard[_iface.key].interface.private_key_file}}"
+    owner: root
+    group: root
+    mode: 0600
+  register: _wg_key_copy
+  when: >
+    wireguard[_iface.key].interface.private_key_file is defined and
+    wireguard[_iface.key].interface.passdb_entry is defined
+
 - name: create wireguard private key
   shell: "wg genkey > {{wireguard[_iface.key].interface.private_key_file}}"
   when: >
     wireguard[_iface.key].interface.private_key_file is defined and
     _wireguard_private_key_file.stat.exists == False
+  register: _wg_key_create
   tags:
     - access_setup
 
@@ -30,12 +43,15 @@
   tags:
     - access_setup
 
+# TODO: this should also get recreated if the private key changes in one of the two steps above
 - name: create wireguard public key
   shell: "wg pubkey < {{wireguard[_iface.key].interface.private_key_file}} > {{wireguard[_iface.key].interface.public_key_file}}"
   when: >
     wireguard[_iface.key].interface.private_key_file is defined and
     wireguard[_iface.key].interface.public_key_file is defined and
-    _wireguard_public_key_file.stat.exists == False
+    (_wireguard_public_key_file.stat.exists == False or
+     (_wg_key_copy is defined and _wg_key_copy is changed) or
+     (_wg_key_create is defined and _wg_key_create is changed))
   tags:
     - access_setup
 
