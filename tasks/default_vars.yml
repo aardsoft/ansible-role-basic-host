@@ -45,3 +45,10 @@
     server_model: "{{ ansible_product_name.split(' ')[1] | lower }}"
     server_gen: "{{ ansible_product_name.split(' ')[2] | int }}"
   when: ansible_product_name.split(" ")[0] | lower == "proliant"
+
+# this should move to a default variables file in data-utilities
+- set_fact:
+    _root_group: "{% if ansible_os_family == 'Darwin' %}wheel{% else %}root{% endif %}"
+  tags:
+    - base_config
+    - access_setup

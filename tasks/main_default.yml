@@ -43,6 +43,7 @@
     owner: root
     group: root
     mode: 0644
+  when: ansible_os_family != "Darwin"
   tags:
     - base_config
 
@@ -87,7 +88,7 @@
     src: sshd_config.j2
     dest: /etc/ssh/sshd_config
     owner: root
-    group: root
+    group: "{{_root_group}}"
     mode: 0640
   tags:
     - base_config
@@ -221,6 +222,8 @@
     owner: root
     group: root
     mode: 0755
+  when: >
+    ansible_os_family != "Darwin"
   with_items:
     - hp-spp-tool
 
