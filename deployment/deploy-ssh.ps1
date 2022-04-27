@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Continue"
 [Net.ServicePointManager]::SecurityProtocol = "tls12, tls11, tls"
 
-$installer_url = "https://github.com/PowerShell/Win32-OpenSSH/releases/download/V8.6.0.0p1-Beta/OpenSSH-Win64.zip"
+$installer_url = "https://github.com/PowerShell/Win32-OpenSSH/releases/download/v8.9.1.0p1-Beta/OpenSSH-Win64.zip"
 $installer_archive = "OpenSSH-Win64.zip"
 $installer_search_path = @("c:\ci",
                            $PWD,
