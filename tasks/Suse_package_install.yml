@@ -1,3 +1,16 @@
+- debug:
+    msg: "Installing packages for {{delegate_hostname|default(inventory_hostname)}}"
+  when: >
+    debug_delegates is defined
+
+- debug:
+    msg:
+      - "Step 3:"
+      - "{{hostvars[delegate_hostname].base_packages}}"
+  when: >
+    debug_delegates is defined and
+    delegate_hostname is defined
+
 - name: Install base packages
   zypper:
     name: "{{ hostvars[delegate_hostname|default(inventory_hostname)].base_packages }}"

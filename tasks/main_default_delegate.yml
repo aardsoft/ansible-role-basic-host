@@ -11,17 +11,33 @@
 # - create and configure management user
 
 - debug: msg="Running for {{delegate_hostname|default(inventory_hostname)}}"
+  when: >
+    debug_delegates is defined
 
 - name: check provisioning marker
   stat:
     path: "/.provisioning-needed"
   register: marker
 
+- debug:
+    msg:
+      - "Step 1:"
+      - "{{hostvars[delegate_hostname].base_packages|default('unset')}}"
+  when: >
+    debug_delegates is defined and
+    delegate_hostname is defined
+
 - include_tasks: "{{ ansible_os_family }}_basic_setup.yml"
   when: ansible_os_family == "Debian" or ansible_os_family == "Suse" or ansible_os_family == "RedHat"
   tags:
     - base_config
     - access_setup
+
+- debug:
+    msg:
+      - "Step 4:"
+      - "{{hostvars[delegate_hostname].base_packages|default('unset')}}"
+  when: delegate_hostname is defined
 
 - include_tasks: "{{ ansible_os_family }}_package_install.yml"
   when: ansible_os_family == "Debian" or ansible_os_family == "Suse" or ansible_os_family == "RedHat"
