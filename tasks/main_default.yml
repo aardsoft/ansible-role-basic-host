@@ -113,8 +113,13 @@
     - base_config
     - access_setup
 
-- include_tasks: "basic_host_{{ ansible_os_family }}.yml"
-  when: ansible_os_family == "Debian" or ansible_os_family == "Suse" or ansible_os_family == "RedHat"
+- name: include distribution specific tasks
+  include_tasks: "basic_host_{{ ansible_os_family }}.yml"
+  when: >
+    ansible_os_family == "Debian" or
+    ansible_os_family == "Suse" or
+    ansible_os_family == "RedHat" or
+    ansible_os_family == "Darwin"
   tags:
     - base_config
     - access_setup

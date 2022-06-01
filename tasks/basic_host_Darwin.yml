@@ -1,0 +1,45 @@
+# python3 on OS X per default only is a stub pointing to xcode CLI. Make sure
+# proper python3 gets installed on bootstrap.
+- name: check xcode-select path
+  command: xcode-select -p
+  ignore_errors: true
+  changed_when: false
+  register: __xcode_select_p
+  tags:
+    - base_config
+    - access_setup
+
+- name: prepare xcode CLI install
+  file:
+    path: /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
+    state: touch
+  when: >
+    __xcode_select_p.rc != 0
+  tags:
+    - base_config
+    - access_setup
+
+- name: register xcode CLI product name
+  shell: >
+    set -o pipefail;
+    softwareupdate -l | grep "\*.*Command Line Tools for Xcode" | sort | tail -n 1 | sed 's/^[^C]* //'
+  args:
+    executable: /bin/bash
+  register: __cli_product
+  when: >
+    __xcode_select_p.rc != 0
+  tags:
+    - base_config
+    - access_setup
+
+- name: install xcode CLI
+  command: softwareupdate -i "{{__cli_product.stdout}}"
+  register: __result
+  failed_when: >
+    __result.rc != 0 or
+    'Error installing updates.' in __result.stdout
+  when: >
+    __xcode_select_p.rc != 0
+  tags:
+    - base_config
+    - access_setup
