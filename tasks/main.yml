@@ -55,9 +55,6 @@
   tags:
     - base_config
     - access_setup
-  tags:
-    - base_config
-    - access_setup
 
 - name: include main tasks for non-Windows
   include_tasks: main_default.yml
