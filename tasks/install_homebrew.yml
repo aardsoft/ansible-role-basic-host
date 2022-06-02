@@ -1,0 +1,15 @@
+- set_fact:
+    homebrew_prefix: "{{ (ansible_machine == 'arm64') | ternary('/opt/homebrew', '/usr/local') }}"
+
+- name: check for brew binary
+  stat:
+    path: "{{homebrew_prefix}}/bin/brew"
+  register: __brew
+
+- name: setup homebrew
+  script: homebrew-installer.sh
+  become: false
+  environment:
+    NONINTERACTIVE: 1
+  when: >
+    __brew.stat.exists == False

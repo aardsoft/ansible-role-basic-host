@@ -43,3 +43,9 @@
   tags:
     - base_config
     - access_setup
+
+- name: install homebrew
+  include_tasks: install_homebrew.yml
+  when: >
+    install_homebrew is undefined or
+    install_homebrew != false
