@@ -1,0 +1,20 @@
+- name: try to locate tar binary
+  find:
+    file_type: link
+    recurse: yes
+    patterns:
+      - tar
+    paths:
+      - "{{homebrew_prefix}}"
+  register:
+    __tar_path
+
+- set_fact:
+    gnu_tar_path: "{{__tar_directory}}"
+    path_with_gnu_tar: "{{__tar_directory}}:{{lookup('env', 'PATH')}}"
+  vars:
+    __tar_element: "{{__tar_path.files|first}}"
+    __tar_directory: "{{__tar_element.path|dirname}}"
+  when: __tar_path.files|length == 1
+
+# TODO: handle more than 1 tar found

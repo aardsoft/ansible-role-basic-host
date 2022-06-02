@@ -1,0 +1,21 @@
+# currently only implemented for OSX
+
+- include_role:
+    name: basic-host
+    tasks_from: _set_tar_path.yml
+
+- name: install gnu tar
+  homebrew:
+    name: gnu-tar
+    state: present
+  become: false
+  environment:
+    PATH: "{{homebrew_prefix}}/bin:{{lookup('env', 'PATH')}}"
+  when: >
+    gnu_tar_path is undefined
+
+- include_role:
+    name: basic-host
+    tasks_from: _set_tar_path.yml
+  when: >
+    gnu_tar_path is undefined
