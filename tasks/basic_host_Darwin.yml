@@ -56,3 +56,12 @@
   when: >
     install_homebrew is undefined or
     install_homebrew != false
+
+- ansible.builtin.include_tasks: _homebrew_packages.yml
+  when: >
+    ansible_version.full is version('2.10', '>=')
+
+- ansible.builtin.include_tasks: _homebrew_packages_legacy.yml
+  when: >
+    ansible_version.full is version('2.9', '>=') and
+    ansible_version.full is version('2.10', '<')

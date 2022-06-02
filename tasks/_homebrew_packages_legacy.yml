@@ -1,0 +1,25 @@
+- name: install homebrew packages
+  homebrew:
+    name: "{{homebrew_packages}}"
+    state: present
+  become: false
+  environment:
+    PATH: "{{homebrew_prefix}}/bin:{{lookup('env', 'PATH')}}"
+  when: >
+    (install_homebrew is undefined or
+     install_homebrew != false) and
+    homebrew_packages is defined
+
+# homebrew_cask is broken in older ansible
+- name: install homebrew casks
+  shell: "brew install --cask {{_package}}"
+  environment:
+    PATH: "{{homebrew_prefix}}/bin:{{lookup('env', 'PATH')}}"
+  loop_control:
+    loop_var: _package
+  with_items: "{{homebrew_cask_packages}}"
+  become: false
+  when: >
+    (install_homebrew is undefined or
+     install_homebrew != false) and
+    homebrew_cask_packages is defined
