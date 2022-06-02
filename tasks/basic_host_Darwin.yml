@@ -44,6 +44,13 @@
     - base_config
     - access_setup
 
+- name: install rosetta
+  command: softwareupdate --install-rosetta --agree-to-license
+  when: >
+    ansible_machine == 'arm64' and
+    (install_rosetta is undefined or
+     install_rosetta != false)
+
 - name: install homebrew
   include_tasks: install_homebrew.yml
   when: >
