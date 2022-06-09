@@ -9,6 +9,23 @@
 # a `delegate_hostname' variable. Instead of directly accessing variables the
 # correct form is hostvars[delegate_hostname|default(inventory_hostname)].var
 
+- name: check target host architecture
+  set_fact:
+    _target_suse_arch: "{{hostvars[delegate_hostname|default(inventory_hostname)].ansible_architecture}}"
+  tags:
+    - access_setup
+
+# additional architectures in main repos are:
+# - i586 dead and unsupported
+# - ppc64le unlikely to be relevant for us
+# - s390x unlikely to be relevant for us
+- include: Suse_port_setup.yml
+  when: >
+    _target_suse_arch != "x86_64" and
+    _target_suse_arch != "aarch64"
+  tags:
+    - access_setup
+
 - name: use os_release as suse release ({{delegate_hostname|default(inventory_hostname)}})
   set_fact:
     suse_release: "{{hostvars[delegate_hostname|default(inventory_hostname)].os_release|float}}"
@@ -32,7 +49,7 @@
 
 - name: set suse release
   set_fact:
-    suse_release: 15.0
+    suse_release: 15.3
   when: >
     hostvars[delegate_hostname|default(inventory_hostname)].suse_release is undefined
   tags:
@@ -44,7 +61,18 @@
       - oss
       - non-oss
   when: >
-    hostvars[delegate_hostname|default(inventory_hostname)].suse_core_repos is undefined
+    hostvars[delegate_hostname|default(inventory_hostname)].suse_core_repos is undefined and
+    suse_port is undefined
+  tags:
+    - access_setup
+
+- name: set core repo list
+  set_fact:
+    suse_core_repos:
+      - oss
+  when: >
+    hostvars[delegate_hostname|default(inventory_hostname)].suse_core_repos is undefined and
+    suse_port is defined
   tags:
     - access_setup
 
@@ -61,6 +89,7 @@
     suse_update_repos: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_update_repos}} + [ 'backports', 'sle' ]"
   when: >
     hostvars[delegate_hostname|default(inventory_hostname)].suse_update_repos is defined and
+    suse_port is undefined and
     suse_release|float >= 15.3
   tags:
     - access_setup
@@ -69,6 +98,8 @@
     msg:
       - "Hostname: {{delegate_hostname|default(inventory_hostname)}}"
       - "Base URL: {{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url}}"
+      - "Target machine architecture: {{_target_suse_arch}}"
+      - "Port: {{suse_port|default('')}}"
   tags:
     - access_setup
 
@@ -76,6 +107,15 @@
   set_fact:
     suse_base_url: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url|default('http://download.opensuse.org/')}}"
     suse_base_url_obs: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url_obs|default('http://download.opensuse.org/')}}"
+  tags:
+    - access_setup
+
+- name: set port specific update/distribution path
+  set_fact:
+    suse_update_path: "ports/update"
+    suse_dist_path: "ports/{{suse_port}}/distribution"
+  when: >
+    suse_port is defined
   tags:
     - access_setup
 
@@ -94,9 +134,9 @@
 - name: handle leap release naming ({{hostvars[delegate_hostname|default(inventory_hostname)].suse_release}})
   set_fact:
     suse_long_release: openSUSE_Leap_{{ hostvars[delegate_hostname|default(inventory_hostname)].suse_release }}
-    dist_base: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url}}/distribution/leap/"
+    dist_base: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url}}/{{suse_dist_path|default('distribution')}}/leap/"
     obs_base: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url_obs}}/repositories/"
-    update_url: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url}}/update/leap/{{ hostvars[delegate_hostname|default(inventory_hostname)].suse_release }}"
+    update_url: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url}}/{{suse_update_path|default('update')}}/leap/{{ hostvars[delegate_hostname|default(inventory_hostname)].suse_release }}"
   when: >
     hostvars[delegate_hostname|default(inventory_hostname)].suse_release|float >= 15 and
     hostvars[delegate_hostname|default(inventory_hostname)].suse_release|float <= 43
@@ -106,7 +146,7 @@
 - name: set suse longrelease ({{hostvars[delegate_hostname|default(inventory_hostname)].suse_release}})
   set_fact:
     suse_long_release: openSUSE_{{ hostvars[delegate_hostname|default(inventory_hostname)].suse_release }}
-    dist_base: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url}}/distribution/"
+    dist_base: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url}}/{{suse_dist_path|default('distribution')}}/"
     obs_base: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url_obs}}/repositories/"
   when: >
     hostvars[delegate_hostname|default(inventory_hostname)].suse_release is defined and
@@ -116,7 +156,7 @@
 
 - name: set base URL
   set_fact:
-    dist_base=http://download.opensuse.org/distribution/
+    dist_base=http://download.opensuse.org/{{suse_dist_path|default('distribution')}}/
   when: >
     hostvars[delegate_hostname|default(inventory_hostname)].suse_release != "tumbleweed" and
     hostvars[delegate_hostname|default(inventory_hostname)].dist_base is undefined
@@ -125,7 +165,7 @@
 
 - name: override update URL
   set_fact:
-    update_url: "{{suse_update_url_prefix}}/update/leap/{{hostvars[delegate_hostname|default(inventory_hostname)].suse_release}}"
+    update_url: "{{suse_update_url_prefix}}/{{suse_update_path|default('update')}}/leap/{{hostvars[delegate_hostname|default(inventory_hostname)].suse_release}}"
   when: >
     hostvars[delegate_hostname|default(inventory_hostname)].suse_release|float >= 15 and
     hostvars[delegate_hostname|default(inventory_hostname)].suse_release|float <= 43 and

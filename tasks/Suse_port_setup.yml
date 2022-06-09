@@ -1,0 +1,8 @@
+- name: set port for arch {{_target_suse_arch}}
+  set_fact:
+    suse_port: armv7hl
+  when: >
+    _target_suse_arch == 'armv7l' or
+    _target_suse_arch == 'armv7hl'
+  tags:
+    - access_setup
