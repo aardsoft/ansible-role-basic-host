@@ -1,9 +1,3 @@
-- set_fact:
-    is_wsl: False
-  tags:
-    - base_config
-    - access_setup
-
 - set_fact: host_timezone=Europe/Helsinki
   when: host_timezone is undefined
   tags:
@@ -15,40 +9,9 @@
   tags:
     - base_config
     - access_setup
-- set_fact: adm_uid=10000
-  when: adm_uid is undefined
-  tags:
-    - base_config
-    - access_setup
-- set_fact: adm_gid=10000
-  when: adm_gid is undefined
-  tags:
-    - base_config
-    - access_setup
-- set_fact: adm_user=management
-  when: adm_user is undefined
-  tags:
-    - base_config
-    - access_setup
-- set_fact: adm_group=management
-  when: adm_group is undefined
-  tags:
-    - base_config
-    - access_setup
-- set_fact: firewalld_available=False
-  when: firewalld_available is undefined
-  tags:
-    - base_config
-    - access_setup
+
 - set_fact:
     server_type: "proliant"
     server_model: "{{ ansible_product_name.split(' ')[1] | lower }}"
     server_gen: "{{ ansible_product_name.split(' ')[2] | int }}"
   when: ansible_product_name.split(" ")[0] | lower == "proliant"
-
-# this should move to a default variables file in data-utilities
-- set_fact:
-    _root_group: "{% if ansible_os_family == 'Darwin' %}wheel{% else %}root{% endif %}"
-  tags:
-    - base_config
-    - access_setup
