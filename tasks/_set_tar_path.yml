@@ -11,7 +11,7 @@
 
 - set_fact:
     gnu_tar_path: "{{__tar_directory}}"
-    path_with_gnu_tar: "{{__tar_directory}}:{{lookup('env', 'PATH')}}"
+    path_with_gnu_tar: "{{__tar_directory}}:{{ansible_env.PATH}}"
   vars:
     __tar_element: "{{__tar_path.files|first}}"
     __tar_directory: "{{__tar_element.path|dirname}}"

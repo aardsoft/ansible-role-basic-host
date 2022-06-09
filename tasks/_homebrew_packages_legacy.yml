@@ -4,7 +4,7 @@
     state: present
   become: false
   environment:
-    PATH: "{{homebrew_prefix}}/bin:{{lookup('env', 'PATH')}}"
+    PATH: "{{homebrew_prefix}}/bin:{{ansible_env.PATH}}"
   when: >
     (install_homebrew is undefined or
      install_homebrew != false) and
@@ -14,7 +14,7 @@
 - name: install homebrew casks
   shell: "brew install --cask {{_package}}"
   environment:
-    PATH: "{{homebrew_prefix}}/bin:{{lookup('env', 'PATH')}}"
+    PATH: "{{homebrew_prefix}}/bin:{{ansible_env.PATH}}"
   loop_control:
     loop_var: _package
   with_items: "{{homebrew_cask_packages}}"
