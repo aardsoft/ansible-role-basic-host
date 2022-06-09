@@ -212,6 +212,16 @@
   tags:
     - access_setup
 
+- name: create wheel group
+  group:
+    name: wheel
+    state: present
+    system: true
+  when: >
+    ansible_os_family != "Darwin"
+  tags:
+    - access_setup
+
 - name: configure sysctl
   include: sysctl.yml
   loop_control:
