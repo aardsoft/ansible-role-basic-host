@@ -1,0 +1,132 @@
+- set_fact:
+    __xip_installed: false
+    __xip_exists: false
+    __xip_download_dir: "{{ansible_env.PWD}}"
+    __xip_name: "{{_installer.key}}.xip"
+
+- set_fact:
+    __xip_path: "{{_installer.value.download_dir|default(__xip_download_dir)}}/{{__xip_name}}"
+
+- name: check if xip is installed in /Applications/{{_installer.value.appname|default(_installer.key)}}.app
+  stat:
+    path: "/Applications/{{_installer.value.appname|default(_installer.key)}}.app"
+  register: __xip_install_status
+
+- set_fact:
+    __xip_installed: true
+  when: >
+    __xip_install_status.stat.isdir is defined and
+    __xip_install_status.stat.isdir
+
+- name: check xip presence for {{_installer.key}}
+  stat:
+    checksum_algorithm: sha256
+    get_md5: no
+    path: "{{__xip_path}}"
+  register: __xip_file_status
+  when: >
+    __xip_installed == false or
+    (_installer.value.keep_xip is defined and
+     _installer.value.keep_xip == true)
+
+# TODO: download should only happen if xip isn't installed and it should be kept
+- set_fact:
+    __xip_exists: true
+  when: >
+    __xip_file_status is defined and
+    __xip_file_status.stat.exists is defined and
+    ((_installer.value.sha256 is defined and
+      __xip_file_status.stat.checksum == _installer.value.sha256) or
+     (_installer.value.sha256 is undefined and
+      __xip_file_status.stat.exists == true))
+
+- name: download xip for {{_installer.key}} without checksum
+  get_url:
+    url: "{{_installer.value.url}}"
+    dest: "{{__xip_path}}"
+  when: >
+    __xip_installed == false and
+    __xip_exists == false and
+    _installer.value.sha256 is undefined and
+    _installer.value.url is defined and
+    (_installer.value.url.startswith("http:") or
+     _installer.value.url.startswith("https:"))
+
+- name: download xip for {{_installer.key}} with checksum
+  get_url:
+    url: "{{_installer.value.url}}"
+    dest: "{{__xip_path}}"
+    checksum: "sha256:{{_installer.value.sha256}}"
+  when: >
+    __xip_installed == false and
+    __xip_exists == false and
+    _installer.value.sha256 is defined and
+    _installer.value.url is defined and
+    (_installer.value.url.startswith("http:") or
+     _installer.value.url.startswith("https:"))
+
+- name: extract xip
+  command: "xip --expand {{__xip_path}}"
+  when: >
+    __xip_installed == false
+
+- name: check if xip extracted to appname key {{_installer.value.appname|default('')}}
+  stat:
+    path: "{{_installer.value.appname}}.app"
+  register: __extracted_xip
+  when: >
+    __xip_installed == false and
+    _installer.value.appname is defined
+
+- set_fact:
+    __xip_appdir: "{{_installer.value.appname}}.app"
+  when: >
+    __xip_installed == false and
+    __extracted_xip.stat.isdir is defined and
+    __extracted_xip.stat.isdir
+
+- name: check if xip extracted to {{_installer.key}}
+  stat:
+    path: "{{_installer.key}}.app"
+  register: __extracted_xip
+  when: >
+    __xip_installed == false and
+    __xip_appdir is undefined
+
+- set_fact:
+    __xip_appdir: "{{_installer.key}}.app"
+  when: >
+    __xip_installed == false and
+    __xip_appdir is undefined and
+    __extracted_xip.stat.isdir is defined and
+    __extracted_xip.stat.isdir
+
+- name: check if xip extracted to xip_appname key {{_installer.value.xip_appname|default('')}}
+  stat:
+    path: "{{_installer.value.xip_appname}}.app"
+  register: __extracted_xip
+  when: >
+    __xip_installed == false and
+    __xip_appdir is undefined and
+    _installer.value.xip_appname is defined
+
+- set_fact:
+    __xip_appdir: "{{_installer.value.xip_appname}}.app"
+  when: >
+    __xip_installed == false and
+    __xip_appdir is undefined and
+    __extracted_xip.stat.isdir is defined and
+    __extracted_xip.stat.isdir
+
+- name: move extracted xip to location
+  command: "mv {{__xip_appdir}} /Applications/{{_installer.value.appname|default(_installer.key)}}.app"
+  when: >
+    __xip_installed == false and
+    __xip_appdir is defined
+
+- name: fail xip installation
+  fail:
+    msg: "Unable to install {{_installer.key}}, no extracted appdir located. Consider setting .xip_appdir"
+  when: >
+    __xip_installed == false and
+    __xip_appdir is undefined

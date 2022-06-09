@@ -65,3 +65,11 @@
   when: >
     ansible_version.full is version('2.9', '>=') and
     ansible_version.full is version('2.10', '<')
+
+- name: install XIP installers
+  include_tasks: install_xip.yml
+  with_dict: "{{xip_installers}}"
+  loop_control:
+    loop_var: _installer
+  when: >
+    xip_installers is defined
