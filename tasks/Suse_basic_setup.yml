@@ -11,7 +11,7 @@
 
 - name: check target host architecture
   set_fact:
-    _target_suse_arch: "{{hostvars[delegate_hostname|default(inventory_hostname)].ansible_architecture}}"
+    _target_suse_arch: "{{hostvars[delegate_hostname|default(inventory_hostname)].ansible_architecture|default('x86_64')}}"
   tags:
     - access_setup
 
