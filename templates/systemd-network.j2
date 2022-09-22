@@ -86,9 +86,34 @@ IPForward={{ item.value.forwarding|default("no") }}
 IPMasquerade={{ item.value.masquerade|default("no") }}
 
 #BindCarrier=
-#IPv6PrivacyExtensions=
-#IPv6AcceptRA=
-#IPv6HopLimit=
+{% if item.value.ipv6 is defined %}
+  {% if item.value.ipv6.privacy_extensions is defined %}
+IPv6PrivacyExtensions={{item.value.ipv6.privacy_extensions}}
+  {% endif %}
+  {% if item.value.ipv6.accept_ra is defined %}
+IPv6AcceptRA={{item.value.ipv6.accept_ra}}
+  {% endif %}
+  {% if item.value.ipv6.duplicate_address_detection is defined %}
+IPv6DuplicateAddressDetection={{item.value.ipv6.duplicate_address_detection}}
+  {% endif %}
+  {% if item.value.ipv6.hop_limit is defined %}
+IPv6HopLimit={{item.value.ipv6.hop_limit}}
+  {% endif %}
+  {% if item.value.ipv6.proxy_ndp is defined %}
+IPv6ProxyNDP={{item.value.ipv6.proxy_ndp}}
+  {% endif %}
+  {% if item.value.ipv6.proxy_ndp_address is defined %}
+IPv6ProxyNDPAddress={{item.value.ipv6.proxy_ndp_address}}
+  {% endif %}
+  {% if item.value.ipv6.send_ra is defined %}
+IPv6SendRA=True
+  {% endif %}
+  {% if item.value.ipv6.mti_bytes is defined %}
+IPv6MTUBytes={{item.value.ipv6.mtu_bytes}}
+  {% endif %}
+# DHCPPrefixDelegation is not yet supported
+{% endif %}
+
 {% if item.value.bridge is defined %}
 Bridge={{item.value.bridge}}
 {% endif %}
@@ -229,3 +254,66 @@ Gateway={{item.value.addresses[address].gateway}}
 #[IPv6AddressLabel]
 #Label=
 #Prefix=
+
+{% if item.value.ipv6.send_ra is defined %}
+[IPv6SendRA]
+  {% if item.value.ipv6.send_ra.managed is defined %}
+Managed={{item.value.ipv6.send_ra.managed}}
+  {% endif %}
+  {% if item.value.ipv6.send_ra.other_information is defined %}
+OtherInformation={{item.value.ipv6.send_ra.other_information}}
+  {% endif %}
+  {% if item.value.ipv6.send_ra.router_lifetime_sec is defined %}
+RouterLifetimeSec={{item.value.ipv6.send_ra.router_lifetime_sec}}
+  {% endif %}
+  {% if item.value.ipv6.send_ra.router_preference is defined %}
+RouterPreference={{item.value.ipv6.send_ra.router_preference}}
+  {% endif %}
+  {% if item.value.ipv6.send_ra.uplink_interface is defined %}
+UplinkInterface={{item.value.ipv6.send_ra.uplink_interface}}
+  {% endif %}
+  {% if item.value.ipv6.send_ra.emit_dns is defined %}
+EmitDNS={{item.value.ipv6.send_ra.emit_dns}}
+  {% endif %}
+  {% if item.value.ipv6.send_ra.dns is defined %}
+DNS={{item.value.ipv6.send_ra.dns}}
+  {% endif %}
+  {% if item.value.ipv6.send_ra.emit_domains is defined %}
+EmitDomains={{item.value.ipv6.send_ra.emit_domains}}
+  {% endif %}
+  {% if item.value.ipv6.send_ra.domains is defined %}
+Domains={{item.value.ipv6.send_ra.domains}}
+  {% endif %}
+  {% if item.value.ipv6.send_ra.dns_lifetime_sec is defined %}
+DNSLifetimeSec={{item.value.ipv6.send_ra.dns_lifetime_sec}}
+  {% endif %}
+{% endif %}
+
+{% if item.value.ipv6.prefixes is defined %}
+  {% for prefix in item.value.ipv6.prefixes %}
+[IPv6Prefix]
+Prefix={{ item.value.ipv6.prefixes[prefix].prefix|default(prefix) }}
+  {% if item.value.ipv6.prefixes[prefix].address_autoconfiguration is defined %}
+AddressAutoconfiguration={{ item.value.ipv6.prefixes[prefix].address_autoconfiguration }}
+  {% endif %}
+  {% if item.value.ipv6.prefixes[prefix].on_link is defined %}
+OnLink={{ item.value.ipv6.prefixes[prefix].on_link }}
+  {% endif %}
+  {% if item.value.ipv6.prefixes[prefix].preferred_lifetime_sec is defined %}
+PreferredLifetimeSec={{ item.value.ipv6.prefixes[prefix].preferred_lifetime_sec }}
+  {% endif %}
+  {% if item.value.ipv6.prefixes[prefix].valid_lifetime_sec is defined %}
+ValidLifetimeSec={{ item.value.ipv6.prefixes[prefix].valid_lifetime_sec }}
+  {% endif %}
+  {% if item.value.ipv6.prefixes[prefix].assign is defined %}
+Assign={{ item.value.ipv6.prefixes[prefix].assign }}
+  {% endif %}
+  {% if item.value.ipv6.prefixes[prefix].token is defined %}
+Token={{ item.value.ipv6.prefixes[prefix].token }}
+  {% endif %}
+  {% if item.value.ipv6.prefixes[prefix].route_metric is defined %}
+RouteMetric={{ item.value.ipv6.prefixes[prefix].route_metric }}
+  {% endif %}
+
+  {% endfor %}
+{% endif %}
