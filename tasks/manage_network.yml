@@ -368,6 +368,16 @@
   tags:
     - access_setup
 
+- name: configure deterministic v6 addresses for OS X
+  sysctl:
+    name: net.inet6.send.opmode
+    state: present
+    value: 0
+    reload: no
+    sysctl_set: yes
+  when: >
+    ansible_os_family == "Darwin"
+
 # this seems to go mostly away, so relying on distributions no longer
 # works. Only disable when explicitely required.
 - name: remove bridge filtering keys on unsupported distributions
