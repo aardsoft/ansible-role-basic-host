@@ -82,7 +82,12 @@ DHCP={{ item.value.dhcp }}
 DHCP=no
 {% endif %}
 
+{% if item.value.type is defined and item.value.type == "bridge" %}
+IPForward={{ item.value.forwarding|default("yes") }}
+{% else %}
 IPForward={{ item.value.forwarding|default("no") }}
+{% endif %}
+
 IPMasquerade={{ item.value.masquerade|default("no") }}
 
 #BindCarrier=
