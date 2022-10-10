@@ -1,7 +1,13 @@
 #jinja2: lstrip_blocks: True
 # {{ ansible_managed }}
 [Interface]
+{% if wireguard[_iface.key].interface.address is defined %}
 Address = {{wireguard[_iface.key].interface.address}}
+{% elif wireguard[_iface.key].interface.addresses is defined %}
+  {% for _address in wireguard[_iface.key].interface.addresses %}
+Address = {{_address}}
+  {% endfor %}
+{% endif %}
 {% if wireguard[_iface.key].interface.listen_port is defined %}
 ListenPort = {{wireguard[_iface.key].interface.listen_port}}
 {% endif %}
