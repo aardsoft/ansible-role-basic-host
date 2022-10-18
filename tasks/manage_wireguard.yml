@@ -1,3 +1,67 @@
+- set_fact:
+    _wireguard_confdir: /etc/wireguard
+
+- set_fact:
+    _wg: wg
+
+- set_fact:
+    _wireguard_confdir: "{{homebrew_prefix}}/etc/wireguard"
+  when: >
+    ansible_os_family == "Darwin"
+
+- set_fact:
+    _wg: "{{homebrew_prefix}}/bin/wg"
+  when: >
+    ansible_os_family == "Darwin"
+
+- name: make sure wireguard configuration directory exists
+  ansible.builtin.file:
+    path: "{{_wireguard_confdir}}"
+    owner: root
+    group: "{{_root_group}}"
+    mode: 0700
+    state: directory
+
+- name: link wireguard configuration on arm macs
+  ansible.builtin.file:
+    path: "/usr/local/etc"
+    owner: root
+    group: admin
+    mode: 0775
+    state: directory
+  when: >
+    ansible_os_family == "Darwin" and
+    ansible_machine == 'arm64'
+
+- name: link wireguard configuration on arm macs
+  ansible.builtin.file:
+    src: "{{_wireguard_confdir}}"
+    dest: "/usr/local/etc/wireguard"
+    state: link
+    force: True
+  when: >
+    ansible_os_family == "Darwin" and
+    ansible_machine == 'arm64'
+
+- ansible.builtin.include_tasks: _homebrew_packages.yml
+  when: >
+    ansible_os_family == "Darwin" and
+    ansible_version.full is version('2.10', '>=')
+  vars:
+    homebrew_packages:
+      - wireguard-go
+      - wireguard-tools
+
+- ansible.builtin.include_tasks: _homebrew_packages_legacy.yml
+  when: >
+    ansible_os_family == "Darwin" and
+    ansible_version.full is version('2.9', '>=') and
+    ansible_version.full is version('2.10', '<')
+  vars:
+    homebrew_packages:
+      - wireguard-go
+      - wireguard-tools
+
 - stat:
     path: "{{wireguard[_iface.key].interface.private_key_file}}"
   register: _wireguard_private_key_file
@@ -25,7 +89,7 @@
     wireguard[_iface.key].interface.passdb_entry is defined
 
 - name: create wireguard private key
-  shell: "wg genkey > {{wireguard[_iface.key].interface.private_key_file}}"
+  shell: "{{_wg}} genkey > {{wireguard[_iface.key].interface.private_key_file}}"
   when: >
     wireguard[_iface.key].interface.private_key_file is defined and
     _wireguard_private_key_file.stat.exists == False
@@ -45,7 +109,7 @@
 
 # TODO: this should also get recreated if the private key changes in one of the two steps above
 - name: create wireguard public key
-  shell: "wg pubkey < {{wireguard[_iface.key].interface.private_key_file}} > {{wireguard[_iface.key].interface.public_key_file}}"
+  shell: "{{_wg}} pubkey < {{wireguard[_iface.key].interface.private_key_file}} > {{wireguard[_iface.key].interface.public_key_file}}"
   when: >
     wireguard[_iface.key].interface.private_key_file is defined and
     wireguard[_iface.key].interface.public_key_file is defined and
@@ -66,7 +130,7 @@
 - name: configure wireguard interfaces
   template:
    src: wireguard.conf.j2
-   dest: "/etc/wireguard/{{_iface.key}}.conf"
+   dest: "{{_wireguard_confdir}}/{{_iface.key}}.conf"
    mode: 0600
   register: __iface_changed
   tags:
@@ -78,6 +142,7 @@
     state: restarted
     enabled: yes
   when: >
+    ansible_service_mgr == 'systemd' and
     __iface_changed is defined and __iface_changed is changed and
     wireguard[_iface.key].interface.active|default(True) == True
   tags:
