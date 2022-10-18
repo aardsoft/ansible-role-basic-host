@@ -225,6 +225,20 @@
   tags:
     - access_setup
 
+- name: disable and stop nscd
+  systemd:
+    name: nscd.service
+    masked: yes
+    state: stopped
+    force: yes
+  when: >
+    ansible_service_mgr == 'systemd' and
+    (keep_nscd is undefined or
+     keep_nscd == False)
+  ignore_errors: True
+  tags:
+    - base_config
+
 - name: locate netplan configuration files
   find:
     paths: /etc/netplan
