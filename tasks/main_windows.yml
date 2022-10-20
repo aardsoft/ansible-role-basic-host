@@ -188,6 +188,9 @@
 #   cd HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall, and
 #   check contents with ls
 # - get-wmiobject Win32_Product | Format-Table IdentifyingNumber, Name, LocalPackage -AutoSize
+# - Get-ItemProperty HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* |Select-Object DisplayName, DisplayVersion, Publisher, InstallDate|Format-Table -AutoSize
+# - Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* |Select-Object DisplayName, DisplayVersion, Publisher, InstallDate|Format-Table -AutoSize
+
 - name: install windows installers
   with_dict: "{{windows_installers|default({})}}"
   win_package:
