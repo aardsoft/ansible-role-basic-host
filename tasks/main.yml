@@ -2,7 +2,7 @@
     name: data-utilities
     tasks_from: check_versions
   vars:
-    data_utilities_minver: 0.1
+    data_utilities_minver: 0.3
   tags:
     - base_config
     - access_setup

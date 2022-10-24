@@ -8,19 +8,6 @@
   tags:
     - access_setup
 
-- name: add network configuration
-  template:
-    src: interfaces.j2
-    dest: /etc/network/interfaces
-    owner: root
-    group: root
-    mode: 0644
-  tags:
-    - access_setup
-  when: >
-    network_manager is defined and
-    network_manager == "networkd"
-
 - name: set sudo package name for Debian
   set_fact:
     sudo_pkg: "sudo-ldap"

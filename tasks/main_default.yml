@@ -242,9 +242,9 @@
   with_items:
     - hp-spp-tool
 
-- include: manage_network.yml
-  tags:
-    - access_setup
+- ansible.builtin.include_role:
+    name: data-utilities
+    tasks_from: manage_network
 
 - ansible.builtin.include_role:
     name: data-utilities
