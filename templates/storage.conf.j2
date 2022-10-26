@@ -5,7 +5,7 @@
 [storage]
 
 # Default Storage Driver
-driver = ""
+driver = "{{containers.storage.driver|default('overlay')}}"
 
 # Temporary storage location
 runroot = "/var/run/containers/storage"
