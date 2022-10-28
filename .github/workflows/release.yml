@@ -1,0 +1,25 @@
+on:
+  release:
+    types: [created]
+  push:
+    branches: [ master ]
+    tags:
+      - '*'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: Test documentation build and publish
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Release documentation
+      uses: aardsoft/publish-component@master
+      with:
+        ssh-key: ${{secrets.DE1DOC_PUB}}
+        gh-token: ${{secrets.SERVICE_TOKEN}}

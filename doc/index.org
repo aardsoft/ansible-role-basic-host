@@ -1,0 +1,260 @@
+* basic-host
+
+** Introduction
+
+The =basic-host= sits at the core of our Ansible deployment model. Typcially ansible discovers host information for the inventory, and then acts on this information - which doesn't work very well if setting up those sources is part of the Ansible managed infrastructure. To solve this some information typically discovered is configured in a globally availably YAML data structure - this allows us to set up information services, followed by deploying everything else in a single ansible run.
+
+Some things can be made to work easier with modern Ansible versions - to allow that without breaking backwards compatibility as well as making use by other roles easier pre-parsing of some of the YAML-structures will be implemented in [[https://github.com/aardsoft/ansible-data-utilities][ansible-data-utilities.]] Some commonly used filters and includes will also eventually move there.
+
+
+The basic idea is to have very simple playbooks going through a list of host-groups, and applying roles to it. This roles purpose is to apply basic configuration expected to happen on any host, to leave every system in a setup in a similar basic state, no matter the exact operating system used.
+
+Additionally, it allows adding system specific basic operations like adding additional users or installing additional packages. More complicated or service specific configuration happens in specialised roles. Those roles still make use of data structures introduced by =basic-host=, and may utilise some common operations (like package installations) by including tasks from here.
+
+Ideally it should become possible to generate infrastructure playbooks by specifying the roles to be used for a customer infrastructure.
+
+To make this possible infrastructure metadata is maintained in the =network_nodes= yaml structure. A minimal entry might look like this:
+
+#+BEGIN_SRC yaml
+network_nodes:
+  system1:
+    type: server
+    rack: 1
+    networks:
+      eth0:
+        vlan: test
+        ipv4: 10.10.10.10/29
+        hwaddr: aa:bb:cc:dd:ee:ff
+        port: 22
+#+END_SRC
+
+This would assume =system1= placed in the first rack to be connected to port 22 on the first switch in the rack. The switch port is in the vlan =test=, the interface connected has the MAC =aa:bb:cc:dd:ee:ff= and will be configured by DHCP.
+
+Even this simple example already has some implicit assumptions:
+
+- no switch entry: assume first switch in rack
+- no explicit DNS record: calculate based on system name and vlan name
+- no explicit network configuration type: assume DHCP
+- look up the vlan ID from a separate table
+
+It gets worse when introducing things like bridges:
+
+#+BEGIN_SRC yaml
+network_nodes:
+  system2:
+    type: server
+    rack: 1
+    networks:
+      eth0:
+        vlans:
+          - default
+          - test
+      vl.test:
+        vlan: test
+        ipv4: 10.10.10.11/29
+        hwaddr: aa:bb:cc:dd:ee:ef
+        port: 22
+      vl.default:
+        type: vlan
+        vlan: default
+        bridge: main
+      main:
+        type: bridge
+        static: yes
+        hwaddr: ff:ee:dd:cc:bb:aa
+        ipv4: 10.0.0.1/24
+#+END_SRC
+
+This configuration now adds two tagged vlans to =eth0=. One vlan receives an IP address via DHCP, the other is attached to a bridge, which has a static IP configured. Note that the interface name used is =main=, not =default= - the Linux network tooling doesn't like =default= as interface name.
+
+It adds some more implicit assumptions and layers of lookups:
+
+- to find the correct vlan looping over all interfaces is required. the =vl.interface= naming is just for easier readability, the relevant bit is the =vlan= key.
+- to find the correct vlan for a bridge also all interfaces need to be queried for the =bridge= key
+
+Currently each role using this information (mainly DHCP and DNS servers) needs to re-implement the same parsing logic for this. It also makes the templates for those unnecessarily complicated, and adding in additional keys hard.
+
+While it'd be easily possible to expect additional keys in each interface it'd add redundant information, which adds overhead and sources for errors. Instead, eventually a pre-parser should be written to solve those implicit dependencies by adding redundant information before other roles consume this data structure.
+
+To avoid redundancy in the Ansible hosts file it's possible to dynamically add hosts to the inventory based on their configuration in =network_nodes=. Currently this is mainly used for VMs and containers.
+
+** configuration options
+*** management user configuration
+The =basic-host= role creates a management user with passwordless =sudo= access on each managed system. UID/GID as well as user- and group name can be overridden. It is recommended to only change those values globally (=group_vars/all=), if at all.
+
+- =adm_uid= contains the UID of the management user, defaulting to =10000=.
+- =adm_gid= contains the GID of the management user, defaulting to =10000=.
+- =adm_user= contains the name of the management user, defaulting to =management=.
+- =adm_group= contains the name of the management group, defaulting to =management=.
+*** firewall configuration
+TODO
+*** password store configuration
+
+Several roles require securely stored credentials to function correctly.
+
+The =passdb= variable configures which password store should be used as default. Without override it is set to =passwordstore=. While ansible supports other backends this is currently the only one all roles are tested with.
+
+When roles are calling the password store it is possible to pass extra arguments, defined in =passdb_extra_arg=. This defaults to = create={{passdb_password_create}} length={{passdb_password_length}}". The variables included there are configured as follows:
+
+- =passdb_password_create= controls if passwords should be created if they don't exist. It defaults to =true=.
+- =passdb_default_password_length= controls the length of newly created passwords, if not otherwise specified. It defaults to =20=.
+
+When using a password store in a role it should generally be possible to set a role specific password store, with fallback to the global setting. For the mariadb role this looks like this:
+
+#+BEGIN_SRC yaml
+- name: set default password store
+  set_fact:
+    mariadb_passdb: "{{passdb|default('passwordstore')}}"
+  when: mariadb_passdb is undefined
+#+END_SRC
+
+If the role is not supposed to autogenerate passwords this is sufficient for accessing passwords, after setting =mariadb_root_passdb_entry= to a valid key inside the password store:
+
+#+BEGIN_SRC yaml
+- name: set password for root/localhost (no-auth, socket)
+  mysql_user:
+    name: root
+    host: localhost
+    login_unix_socket: "{{mariadb_socket}}"
+    password: "{{lookup(mariadb_passdb, mariadb_root_passdb_entry)}}"
+  ignore_errors: True
+  when: mariadb_root_passdb_entry is defined and mariadb_socket is defined
+#+END_SRC
+
+For password creation additional variables need to be configured:
+
+#+BEGIN_SRC yaml
+- name: set default password length
+  set_fact:
+    mariadb_password_length: "{{passdb_password_length|default(20)}}"
+  when: mariadb_password_length is undefined
+
+- name: set default for password creation
+  set_fact:
+    mariadb_password_create: "{{passdb_password_create|default(True)}}"
+  when: mariadb_password_create is undefined
+
+- name: set passdb extra arguments
+  set_fact:
+    mariadb_passdb_extra_arg: " create={{mariadb_password_create}} length={{mariadb_password_length}}"
+#+END_SRC
+
+And now =mariadb_passdb_extra_arg= appended to the passdb call:
+
+#+BEGIN_SRC yaml
+- name: set password for root/localhost (no-auth, socket)
+  mysql_user:
+    name: root
+    host: localhost
+    login_unix_socket: "{{mariadb_socket}}"
+    password: "{{lookup(mariadb_passdb, mariadb_root_passdb_entry+mariadb_passdb_extra_arg)}}"
+  ignore_errors: True
+  when: mariadb_root_passdb_entry is defined and mariadb_socket is defined
+#+END_SRC
+
+If password change should be supported for roles requiring authentication to change the passwerd the recommended way is to provide a key to reference the old password (like =mariadb_old_root_passdb_entry=), move the old password to that key in the password store, and create a new password under the main key.
+
+In the role an authentication attempt should happen early on. On failure, authentication should be re-tried with the old password, and on success, a password change triggered.
+
+*** time zone configuration
+As time zone specification is incompatible between Linux/UNIX and Windows two different configuration keys exist.
+
+For Linux =host_timezone= should be used, defaulting to =Europe/Helsinki=.
+
+For Windows =host_timezone_win= should be used, defaulting to =FLE Standard Time=. Microsoft documents the [[https://docs.microsoft.com/en-us/previous-versions/windows/embedded/ms912391(v=winembedded.11)?redirectedfrom=MSDN][list of available time zone descriptions.]]
+*** udev rules
+Rule files in the search path can be added through the variables =udev_rule_files= and =removed_udev_rule_files=. For looking up the filename in the ansible tree =.j2= is appended, for the filesystem location =.rules= is appended - i.e., an entrie of =foo= will have ansible search for =foo.j2=, and generate =foo.rules=.
+
+This variable intentionally is a simple list to allow easy merging of multiple declarations over several variable files.
+*** profile.d files
+Profile files in the search path can be added through the variables =profiled_files= and =removed_profiled_files=. For looking up the filename in the ansible tree =.j2= is appended. The filename must have a shell specific ending (like .sh, .bash, .csh, ..), otherwise it may not be included on launching a shell.
+
+This variable intentionally is a simple list to allow easy merging of multiple declarations over several variable files.
+*** =dhcp_networks= key
+A configuration structure mainly consumed by DNS and DHCP roles, but documented here as it is shared across roles.
+
+#+BEGIN_SRC yaml
+dhcp_networks:
+  default:
+    subnets:
+      "192.168.1.1/24":
+        options:
+          - option routers 192.168.1.1
+        boot_options:
+          pxe:
+            - next-server 192.168.1.1
+      options:
+        - default-lease-time 86400
+  test2:
+    vlan_id: "2"
+    subnets:
+      "192.168.2.1/24":
+  test3:
+    dns_subdomain: false
+    subnets:
+      "192.168.2.1/24":
+#+END_SRC
+
+The name of each top level entry should match a vlan definition. It is used to look up the vlan ID, unless the =vlan_id= option is specified.
+
+Each configuration may contain multiple subnet definitions. Both on the top level and on subnet level the =options= key is available, containing a list of DHCP configuration options. The available options depend on the DHCP server implementation used in the setup - generally ISC DHCPD is recommended.
+
+Subnet specific options override options set on higher levels. =boot_options= also just takes DHCP configuration options, but is listed separately to allow different options based on boot method (PXE, UEFI).
+
+Without an explicitly configured dynamic address pool this configuration will just prepare the DHCP server to hand out static addresses to servers configured in the =network_nodes= structure, but not hand out addresses without explicitely configured systems.
+
+*** =vlans= key
+A simple key value list containing human readable vlan names and their IDs.
+
+#+BEGIN_SRC yaml
+vlans:
+  "default": "1"
+  "test": "2"
+#+END_SRC
+
+*** Host/group specific data overrides
+It is possible to override/add to some of the global structures for a host or group. Note that lists will get overwritten by the last definition, see [[https://github.com/aardsoft/ansible-role-basic-host/issues/1][Issue 1.]]
+
+- =local_network_nodes= is merged into =network_nodes= for this host or group, if defined.
+- =local_vlans= is merged into =vlans= for this host or group, if defined.
+- =local_dhcp_networks= is merged into =dhcp_networks= for this host or group, if defined.
+
+It also is possible to load additional tasks or variables from files. Each of those variables is a list of values:
+
+- =basic_host_extra_host_vars= will load additional variables from =host_vars/<value>.yml=.
+- =basic_host_extra_group_vars= will load additional variables from =group_vars/<value>.yml=.
+- =basic_host_extra_tasks= will load additional tasks from =playbooks/tasks/<value>.yml=
+
+** Configuration flags
+*** is_wsl
+Set to =true= if running inside of WSL was detected. Default is =false=.
+
+*** firewalld_available
+Set to =true= if firewalld was detected as available and running. Default is =false=. Firewalld usage can be forced by setting =firewalld_required= to true.
+
+*** server_type
+This is undefined by default, and only configured on select servers:
+
+- HP Proliant: =proliant=
+
+*** server_model
+This is undefined by default, and only defined if server_type is configured as well.
+
+*** server_gen
+This is undefined per default, and only defined if server_type is configured, and this particular server type has valid generations.
+
+- HP: =gen9=, =gen10=
+** Tasks designed to be included from other roles
+TODO
+*** add_timer
+*** install_packages
+*** main_default_delegate
+*** remove_timer
+** References
+*** Windows specific documentation
+- [[https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_execution_policies?view=powershell-6][PowerShell execution policies]]
+- [[https://devblogs.microsoft.com/commandline/background-task-support-in-wsl/][Background tasks in WSL]]. Note that this does not provide a mechanism for starting background tasks on bootup.
+- Old Windows versions may trigger [[https://github.com/Microsoft/WSL/issues/651][Error 0x80070005]]
+- [[https://ss64.com/nt/syntax-variables.html][List of standard Windows environment variables]]
+- [[https://4sysops.com/archives/enabling-powershell-remoting-fails-due-to-public-network-connection-type/][PowerShell remoting issues]]. TL;DR: PowerShell remote requires a non-public firewall zone. We're using SSH for that reason, but also set firewall zone to private in case PowerShell access is required
+- [[https://docs.microsoft.com/en-us/visualstudio/install/tools-for-managing-visual-studio-instances?view=vs-2019][Detect VS studio instances with vswhere]]
