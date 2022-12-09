@@ -48,7 +48,6 @@
       - dbus
       - dosfstools
       - ftp
-      - fuse
       - iperf
       - iputils-ping
       - less
@@ -57,9 +56,8 @@
       - openssh-server
       - openssl
       - psmisc
-      - python
+      - python3
       - screen
-      - sshfs
       - strace
       - sysstat
       - wget
