@@ -115,14 +115,23 @@
     suse_update_path: "ports/update"
     suse_dist_path: "ports/{{suse_port}}/distribution"
   when: >
-    suse_port is defined
+    suse_port is defined and suse_release != "tumbleweed"
+  tags:
+    - access_setup
+
+- name: set port specific update/distribution path
+  set_fact:
+    suse_update_path: "ports/update"
+    suse_dist_path: "ports/{{suse_port}}"
+  when: >
+    suse_port is defined and suse_release == "tumbleweed"
   tags:
     - access_setup
 
 - name: set suse release
   set_fact:
     suse_release: tumbleweed
-    dist_base: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url}}"
+    dist_base: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url}}/{{suse_dist_path|default('')}}"
     obs_base: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url_obs}}/repositories/"
     suse_long_release: openSUSE_Tumbleweed
   when: >
