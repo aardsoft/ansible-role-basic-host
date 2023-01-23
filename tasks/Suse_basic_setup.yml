@@ -303,6 +303,27 @@
   when: >
     marker.stat.exists == True
 
+# suse 15.3 adds repo files via the openSUSE-release packages, which leads to
+# errors when the default download URL is not reachable. We're using a different
+# repo naming scheme, so no repos with that name should exist - which doesn't
+# mask them. Removing them would just bring them back on dist upgrade -> just
+# disable those repos, ignoring errors. This can't be handled with the builtin
+# zypper module as we don't care about how the repo is configured, just that it
+# is disabled.
+- name: "disable core repos packaged by suse"
+  shell: zypper mr -d "{{__repo}}"
+  loop_control:
+    loop_var: __repo
+  ignore_errors: True
+  changed_when: false
+  args:
+    warn: false
+  with_items:
+    - repo-sle-update
+    - repo-sle-debug-update
+    - repo-backports-update
+    - repo-backports-debug-update
+
 # additional repositories are considered not relevant for initial access
 # repo_ssl_verify is expected to come via vars, and therefore should be usable
 - name: "configure core repos (base: {{hostvars[delegate_hostname|default(inventory_hostname)].dist_base}})"
