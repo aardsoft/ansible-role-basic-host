@@ -4,6 +4,7 @@
     repo: "{{_repository.value.baseurl}}"
     state: "{{_repository.value.state|default('present')}}"
     auto_import_keys: yes
+    priority: "{{_repository.value.priority|default(99)}}"
     overwrite_multiple: yes
     disable_gpg_check: >
       {% if _repository.value.gpg_check is defined and

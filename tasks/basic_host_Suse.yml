@@ -58,16 +58,18 @@
 # TODO: add support for extra keys:
 #       - description
 #       - gpgcheck
-#       - priority
 - name: add additional RPM repositories
   zypper_repository:
-    name: "{{ item.key }}"
-    repo: "{{ item.value.baseurl }}?ssl_verify={{repo_ssl_verify|default('yes')}}"
+    name: "{{ _repository.key }}"
+    repo: "{{ _repository.value.baseurl }}?ssl_verify={{repo_ssl_verify|default('yes')}}"
+    priority: "{{_repository.value.priority|default(99)}}"
     state: present
     auto_import_keys: yes
     overwrite_multiple: yes
-    disable_gpg_check: "{{ item.value.gpg_check|default('yes')}}"
+    disable_gpg_check: "{{ _repository.value.gpg_check|default('yes')}}"
   with_dict: "{{ rpm_repos }}"
+  loop_control:
+    loop_var: _repository
   when: rpm_repos is defined
   tags:
     - access_setup
