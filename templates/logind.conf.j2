@@ -17,7 +17,7 @@
 {% set logind = {} %}
 {% endif %}
 [Login]
-NAutoVTs={{logind.n_aut_vts|default('0')}}
+NAutoVTs={{logind.n_auto_vts|default('0')}}
 ReserveVT={{logind.reserve_vt|default('0')}}
 KillUserProcesses={{logind.kill_user_processes|default('no')}}
 KillOnlyUsers={{logind.kill_only_users|default('')}}
