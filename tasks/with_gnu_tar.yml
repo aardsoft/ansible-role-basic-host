@@ -10,7 +10,7 @@
     state: present
   become: false
   environment:
-    PATH: "{{homebrew_prefix}}/bin:{{ansible_env.PATH)}}"
+    PATH: "{{homebrew_prefix}}/bin:{{ansible_env.PATH}}"
   when: >
     gnu_tar_path is undefined
 
