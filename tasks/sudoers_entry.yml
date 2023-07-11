@@ -7,4 +7,5 @@
   loop_control:
     loop_var: __user
   with_dict: "{{_sudo_dict}}"
+  become: true
   when: _sudo_dict is defined and __user.value.sudoers is defined
