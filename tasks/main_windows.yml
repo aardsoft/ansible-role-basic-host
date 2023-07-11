@@ -202,7 +202,8 @@
     (item.value.url is defined or item.value.path is defined) and
     item.value.product_id is defined
 
-- include_tasks: win_unpack_zips.yml
+- name: install zip installers
+  include_tasks: win_unpack_zips.yml
   with_dict: "{{windows_installers|default({})}}"
   loop_control:
     loop_var: _installer
@@ -221,7 +222,8 @@
 
 # for whatever reason windows insists on broken store reference entries in
 # some cases -> nuke those
-- include_tasks: win_remove_applinks.yml
+- name: remove old applinks
+  include_tasks: win_remove_applinks.yml
   with_dict: "{{windows_installers|default({})}}"
   when: >
     (item.value.state is undefined or item.value.state == 'present') and
@@ -263,5 +265,6 @@
     - base_config
     - access_setup
 
-- include_tasks: manage_wsl.yml
+- name: manage WSL
+  include_tasks: manage_wsl.yml
   when: wsl_distributions is defined
