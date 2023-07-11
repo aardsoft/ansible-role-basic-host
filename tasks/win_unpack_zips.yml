@@ -1,6 +1,6 @@
 - name: check target directory for zip installer
   win_stat:
-    path: "{{_installer.value.dest}}"
+    path: "{{_installer.value.stat|default(_installer.value.dest)}}"
   register: _installer_stat
 
 # this is less picky about the archive than win_unzip, at least on older windows
