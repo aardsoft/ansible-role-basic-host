@@ -351,6 +351,16 @@
   include_tasks: systemd_timer.yml
   when: systemd_timers is defined
 
+- ansible.builtin.include_role:
+    name: data-utilities
+    tasks_from: manage_nbd_exports
+  when: nbd_exports is defined
+
+- ansible.builtin.include_role:
+    name: data-utilities
+    tasks_from: manage_nfs_exports
+  when: nfs_exports is defined
+
 - name: manage users
   include_tasks: manage_users.yml
   tags:
