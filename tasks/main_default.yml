@@ -356,3 +356,8 @@
   tags:
     - base_config
     - access_setup
+
+- ansible.builtin.include_role:
+    name: data-utilities
+    tasks_from: configure_gpg_users
+  when: gpg_users is defined
