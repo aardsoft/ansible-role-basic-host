@@ -323,6 +323,8 @@
     - repo-sle-debug-update
     - repo-backports-update
     - repo-backports-debug-update
+  tags:
+    - access_setup
 
 # additional repositories are considered not relevant for initial access
 # repo_ssl_verify is expected to come via vars, and therefore should be usable
