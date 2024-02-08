@@ -233,7 +233,7 @@
     - epel-testing.repo
   when: >
     ansible_distribution == "CentOS" and epel_mirror is defined and
-    use_epel is undefined or use_epel != True
+    use_epel is undefined or use_epel|default(False) != True
   tags:
     - access_setup
 
