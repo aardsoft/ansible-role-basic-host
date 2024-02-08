@@ -460,7 +460,7 @@
 
 - name: add wireguard
   set_fact:
-    base_packages: "{{ base_packages }} + [ 'wireguard-tools' ]"
+    base_packages: "{{ base_packages + [ 'wireguard-tools' ] }}"
   when: >
     wireguard is defined
   tags:
@@ -468,7 +468,7 @@
 
 - name: add systemd-networkd to base packages (CentOS)
   set_fact:
-    base_packages: "{{ base_packages }} + [ 'systemd-networkd' ]"
+    base_packages: "{{ base_packages + [ 'systemd-networkd' ]}}"
   when: >
     network_manager is defined and network_manager == "networkd"
     and ansible_distribution == "CentOS" and _os_release|int <= 7
@@ -477,7 +477,7 @@
 
 - name: add HP SPP packages
   set_fact:
-    base_packages: "{{ base_packages }} + {{ hp_packages }}"
+    base_packages: "{{ base_packages + hp_packages }}"
   when: >
     hp_spp_repository is defined
     and server_type is defined and server_type == "proliant"
@@ -493,7 +493,7 @@
 
 - name: add podman
   set_fact:
-    bare_metal_packages: "{{ bare_metal_packages }} + [ 'podman' ]"
+    bare_metal_packages: "{{ bare_metal_packages + [ 'podman' ]}}"
   when: >
     ansible_virtualization_role == "host" and
     use_podman is defined and use_podman == True

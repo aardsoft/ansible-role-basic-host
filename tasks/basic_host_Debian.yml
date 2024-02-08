@@ -78,7 +78,7 @@
 
 - name: add wireguard
   set_fact:
-    base_packages: "{{ base_packages }} + [ 'wireguard-tools' ]"
+    base_packages: "{{ base_packages + [ 'wireguard-tools' ]}}"
   when: >
     wireguard is defined
   tags:
