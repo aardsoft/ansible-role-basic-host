@@ -23,4 +23,4 @@
       })}}
 
 - name: setup timer
-  include: systemd_timer.yml
+  include_tasks: systemd_timer.yml

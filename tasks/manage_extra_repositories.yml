@@ -1,5 +1,5 @@
 - name: manage extra suse rpm repositories {{suse_long_release|default("")}}
-  include: manage_extra_repository_suse.yml
+  include_tasks: manage_extra_repository_suse.yml
   with_dict: "{{package_repositories}}"
   loop_control:
     loop_var: _repository
@@ -14,7 +14,7 @@
 # the major version for a specific distribution, which for us should be good
 # enough for now
 - name: manage extra RedHat repositories {{ansible_distribution+"_"+ansible_distribution_major_version}}
-  include: manage_extra_repository_redhat.yml
+  include_tasks: manage_extra_repository_redhat.yml
   with_dict: "{{package_repositories}}"
   loop_control:
     loop_var: _repository

@@ -19,7 +19,7 @@
 # - i586 dead and unsupported
 # - ppc64le unlikely to be relevant for us
 # - s390x unlikely to be relevant for us
-- include: Suse_port_setup.yml
+- include_tasks: Suse_port_setup.yml
   when: >
     _target_suse_arch != "x86_64" and
     _target_suse_arch != "aarch64"

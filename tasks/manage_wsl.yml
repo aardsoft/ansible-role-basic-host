@@ -67,7 +67,7 @@
     wsl_service_changed: false
 
 - name: create WSL sshd services
-  include: add_wsl_service.yml
+  include_tasks: add_wsl_service.yml
   with_dict: "{{wsl_distributions}}"
   vars:
     _service_name: sshd

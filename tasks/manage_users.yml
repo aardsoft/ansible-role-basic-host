@@ -99,7 +99,7 @@
   loop_control:
     loop_var: __user
 
-- include: sudoers_entry.yml
+- include_tasks: sudoers_entry.yml
   vars:
     _sudo_dict: "{{local_users}}"
   when: local_users is defined

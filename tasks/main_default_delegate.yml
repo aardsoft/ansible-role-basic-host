@@ -45,4 +45,4 @@
     - base_config
     - access_setup
 
-- include: manage_adm_user.yml
+- include_tasks: manage_adm_user.yml

@@ -208,7 +208,7 @@
 #    - access_setup
 
 # This is split off to allow easier includes from roles using delegates
-- include: manage_adm_user.yml
+- include_tasks: manage_adm_user.yml
   tags:
     - access_setup
 
@@ -223,7 +223,7 @@
     - access_setup
 
 - name: configure sysctl
-  include: sysctl.yml
+  include_tasks: sysctl.yml
   loop_control:
     loop_var: _sysctl
   with_dict: "{{sysctl_keys|default({})}}"
@@ -265,7 +265,7 @@
 # using a different name:
 # grep ctdb /var/log/audit/audit.log | audit2allow -M ctdb-ceph
 - name: add custom selinux modules
-  include: add_selinux_modules.yml
+  include_tasks: add_selinux_modules.yml
   with_dict: "{{selinux_te_files|default({})}}"
   when: >
     (item.value.state is undefined or
@@ -301,11 +301,11 @@
     ceph_minimal_client is defined and ceph_minimal_client == True
 
 - name: configure rbd mapping
-  include: rbd_mappings.yml
+  include_tasks: rbd_mappings.yml
   when: rbd_mappings is defined
 
 - name: configure mounts
-  include: mounts.yml
+  include_tasks: mounts.yml
   when: mounts is defined
 
 # non-provisioning related steps should go here, if possible

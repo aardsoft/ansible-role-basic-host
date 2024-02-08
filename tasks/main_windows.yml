@@ -127,7 +127,7 @@
     - access_setup
     - base_config
 
-- include: manage_adm_user_win.yml
+- include_tasks: manage_adm_user_win.yml
   tags:
     - base_config
     - access_setup

@@ -21,7 +21,7 @@
   ignore_errors: True
   changed_when: false
 
-- include: Suse_basic_setup.yml
+- include_tasks: Suse_basic_setup.yml
 
 # extra packages are assumed to be not required for just providing access
 # having access_setup tags here could lead to conflicts during lxc provisioning
@@ -82,7 +82,7 @@
     (skip_updates is undefined or skip_updates == False) or
     (force_updates is defined and force_updates == True)
 
-- include: Suse_package_install.yml
+- include_tasks: Suse_package_install.yml
 
 # in case the first one failed due to missing package, and we got here
 # without needing a certificate for a proxy, refresh without masking
