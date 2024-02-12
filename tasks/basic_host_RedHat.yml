@@ -566,6 +566,7 @@
   tags:
     - access_setup
 
+# TODO: this should go to network configuration in data utilities
 - name: configure static network interfaces (NM)
   template:
     src: ifcfg.j2
@@ -573,7 +574,8 @@
     mode: 0644
   with_dict: "{{network_nodes[inventory_hostname].networks |default({})}}"
   when: >
-    item.value.static is defined and item.value.static == True
+    (item.value.static is defined and item.value.static == True) and
+    (item.value.manager is undefined or item.value.manager == "networkmanager")
     and (network_manager is undefined or
     (network_manager is defined and network_manager == "networkmanager"))
   tags:
