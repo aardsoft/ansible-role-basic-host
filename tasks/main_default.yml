@@ -83,6 +83,21 @@
   tags:
     - base_config
 
+- name: try to locate sftp binary
+  include_tasks: detect_sftp_binary.yml
+  with_items:
+    - /usr/libexec/openssh/sftp-server
+    - /usr/lib/openssh/sftp-server
+    - /usr/libexec/ssh/sftp-server
+    - /usr/lib/ssh/sftp-server
+  loop_control:
+    loop_var: _sftp_path
+  tags:
+    - base_config
+  when: >
+    sshd.sftp_binary is undefined and
+    detected_sftp_binary is undefined
+
 - name: add sshd configuration
   template:
     src: sshd_config.j2

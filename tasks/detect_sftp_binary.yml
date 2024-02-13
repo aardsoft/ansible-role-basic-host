@@ -1,0 +1,15 @@
+- name: check sftp binary ({{_sftp_path}})
+  stat:
+    path: "{{_sftp_path}}"
+  register: _sftp_marker
+  tags:
+    - base_config
+    - access_setup
+
+- name: register found sftp binary
+  set_fact:
+    detected_sftp_binary: "{{_sftp_path}}"
+  when: _sftp_marker.stat.exists == True
+  tags:
+    - base_config
+    - access_setup

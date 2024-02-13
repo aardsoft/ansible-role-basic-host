@@ -88,9 +88,14 @@ AcceptEnv LANG LC_*
 
 {% if sshd.sftp_binary is defined %}
 Subsystem sftp {{sshd.sftp_binary}}
+{% elif detected_sftp_binary is defined %}
+# sftp found by auto-probing
+Subsystem sftp {{detected_sftp_binary}}
 {% elif ansible_os_family == "RedHat" %}
+# sftp not found, best guess for redhat
 Subsystem sftp /usr/libexec/openssh/sftp-server
 {% elif ansible_os_family == "Suse" %}
+# sftp not found, best guess for suse
 Subsystem sftp /usr/lib/openssh/sftp-server
 {% endif %}
 
