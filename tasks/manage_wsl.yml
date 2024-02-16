@@ -91,7 +91,7 @@
   add_host:
     hostname: "{{item.value.host_prefix}}{{inventory_hostname}}"
     groups: "{{item.value.groups}}"
-    ansible_host: "{{inventory_hostname}}"
+    ansible_host: "{{ansible_host}}"
     ansible_port: "{{item.value.sshd_port}}"
     sshd: "{{ {'port': item.value.sshd_port} }}"
   when: >
