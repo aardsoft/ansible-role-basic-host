@@ -50,6 +50,7 @@
   tags:
     - base_config
     - access_setup
+  changed_when: false
 
 - name: install rosetta
   command: softwareupdate --install-rosetta --agree-to-license
