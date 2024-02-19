@@ -86,7 +86,7 @@
 
 - name: add additional update repos
   set_fact:
-    suse_update_repos: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_update_repos}} + [ 'backports', 'sle' ]"
+    suse_update_repos: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_update_repos + [ 'backports', 'sle' ]}}"
   when: >
     hostvars[delegate_hostname|default(inventory_hostname)].suse_update_repos is defined and
     suse_port is undefined and
