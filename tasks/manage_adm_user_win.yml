@@ -3,6 +3,17 @@
 # Windows is not copy & paste friendly. It therefore makes sense to
 # allow specifying a separate password for the Windows user. If
 # undefined the default password will be used.
+- fail:
+    msg:
+      - "Unable to create the Windows management user without a password."
+      - "Configure a password store, and set adm_passdb_entry_win or adm_passdb_entry"
+  when: >
+    adm_passdb_entry_win is undefined and
+    adm_passdb_entry is undefined
+  tags:
+    - base_config
+    - access_setup
+
 - name: configure management user password (Windows password)
   win_user:
     name: "{{ adm_user }}"
