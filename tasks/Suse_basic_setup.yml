@@ -316,8 +316,6 @@
     loop_var: __repo
   ignore_errors: True
   changed_when: false
-  args:
-    warn: false
   with_items:
     - repo-sle-update
     - repo-sle-debug-update

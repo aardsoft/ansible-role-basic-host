@@ -146,8 +146,6 @@
 
 - name: clean apt cache
   command: apt-get -y clean
-  args:
-    warn: False
   changed_when: false
 
 - name: Update apt-file cache
