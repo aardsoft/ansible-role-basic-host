@@ -90,6 +90,7 @@
     - /usr/lib/openssh/sftp-server
     - /usr/libexec/ssh/sftp-server
     - /usr/lib/ssh/sftp-server
+    - /usr/libexec/sftp-server
   loop_control:
     loop_var: _sftp_path
   tags:
