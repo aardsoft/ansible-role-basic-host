@@ -1,0 +1,15 @@
+#!/bin/bash
+
+_target_directory=$1
+_file_age=90
+
+if [ -z "$_target_directory" ]; then
+    exit 1
+fi
+
+cd "$_target_directory" || exit 1
+
+find . -type f -mtime +${_file_age} -delete
+if [ -n $_remove_empty_directories ]; then
+    find . -type d -empty -delete
+fi

@@ -1,0 +1,36 @@
+- name: copy cleanup script
+  template:
+    src: directory-cleanup
+    dest: "{{unix_bin|default('/usr/local/bin')}}/directory-cleanup"
+    owner: root
+    mode: 0755
+
+- name: install cleanup handlers
+  include_tasks: add_timer.yml
+  vars:
+    systemd_timer_command: "{{unix_bin|default('/usr/local/bin')}}/directory-cleanup {{cleanup.value['target_directory']}} {{cleanup.value['target.file_age']|default(7)}}"
+    systemd_timer_oncalendar: "*-*-* 3:40:00"
+    systemd_timer_name: "cleanup-{{cleanup.key}}"
+    systemd_timer_add_service: True
+  loop_control:
+    loop_var: cleanup
+  with_dict: "{{directory_cleanup}}"
+  when: >
+    ansible_os_family != "Darwin"
+
+- name: install cleanup handlers (Darwin)
+  include_role:
+    name: data-utilities
+    tasks_from: manage_service
+  vars:
+    service:
+      name: "fi.aardsoft.cleanup-{{cleanup.key}}"
+      exec_start: "{{unix_bin|default('/usr/local/bin')}}/directory-cleanup {{cleanup.value['target_directory']}} {{cleanup.value['target.file_age']|default(7)}}"
+      calendar_interval:
+        minute: 10
+        hour: 03
+  loop_control:
+    loop_var: cleanup
+  with_dict: "{{directory_cleanup}}"
+  when: >
+    ansible_os_family == "Darwin"

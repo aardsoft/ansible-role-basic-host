@@ -265,6 +265,10 @@
     - base_config
     - access_setup
 
+- name: create cleanup scripts
+  include_tasks: cleanup_scripts_win.yml
+  when: directory_cleanup is defined
+
 - name: manage WSL
   include_tasks: manage_wsl.yml
   when: wsl_distributions is defined

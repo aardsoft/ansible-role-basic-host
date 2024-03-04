@@ -1,0 +1,21 @@
+- name: copy cleanup script
+  win_template:
+    src: directory-cleanup.ps1
+    dest: "{{windows_script_directory_bin}}\\directory-cleanup.ps1"
+
+
+- name: install cleanup handlers
+  community.windows.win_scheduled_task:
+    name: "Cleanup{{cleanup.key}}"
+    actions:
+      - path: '%SystemRoot%\system32\WindowsPowerShell\v1.0\powershell.exe'
+        arguments: "{{windows_script_directory_bin}}\\directory-cleanup.ps1 {{cleanup.value['target_directory']}} {{cleanup.value['target.file_age']|default(7)}}"
+    triggers:
+      - type: daily
+        start_boundary: '2023-01-01T01:30:00'
+    username: SYSTEM
+    start_when_available: true
+    execution_time_limit: PT2H
+  loop_control:
+    loop_var: cleanup
+  with_dict: "{{directory_cleanup}}"
