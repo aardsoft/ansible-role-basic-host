@@ -25,6 +25,8 @@
   vars:
     service:
       name: "fi.aardsoft.cleanup-{{cleanup.key}}"
+      standard_error: "/var/log/cleanup-{{cleanup.key}}.err"
+      standard_output: "/var/log/cleanup-{{cleanup.key}}.out"
       exec_start: "{{unix_bin|default('/usr/local/bin')}}/directory-cleanup {{cleanup.value['target_directory']}} {{cleanup.value['target.file_age']|default(7)}}"
       calendar_interval:
         minute: 10

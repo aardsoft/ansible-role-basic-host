@@ -7,6 +7,10 @@ if [ -z "$_target_directory" ]; then
     exit 1
 fi
 
+if [ -n "$2" ]; then
+    _file_age=$2
+fi
+
 cd "$_target_directory" || exit 1
 
 find . -type f -mtime +${_file_age} -delete
