@@ -63,6 +63,14 @@
     - base_config
     - access_setup
 
+# adm_passdb is a bit more generic than root_passdb, so prepare compat bindings
+# for moving to that eventually
+- set_fact:
+    adm_passdb_entry: "{{root_passdb_entry}}"
+  when: >
+    adm_passdb_entry is undefined and
+    root_passdb_entry is defined
+
 - name: include main tasks for non-Windows
   include_tasks: main_default.yml
   tags:
