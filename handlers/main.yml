@@ -12,23 +12,33 @@
 
 - name: restart networkd
   systemd: name=systemd-networkd state=restarted daemon_reload=yes
-  when: ansible_service_mgr == 'systemd'
+  when: >
+    ansible_service_mgr == 'systemd' and
+    is_wsl|default(false) == false
 
 - name: restart logind
   systemd: name=systemd-logind state=restarted
-  when: ansible_service_mgr == 'systemd'
+  when: >
+    ansible_service_mgr == 'systemd' and
+    is_wsl|default(false) == false
 
 - name: restart journald
   systemd: name=systemd-logind state=restarted
-  when: ansible_service_mgr == 'systemd'
+  when: >
+    ansible_service_mgr == 'systemd' and
+    is_wsl|default(false) == false
 
 - name: stop NetworkManager
   systemd: name=NetworkManager state=stopped daemon_reload=yes
-  when: ansible_service_mgr == 'systemd'
+  when: >
+    ansible_service_mgr == 'systemd' and
+    is_wsl|default(false) == false
 
 - name: restart rbdmap
   systemd: name=rbdmap
-  when: ansible_service_mgr == 'systemd'
+  when: >
+    ansible_service_mgr == 'systemd' and
+    is_wsl|default(false) == false
 
 - name: restart wpa_supplicant
   systemd:
