@@ -21,7 +21,10 @@
   ignore_errors: True
   changed_when: false
 
-- include_tasks: Suse_basic_setup.yml
+- name: run basic initi steps
+  include_tasks: Suse_basic_setup.yml
+  tags:
+    - access_setup
 
 # extra packages are assumed to be not required for just providing access
 # having access_setup tags here could lead to conflicts during lxc provisioning
