@@ -11,6 +11,10 @@
     - access_setup
 
 - set_fact:
+    ansible_product_name: "Undefined. Ansible bug?"
+  when: ansible_product_name == None
+
+- set_fact:
     server_type: "proliant"
     server_model: "{{ ansible_product_name.split(' ')[1] | lower }}"
     server_gen: "{{ ansible_product_name.split(' ')[2] | int }}"
