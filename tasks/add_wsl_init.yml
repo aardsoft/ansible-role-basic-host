@@ -1,0 +1,24 @@
+# this is mainly useful for the service hack to reboot the machine on changes
+- set_fact:
+    wsl_init_changed: False
+  when: wsl_init_changed is undefined
+
+- name: check startup folder path
+  win_command: powershell.exe -Command "[environment]::getfolderpath('Startup')"
+  register: wincmd_status
+  changed_when: false
+
+- name: register startup folder path ({{wincmd_status}})
+  set_fact:
+    startup_folder_path: "{{wincmd_status.stdout_lines[0]}}"
+
+- name: copy init service template
+  win_template:
+    src: wsl_init_bat.j2
+    dest: "{{startup_folder_path}}\\wsl_init_{{_service_distribution|default('default')}}.bat"
+    newline_sequence: '\n'
+  register: template_status
+
+- set_fact:
+    wsl_init_changed: True
+  when: template_status.changed == True

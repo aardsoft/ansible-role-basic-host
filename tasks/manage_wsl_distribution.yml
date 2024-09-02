@@ -16,6 +16,11 @@
     src: wsl-simpleservice
     dest: "{{windows_temp_directory}}\\wsl-simpleservice"
 
+- name: copy simple init wrapper (linux side)
+  win_copy:
+    src: wsl-simple-init
+    dest: "{{windows_temp_directory}}\\wsl-simple-init"
+
 - name: copy authorized_keys to temp
   win_template:
     src: authorized_key_template_management.j2

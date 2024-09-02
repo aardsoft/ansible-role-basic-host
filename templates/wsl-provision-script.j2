@@ -51,5 +51,8 @@ cp /etc/ssh/ssh_host_ecdsa_key.pub /mnt/c/temp/
 cp /mnt/c/temp/wsl-simpleservice /usr/sbin/
 chmod 755 /usr/sbin/wsl-simpleservice
 
+cp /mnt/c/temp/wsl-simple-init /usr/sbin/
+chmod 755 /usr/sbin/wsl-simple-init
+
 mkdir -p /etc/wsl-service
 cp /mnt/c/temp/sshd /etc/wsl-service/sshd

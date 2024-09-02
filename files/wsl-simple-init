@@ -1,0 +1,34 @@
+#!/bin/bash
+#
+# This is a simple script to start arbitrary services on WSL startup
+#
+# To avoid inconsistent states it often is best to tear down the WSL instance
+# on errors - so in its simplest form this will exit if any service it started
+# failed, relying on the Windows side to restart WSL.
+#
+# This behaviour will only work properly if this is the only entrance point into
+# WSL, though.
+#
+# Using a service manager to restart individual components is possible - in this
+# case the service manager should be started as a service through this, to make
+# sure the instance properly dies if the service manager fails.
+#
+# SSH will continue to be managed by this script, though - without SSH access
+# the initial deployment is not possible, and as the initial deployment uses
+# several workarounds for WSL limitations supporting different service managers
+# for that is not sensible (for now).
+
+cleanup(){
+    wsl.exe --terminate $WSL_DISTRO_NAME
+}
+
+trap cleanup INT TERM EXIT
+
+for service in /etc/wsl-service/*; do
+    echo "Starting $service..."
+    bash -c ". $service" &
+    echo $!
+done
+
+wait -n
+echo "Monitored process died, tearing down system." >&2

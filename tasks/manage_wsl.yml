@@ -3,6 +3,11 @@
     src: wsl-simpleservice.vbs
     dest: "{{windows_script_directory}}\\wsl-simpleservice.vbs"
 
+- name: copy simple init wrapper (windows side)
+  win_copy:
+    src: wsl-simple-init.vbs
+    dest: "{{windows_script_directory}}\\wsl-simple-init.vbs"
+
 - name: download distribution installers
   win_get_url:
     url: "{{item.value.url}}"
@@ -66,6 +71,14 @@
 - set_fact:
     wsl_service_changed: false
 
+- name: create WSL init service
+  include_tasks: add_wsl_init.yml
+  with_dict: "{{wsl_distributions}}"
+  vars:
+    _service_distribution: "{{item.key}}"
+  when: >
+    wsl_single_services|default(false) == false
+
 - name: create WSL sshd services
   include_tasks: add_wsl_service.yml
   with_dict: "{{wsl_distributions}}"
@@ -73,6 +86,7 @@
     _service_name: sshd
     _service_distribution: "{{item.key}}"
   when: >
+    wsl_single_services|default(false) == true and
     (item.value.state is undefined or item.value.state == 'present') and
     item.value.sshd_service is defined and item.value.sshd_service == True and
     item.value.sshd_port is defined
@@ -84,7 +98,9 @@
     reboot_timeout: 600
     test_command: 'exit (Get-Process -name wsl).Count -eq 0'
     post_reboot_delay: 0
-  when: wsl_service_changed == True
+  when: >
+    wsl_service_changed == True or
+    wsl_init_changed|default(False) == True
 
 - name: add WSL instance to inventory
   with_dict: "{{wsl_distributions}}"

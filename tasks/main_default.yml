@@ -111,6 +111,14 @@
   notify:
     - restart sshd
 
+- name: add simple init (WSL)
+  copy:
+    src: wsl-simple-init
+    dest: /usr/sbin/wsl-simple-init
+    owner: root
+    mode: 0755
+  when: is_wsl == True
+
 - ansible.builtin.include_role:
     name: data-utilities
     tasks_from: manage_time
