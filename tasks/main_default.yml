@@ -12,8 +12,8 @@
   set_fact:
     systemd_version: "{{_systemctl_version.stdout}}"
   when: >
-     ansible_service_mgr == 'systemd' and
-     _systemctl_version is defined
+    ansible_service_mgr == 'systemd' and
+    _systemctl_version is defined
 
 - name: check provisioning marker
   stat:

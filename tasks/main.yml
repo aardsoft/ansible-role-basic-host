@@ -76,14 +76,18 @@
   tags:
     - base_config
     - access_setup
-  when: ansible_os_family != "Windows"
+  when: >
+    ansible_os_family != "Windows" and
+    dump_config is not defined
 
 - name: include main tasks for windows
   include_tasks: main_windows.yml
   tags:
     - base_config
     - access_setup
-  when: ansible_os_family == "Windows"
+  when: >
+    ansible_os_family == "Windows" and
+    dump_config is not defined
 
 - name: include additional tasks
   include_tasks: "tasks/{{item}}.yml"
