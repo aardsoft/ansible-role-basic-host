@@ -8,7 +8,7 @@
 - name: install cleanup handlers
   include_tasks: add_timer.yml
   vars:
-    systemd_timer_command: "{{unix_bin|default('/usr/local/bin')}}/directory-cleanup {{cleanup.value['target_directory']}} {{cleanup.value['target.file_age']|default(7)}}"
+    systemd_timer_command: "{{unix_bin|default('/usr/local/bin')}}/directory-cleanup {{cleanup.value['target_directory']}} {{cleanup.value['file_age']|default(7)}}"
     systemd_timer_oncalendar: "*-*-* 3:40:00"
     systemd_timer_name: "cleanup-{{cleanup.key}}"
     systemd_timer_add_service: True
@@ -27,7 +27,7 @@
       name: "fi.aardsoft.cleanup-{{cleanup.key}}"
       standard_error: "/var/log/cleanup-{{cleanup.key}}.err"
       standard_output: "/var/log/cleanup-{{cleanup.key}}.out"
-      exec_start: "{{unix_bin|default('/usr/local/bin')}}/directory-cleanup {{cleanup.value['target_directory']}} {{cleanup.value['target.file_age']|default(7)}}"
+      exec_start: "{{unix_bin|default('/usr/local/bin')}}/directory-cleanup {{cleanup.value['target_directory']}} {{cleanup.value['file_age']|default(7)}}"
       calendar_interval:
         minute: 10
         hour: 03

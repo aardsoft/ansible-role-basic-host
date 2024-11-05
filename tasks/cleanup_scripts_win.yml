@@ -9,7 +9,7 @@
     name: "Cleanup{{cleanup.key}}"
     actions:
       - path: '%SystemRoot%\system32\WindowsPowerShell\v1.0\powershell.exe'
-        arguments: "{{windows_script_directory_bin}}\\directory-cleanup.ps1 {{cleanup.value['target_directory']}} {{cleanup.value['target.file_age']|default(7)}}"
+        arguments: "{{windows_script_directory_bin}}\\directory-cleanup.ps1 {{cleanup.value['target_directory']}} {{cleanup.value['file_age']|default(7)}}"
     triggers:
       - type: daily
         start_boundary: '2023-01-01T01:30:00'
