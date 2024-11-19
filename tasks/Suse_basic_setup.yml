@@ -235,7 +235,6 @@
       - iperf
       - iproute2
       - less
-      - libopenssl1_0_0-hmac
       - lsof
       - fuse
       - net-tools
