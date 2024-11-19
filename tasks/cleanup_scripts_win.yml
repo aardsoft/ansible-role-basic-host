@@ -15,7 +15,7 @@
         start_boundary: '2023-01-01T01:30:00'
     username: SYSTEM
     start_when_available: true
-    execution_time_limit: PT2H
+    execution_time_limit: "{{cleanup.value['time_limit']|default('PT8H')}}"
   loop_control:
     loop_var: cleanup
   with_dict: "{{directory_cleanup}}"
