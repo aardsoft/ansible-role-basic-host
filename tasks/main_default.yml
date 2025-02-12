@@ -137,6 +137,14 @@
     - base_config
     - access_setup
 
+- ansible.builtin.include_role:
+    name: data-utilities
+    tasks_from: manage_motd
+  tags:
+    - base_config
+  when: >
+    ansible_os_family != "Darwin"
+
 - name: include distribution specific tasks
   include_tasks: "basic_host_{{ ansible_os_family }}.yml"
   when: >
