@@ -69,7 +69,12 @@
     state: present
     auto_import_keys: yes
     overwrite_multiple: yes
-    disable_gpg_check: "{{ _repository.value.gpg_check|default('yes')}}"
+    disable_gpg_check: >
+      {% if _repository.value.gpg_check|default(False) == False %}
+      yes
+      {% else %}
+      no
+      {% endif %}
   with_dict: "{{ rpm_repos }}"
   loop_control:
     loop_var: _repository
