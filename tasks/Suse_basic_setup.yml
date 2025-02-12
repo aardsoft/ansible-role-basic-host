@@ -238,7 +238,6 @@
       - lsof
       - fuse
       - net-tools
-      - python-xml
       - screen
       - strace
       - sudo
@@ -251,6 +250,14 @@
   when: >
     (delegate_hostame is undefined and hostvars[inventory_hostname].base_packages is undefined) or
     (delegate_hostname is defined and hostvars[delegate_hostname].base_packages is undefined)
+  tags:
+    - access_setup
+
+- name: add python-xml for non-tumbleweed hosts
+  set_fact:
+    base_packages: "{{ base_packages + python-xml }}"
+  when: >
+    suse_release != "tumbleweed"
   tags:
     - access_setup
 
