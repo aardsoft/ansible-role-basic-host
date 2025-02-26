@@ -255,7 +255,7 @@
 
 - name: add python-xml for non-tumbleweed hosts
   set_fact:
-    base_packages: "{{ base_packages + python-xml }}"
+    base_packages: "{{ base_packages + [ 'python-xml' ] }}"
   when: >
     suse_release != "tumbleweed"
   tags:
