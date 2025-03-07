@@ -2,19 +2,6 @@
     is_wsl: True
   when: ansible_kernel is search("Microsoft")
 
-- name: check systemd version
-  shell: systemctl --version|head -1|awk '{print $2}'
-  register: _systemctl_version
-  when: ansible_service_mgr == 'systemd'
-  changed_when: false
-
-- name: register systemd version
-  set_fact:
-    systemd_version: "{{_systemctl_version.stdout}}"
-  when: >
-     ansible_service_mgr == 'systemd' and
-     _systemctl_version is defined
-
 - name: check provisioning marker
   stat:
     path: "/.provisioning-needed"
