@@ -143,6 +143,14 @@
     - base_config
     - access_setup
 
+- name: include distribution specific tasks (MicroOS)
+  include_tasks: "basic_host_Suse.yml"
+  when: >
+    ansible_os_family == "openSUSE MicroOS"
+  tags:
+    - base_config
+    - access_setup
+
 - name: create ssl cert group
   group: name=ssl-cert gid=950 state=present
 
