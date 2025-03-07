@@ -251,11 +251,13 @@
 
 - name: copy scripts
   copy:
-    src: "{{item}}"
-    dest: /usr/bin/{{item}}
+    src: "{{script}}"
+    dest: "{{local_bin}}/{{script}}"
     owner: root
     group: root
     mode: 0755
+  loop_control:
+    loop_var: script
   when: >
     ansible_os_family != "Darwin"
   with_items:
