@@ -7,12 +7,23 @@
     - base_config
     - access_setup
 
+- include_role:
+    name: data-utilities
+    tasks_from: check_transactional
+  tags:
+    - base_config
+    - access_setup
+
 - debug:
     msg:
       - "Machine architecture: {{ansible_machine|default('unknown')}}"
       - "OS architecture: {{ansible_architecture|default('unknown')}}"
       - "OS family: {{ansible_os_family|default('unknown')}}"
       - "OS distribution: {{ansible_os_distribution|default('unknown')}} in {{ansible_distribution_version|default('unknown')}}"
+      - "Transactional system: {{transactional_system}}"
+  tags:
+    - base_config
+    - access_setup
 
 # Keep this disabled until we're either using ansible-data-utilities everywhere,
 # or we find a way to properly catch errors here
