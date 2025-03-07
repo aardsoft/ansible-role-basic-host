@@ -21,7 +21,7 @@
   ignore_errors: True
   changed_when: false
 
-- name: run basic initi steps
+- name: run basic init steps
   include_tasks: Suse_basic_setup.yml
   tags:
     - access_setup
@@ -90,7 +90,26 @@
     (skip_updates is undefined or skip_updates == False) or
     (force_updates is defined and force_updates == True)
 
-- include_tasks: Suse_package_install.yml
+- debug:
+    msg: "Installing packages for {{delegate_hostname|default(inventory_hostname)}}"
+  when: >
+    debug_delegates is defined
+
+- debug:
+    msg:
+      - "Step 3:"
+      - "{{hostvars[delegate_hostname].base_packages}}"
+  when: >
+    debug_delegates is defined and
+    delegate_hostname is defined
+
+- name: Install base packages
+  include_role:
+    name: data-utilities
+    tasks_from: install_packages
+  vars:
+    role_packages: "{{ hostvars[delegate_hostname|default(inventory_hostname)].base_packages }}"
+    update_repo_cache: true
 
 # in case the first one failed due to missing package, and we got here
 # without needing a certificate for a proxy, refresh without masking
