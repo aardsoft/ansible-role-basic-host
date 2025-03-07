@@ -27,14 +27,14 @@
     debug_delegates is defined and
     delegate_hostname is defined
 
-- name: [delegate] include distribution specific tasks
+- name: "[delegate] include distribution specific tasks"
   include_tasks: "{{ ansible_os_family }}_basic_setup.yml"
   when: ansible_os_family == "Debian" or ansible_os_family == "Suse" or ansible_os_family == "RedHat"
   tags:
     - base_config
     - access_setup
 
-- name: [delegate] include distribution specific tasks (MicroOS)
+- name: "[delegate] include distribution specific tasks (MicroOS)"
   include_tasks: "basic_host_Suse.yml"
   when: >
     ansible_os_family == "openSUSE MicroOS"
@@ -50,7 +50,7 @@
 
 # note: this is currently only fully supported with suse based distributions.
 #       other distributions most likely need extra work in data-utilities
-- name: [delegate] Install base packages
+- name: "[delegate] Install base packages"
   include_role:
     name: data-utilities
     tasks_from: install_packages
