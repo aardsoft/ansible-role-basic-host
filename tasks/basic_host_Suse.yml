@@ -87,6 +87,7 @@
     name: '*'
     state: dist-upgrade
   when: >
+    transactional_system|default(False) == False and
     (skip_updates is undefined or skip_updates == False) or
     (force_updates is defined and force_updates == True)
 
