@@ -15,14 +15,10 @@
   tags:
     - access_setup
 
-# additional architectures in main repos are:
-# - i586 dead and unsupported
-# - ppc64le unlikely to be relevant for us
-# - s390x unlikely to be relevant for us
+# main repo now seems to be only x86_64, so point everything else to ports
 - include_tasks: Suse_port_setup.yml
   when: >
-    _target_suse_arch != "x86_64" and
-    _target_suse_arch != "aarch64"
+    _target_suse_arch != "x86_64"
   tags:
     - access_setup
 
@@ -61,18 +57,7 @@
       - oss
       - non-oss
   when: >
-    hostvars[delegate_hostname|default(inventory_hostname)].suse_core_repos is undefined and
-    suse_port is undefined
-  tags:
-    - access_setup
-
-- name: set core repo list
-  set_fact:
-    suse_core_repos:
-      - oss
-  when: >
-    hostvars[delegate_hostname|default(inventory_hostname)].suse_core_repos is undefined and
-    suse_port is defined
+    hostvars[delegate_hostname|default(inventory_hostname)].suse_core_repos is undefined
   tags:
     - access_setup
 

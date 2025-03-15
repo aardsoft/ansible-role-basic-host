@@ -1,4 +1,10 @@
-- name: set port for arch {{_target_suse_arch}}
+- name: set default port arch
+  set_fact:
+    suse_port: "{{_target_suse_arch}}"
+  tags:
+    - access_setup
+
+- name: override port for arch {{_target_suse_arch}}
   set_fact:
     suse_port: armv7hl
   when: >
