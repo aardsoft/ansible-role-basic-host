@@ -70,8 +70,9 @@
 - name: expand package list for bare metal servers
   set_fact:
     base_packages: "{{ base_packages + bare_metal_packages }}"
-  when: ansible_virtualization_role == "host" or
-        ansible_virtualization_role == "NA"
+  when: >
+    ansible_virtualization_role == "host" or
+    ansible_virtualization_role == "NA"
   tags:
     - base_config
     - access_setup
@@ -171,8 +172,9 @@
 - name: detect boot devices
   script: find-bootdevices
   register: host_bootdevices
-  when: ansible_virtualization_role == "host" or
-        ansible_virtualization_role == "NA"
+  when: >
+    ansible_virtualization_role == "host" or
+    ansible_virtualization_role == "NA"
   changed_when: false
 
 # this just pre-configures the bootloader, bootloader and kernel

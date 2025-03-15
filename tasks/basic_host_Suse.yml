@@ -33,7 +33,9 @@
 - name: expand package list for bare metal servers
   set_fact:
     base_packages: "{{ base_packages + bare_metal_packages }}"
-  when: ansible_virtualization_role == "host"
+  when: >
+    ansible_virtualization_role == "host" or
+    ansible_virtualization_role == "NA"
   tags:
     - access_setup
 
