@@ -495,8 +495,8 @@
   set_fact:
     bare_metal_packages: "{{ bare_metal_packages + [ 'podman' ]}}"
   when: >
-    ansible_virtualization_role == "host" or
-    ansible_virtualization_role == "NA" and
+    (ansible_virtualization_role == "host" or
+     ansible_virtualization_role == "NA") and
     use_podman is defined and use_podman == True
   tags:
     - access_setup
@@ -514,8 +514,8 @@
   set_fact:
     base_packages: "{{ base_packages + extra_bare_base_packages_centos7 }}"
   when: >
-    ansible_virtualization_role == "host" or
-    ansible_virtualization_role == "NA" and
+    (ansible_virtualization_role == "host" or
+     ansible_virtualization_role == "NA") and
     extra_bare_base_packages_centos7 is defined
   tags:
     - access_setup
