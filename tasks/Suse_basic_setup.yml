@@ -219,6 +219,7 @@
       - iotop
       - iperf
       - iproute2
+      - jq
       - less
       - lsof
       - fuse

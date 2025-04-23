@@ -50,6 +50,7 @@
       - ftp
       - iperf
       - iputils-ping
+      - jq
       - less
       - netcat-openbsd
       - nvi
