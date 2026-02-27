@@ -257,7 +257,7 @@
 
 - name: add MicroOS packages
   set_fact:
-    base_packages: "{{ hostvars[delegate_hostname|default(inventory_hostname)].base_packages + [ 'systemd-network' ] }}"
+    base_packages: "{{ hostvars[delegate_hostname|default(inventory_hostname)].base_packages + [ 'systemd-networkd' ] }}"
   when: >
     ansible_os_family == "openSUSE MicroOS"
   tags:
