@@ -162,3 +162,9 @@
     ansible_virtualization_type is defined and
     ansible_virtualization_type == "lxc"
   with_sequence: start={{container_getty_mask_start|default(0)}}  end={{container_getty_mask_end|default(3)}}
+
+- name: configure transactional-update and rebootmgr
+  include_role:
+    name: data-utilities
+    tasks_from: manage_transactional_update
+  when: transactional_system|default(False) == True
