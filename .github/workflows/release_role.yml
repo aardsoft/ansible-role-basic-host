@@ -1,0 +1,15 @@
+name: Release role
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release role
+        uses: aardsoft/ci-actions/release-role@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
