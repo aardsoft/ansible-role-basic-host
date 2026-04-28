@@ -28,7 +28,7 @@
   when: >
     hostvars[delegate_hostname|default(inventory_hostname)].suse_release is undefined and
     hostvars[delegate_hostname|default(inventory_hostname)].os_release is defined and
-    hostvars[delegate_hostname|default(inventory_hostname)].os_release != "tumbleweed"
+    hostvars[delegate_hostname|default(inventory_hostname)].os_release | lower not in ["tumbleweed", "microos"]
   tags:
     - access_setup
 
@@ -38,8 +38,18 @@
   when: >
     hostvars[delegate_hostname|default(inventory_hostname)].suse_release is undefined and
     hostvars[delegate_hostname|default(inventory_hostname)].os_release is defined and
-    (hostvars[delegate_hostname|default(inventory_hostname)].os_release == "tumbleweed" or
-    hostvars[delegate_hostname|default(inventory_hostname)].os_release == "factory")
+    (hostvars[delegate_hostname|default(inventory_hostname)].os_release | lower == "tumbleweed" or
+    hostvars[delegate_hostname|default(inventory_hostname)].os_release | lower == "factory")
+  tags:
+    - access_setup
+
+- name: use os_release as suse release (MicroOS)
+  set_fact:
+    suse_release: microos
+  when: >
+    hostvars[delegate_hostname|default(inventory_hostname)].suse_release is undefined and
+    hostvars[delegate_hostname|default(inventory_hostname)].os_release is defined and
+    hostvars[delegate_hostname|default(inventory_hostname)].os_release | lower == "microos"
   tags:
     - access_setup
 
@@ -95,6 +105,12 @@
   tags:
     - access_setup
 
+# look up microos specific repository URLs, fall back to undefined
+- name: set microos URLs
+  set_fact:
+    _microos_url: "{{ hostvars[delegate_hostname | default(inventory_hostname)].suse_microos_url | default(suse_microos_url) | default(omit) }}"
+    _microos_extra_url: "{{ hostvars[delegate_hostname | default(inventory_hostname)].suse_microos_extra_url | default(suse_microos_extra_url) | default(omit) }}"
+
 - name: set port specific update/distribution path
   set_fact:
     suse_update_path: "ports/update"
@@ -113,14 +129,25 @@
   tags:
     - access_setup
 
-- name: set suse release
+- name: set suse release (tumbleweed)
   set_fact:
     suse_release: tumbleweed
     dist_base: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url}}/{{suse_dist_path|default('')}}"
     obs_base: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url_obs}}/repositories/"
     suse_long_release: openSUSE_Tumbleweed
   when: >
-    hostvars[delegate_hostname|default(inventory_hostname)].suse_release == "tumbleweed"
+    hostvars[delegate_hostname|default(inventory_hostname)].suse_release | lower == "tumbleweed"
+  tags:
+    - access_setup
+
+- name: set suse release (MicroOS)
+  set_fact:
+    suse_release: microos
+    dist_base: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url}}/{{suse_dist_path|default('')}}"
+    obs_base: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_base_url_obs}}/repositories/"
+    suse_long_release: openSUSE_MicroOS
+  when: >
+    hostvars[delegate_hostname|default(inventory_hostname)].suse_release | lower == "microos"
   tags:
     - access_setup
 
@@ -152,7 +179,7 @@
   set_fact:
     dist_base=http://download.opensuse.org/{{suse_dist_path|default('distribution')}}/
   when: >
-    hostvars[delegate_hostname|default(inventory_hostname)].suse_release != "tumbleweed" and
+    hostvars[delegate_hostname|default(inventory_hostname)].suse_release | lower not in  ["tumbleweed","microos"] and
     hostvars[delegate_hostname|default(inventory_hostname)].dist_base is undefined
   tags:
     - access_setup
@@ -195,7 +222,7 @@
   tags:
     - access_setup
 
-- name: set basic packages
+- name: set basic packages ({{hostvars[delegate_hostname|default(inventory_hostname)].suse_release}})
   set_fact:
     bare_metal_packages:
       - bridge-utils
@@ -234,8 +261,50 @@
       - which
       - mc
   when: >
-    (delegate_hostame is undefined and hostvars[inventory_hostname].base_packages is undefined) or
-    (delegate_hostname is defined and hostvars[delegate_hostname].base_packages is undefined)
+    ((delegate_hostame is undefined and hostvars[inventory_hostname].base_packages is undefined) or
+    (delegate_hostname is defined and hostvars[delegate_hostname].base_packages is undefined)) and
+    hostvars[delegate_hostname|default(inventory_hostname)].suse_release | lower not in ["tumbleweed","microos"]
+  tags:
+    - access_setup
+
+# we probably also want to limit this for leap micro
+- name: set basic packages ({{hostvars[delegate_hostname|default(inventory_hostname)].suse_release}})
+  set_fact:
+    bare_metal_packages:
+      - dmidecode
+      - lvm2
+      - chrony
+      - toolbox
+      # those are not on the MicroOS ISO, but required for zabbix/ansible
+      # TODO, figure out a better way to handle those
+      - parted
+      - sensors
+      - smartmontools
+      - hdparm
+    base_packages:
+      - ca-certificates
+      - ca-certificates-mozilla
+      - curl
+      - glibc-locale
+      - iproute2
+      - jq
+      - less
+      - lsof
+      - fuse
+      - net-tools
+      - sudo
+      - timezone
+      - vim-small
+      - wget
+      - which
+      # the following are not available on the MicroOS ISO
+      - screen
+      - strace
+#      - sysstat
+  when: >
+    ((delegate_hostame is undefined and hostvars[inventory_hostname].base_packages is undefined) or
+    (delegate_hostname is defined and hostvars[delegate_hostname].base_packages is undefined)) and
+    hostvars[delegate_hostname|default(inventory_hostname)].suse_release | lower in ["tumbleweed","microos"]
   tags:
     - access_setup
 
@@ -243,7 +312,7 @@
   set_fact:
     base_packages: "{{ base_packages + [ 'python-xml' ] }}"
   when: >
-    suse_release != "tumbleweed"
+    suse_release | lower not in ["tumbleweed","microos"]
   tags:
     - access_setup
 
@@ -259,7 +328,9 @@
   set_fact:
     base_packages: "{{ hostvars[delegate_hostname|default(inventory_hostname)].base_packages + [ 'systemd-networkd' ] }}"
   when: >
-    ansible_os_family == "openSUSE MicroOS"
+    ansible_os_family == "openSUSE MicroOS" and (
+    hostvars[delegate_hostname|default(inventory_hostname)].suse_microos_skip_networkd is undefined or
+    hostvars[delegate_hostname|default(inventory_hostname)].suse_microos_skip_networkd == false)
   tags:
     - access_setup
 
@@ -337,6 +408,37 @@
   with_items: "{{hostvars[delegate_hostname|default(inventory_hostname)].suse_core_repos}}"
   loop_control:
     loop_var: __repo
+    # for microos we support mirrors from CD images, in which case we expect
+    # suse_microos_url and suse_microos_extra_url to be defined
+  when: >
+    not (hostvars[delegate_hostname|default(inventory_hostname)].suse_release | lower == "microos" and
+      (_microos_url is defined or _microos_extra_url is defined))
+  tags:
+    - access_setup
+
+- name: "configure microos core repository"
+  zypper_repository:
+    name: "microos"
+    repo: "{{_microos_url}}?ssl_verify={{repo_ssl_verify|default('yes')}}"
+    state: present
+    auto_import_keys: yes
+    overwrite_multiple: yes
+  when: >
+    _microos_url is defined and
+    hostvars[delegate_hostname|default(inventory_hostname)].suse_release | lower == "microos"
+  tags:
+    - access_setup
+
+- name: "configure microos extra repository"
+  zypper_repository:
+    name: "microos"
+    repo: "{{_microos_extra_url}}?ssl_verify={{repo_ssl_verify|default('yes')}}"
+    state: present
+    auto_import_keys: yes
+    overwrite_multiple: yes
+  when: >
+    _microos_extra_url is defined and
+    hostvars[delegate_hostname|default(inventory_hostname)].suse_release | lower == "microos"
   tags:
     - access_setup
 
