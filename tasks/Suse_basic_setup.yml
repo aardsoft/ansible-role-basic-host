@@ -442,7 +442,7 @@
 # so no need for signing (or checking signatures)
 - name: "configure microos extra repository"
   zypper_repository:
-    name: "microos"
+    name: "microos-extra"
     repo: "{{_microos_extra_url}}?ssl_verify={{repo_ssl_verify|default('yes')}}"
     state: present
     auto_import_keys: yes
